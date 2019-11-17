@@ -1,4 +1,4 @@
-#' ROC models for survival data from clinical trials
+#' ROC Models for Survival Data from Clinical Trials
 #'
 #' @description Survival data is often used in clinical trials to determine effectiveness of a new treatment.
 #' Analysis of such data is usually completed using two separate Kaplan-Meier curves, a Log Rank Test and Cox Proportional Hazard models.

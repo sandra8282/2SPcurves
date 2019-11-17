@@ -1,11 +1,16 @@
 Package: ROCsurv
 Type: Package
-Title: What the Package Does (Title Case)
-Version: 0.1.0
-Author: Who wrote it
-Maintainer: The package maintainer <yourself@somewhere.net>
-Description: More about what it does (maybe more than one line)
-    Use four spaces when indenting paragraphs within the Description.
-License: What license is it under?
+Title: ROC Models for Survival Data from Clinical Trials 
+Authors@R: c(person("Sandra", "Castro-Pearson", email= "cast0135@umn.edu", role = c("aut", "cre")))
+Author: Sandra Castro-Pearson [aut, cre]
+Maintainer: Sandra Castro-Pearson <cast0135@umn.edu>
+Description: Analysis of survival data from clinical trials combining the Kaplan-Meier curves of the two arms in the trial into an ROC curve and using the area under the curve (AUC) as measure of treatment effectiveness.
+License: GPL-3
 Encoding: UTF-8
 LazyData: true
+Imports: survival, graphics
+Language: en-US
+RoxygenNote: 6.1.1
+URL: https://github.com/SandraCastroPearson/ROCsurv
+BugReports: https://github.com/SandraCastroPearson/ROCsurv/issues
+
