@@ -1,5 +1,6 @@
 Package: ROCsurv
 Type: Package
+Version: 1.0.0
 Title: ROC Models for Survival Data from Clinical Trials 
 Authors@R: c(person("Sandra", "Castro-Pearson", email= "cast0135@umn.edu", role = c("aut", "cre")))
 Author: Sandra Castro-Pearson [aut, cre]
