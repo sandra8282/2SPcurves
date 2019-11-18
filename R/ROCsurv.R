@@ -74,7 +74,8 @@ ROCsurv <- function(time, event, group){
   }
   abline(c(0,1), col = "black", lty=2)
   area = unname(area)
-  text(0.8, 0.15, paste("AUC=", round(area,2), sep=""))
+  text(x=0.99, y=0.05, labels = paste("AUC=", round(area,2), sep=""),
+       pos=2, cex = 1.25)
 
   return(list(control_KaplanMeier = km_placebo,
               treatment_KaplanMeier = km_drug,
