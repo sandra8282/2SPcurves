@@ -37,47 +37,29 @@ ROCsurv <- function(time, event, group){
   skm <- rbind(skm_p, skm_d)
   skm <- skm[order(skm[,1]),]
 
-  plot(c(0,1), c(0, 1), type="n", xlab="", ylab="")
-  title(main="ROC", xlab="Control Group Survival",
-        ylab="Treatment Group Survival",
-        cex.main = 1)
+  ties_check <- unique(table(skm[,1]))
 
-  area = 0
-  for (i in 1:nrow(skm)) {
-    if(i<2){
-      coord_new = c(1, 1)
-      #check if drug or placebo
-      if (skm[i,3]==0) {#move horizontally
-        coord_new2 = c(skm[i,2], 1)
-        rect(xright = coord_new[1], ytop = coord_new[2],
-             xleft = coord_new2[1], ybottom = 0,
-             col = "pink", border = "pink")
-        area = area + (coord_new[1] - coord_new2[1])*(coord_new[2])
-      } else {#move vertically
-        coord_new2 = c(skm[i,2], 1)
-      }
-    } else {
-      #check if drug or placebo
-      if (skm[i,3]==0) {#move horizontally
-        coord_new2 = c(skm[i,2], coord_new[2])
-        rect(xright = coord_new[1], ytop = coord_new[2],
-             xleft = coord_new2[1], ybottom = 0,
-             col = "pink", border = "pink")
-        area = area + (coord_new[1] - coord_new2[1])*(coord_new[2])
-      } else {#move vertically
-        coord_new2 = c(coord_new[1], skm[i,2])
-      }
-      segments(coord_new[1], coord_new[2],
-               coord_new2[1], coord_new2[2], col="black")
-      coord_new = coord_new2
-    }
-  }
-  abline(c(0,1), col = "black", lty=2)
-  area = unname(area)
-  text(x=0.99, y=0.05, labels = paste("AUC=", round(area,2), sep=""),
-       pos=2, cex = 1.25)
+  if (length(ties_check) > 1) {
+    ties_times = as.integer(names(which(table(skm[,1])>1)))
+    # ties = skm[skm[,1] %in% ties_times,]
+    # if (0 %in% ties[,2]) {
+    #      zero_time <- ties[which(ties[,2]==0),1]
+    #      temp_index <- which(skm[,1]==zero_time)
+    #      temp <- skm[temp_index,]
+    #      last <- which(temp[,2]==0)
+    #      skm[temp_index[1],] = temp[-last,]
+    #      skm[temp_index[2],] = temp[last,]
+    # }
+    ties_ind <- rep(NA, nrow(skm))
+    ties_ind[which(skm[,1] %in% ties_times)]=1
+    ties_ind[-which(skm[,1] %in% ties_times)]=0
+  } else {ties_ind <- rep(0, nrow(skm))}
 
-  return(list(control_KaplanMeier = km_placebo,
-              treatment_KaplanMeier = km_drug,
-              AUC = area))
+  skm = cbind(skm, ties_ind)
+  result <- with_tiesROC(skm)
+
+  return(list(control_km = km_placebo,
+              drug_km = km_drug,
+              AUC = result))
+
 }
