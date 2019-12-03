@@ -19,6 +19,13 @@
 #' @importFrom graphics segments
 #' @importFrom graphics rect
 #' @export
+#'
+#' #Simulate a study: 500 subjects, 365 days follow-up, 0.2 hazard ratio where treatment prolongs life.
+#' set.seed(28)
+#' simdata <- simulate(n, 365, 0.2, 0.15)
+#' #ROC curve
+#' sim_roc <- with(simdata, ROCsurv(time, event, treatment))
+#'
 
 ROCsurv <- function(time, event, group){
 
@@ -41,22 +48,24 @@ ROCsurv <- function(time, event, group){
 
   if (length(ties_check) > 1) {
     ties_times = as.integer(names(which(table(skm[,1])>1)))
-    # ties = skm[skm[,1] %in% ties_times,]
-    # if (0 %in% ties[,2]) {
-    #      zero_time <- ties[which(ties[,2]==0),1]
-    #      temp_index <- which(skm[,1]==zero_time)
-    #      temp <- skm[temp_index,]
-    #      last <- which(temp[,2]==0)
-    #      skm[temp_index[1],] = temp[-last,]
-    #      skm[temp_index[2],] = temp[last,]
-    # }
     ties_ind <- rep(NA, nrow(skm))
     ties_ind[which(skm[,1] %in% ties_times)]=1
     ties_ind[-which(skm[,1] %in% ties_times)]=0
   } else {ties_ind <- rep(0, nrow(skm))}
 
   skm = cbind(skm, ties_ind)
-  result <- with_tiesROC(skm)
+  if (min(skm[,2])==0) {
+      result <- completeROC(skm)
+  } else {
+    if (method=="ph_loglog") {
+      cox <- coxph(Surv(time, event) ~ group, ties="breslow")
+      result <- phmROC(skm, cox)
+    }
+    if (method=="restrict") {
+      result <- restrictROC(skm)
+    }
+  }
+
 
   return(list(control_km = km_placebo,
               drug_km = km_drug,
