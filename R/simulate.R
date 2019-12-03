@@ -20,9 +20,10 @@
 #'
 #' @import survival
 #' @importFrom coxed sim.survdata
-#' @export
+#' @importFrom stats na.omit
+#' @importFrom stats rbinom
 #'
-#' @example
+#' @examples
 #'
 #' #Simulate a study of 500 subjects followed for 365 days where the hazard ratio of 0.2 shows treatment prolongs life.
 #' set.seed(28)
@@ -34,6 +35,8 @@
 #' treatment_hr <- unname(exp(coxph(Surv(time, event) ~ treatment, data=simdata, ties="breslow")$coefficients))
 #' cens
 #' treatment_hr
+#'
+#' @export
 
 simulate <-function(size, time, hazardratio, censprop) {
   treatment = rbinom(size, 1, 0.5)

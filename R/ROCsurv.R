@@ -18,15 +18,16 @@
 #' @import survival
 #' @importFrom graphics segments
 #' @importFrom graphics rect
-#' @export
 #'
+#' @examples
 #' #Simulate a study: 500 subjects, 365 days follow-up, 0.2 hazard ratio where treatment prolongs life.
 #' set.seed(28)
 #' simdata <- simulate(n, 365, 0.2, 0.15)
 #' #ROC curve
 #' sim_roc <- with(simdata, ROCsurv(time, event, treatment))
 #'
-
+#' @export
+#'
 ROCsurv <- function(time, event, group){
 
   km_placebo <- survfit(Surv(time, event) ~ 1,
@@ -65,7 +66,6 @@ ROCsurv <- function(time, event, group){
       result <- restrictROC(skm)
     }
   }
-
 
   return(list(control_km = km_placebo,
               drug_km = km_drug,
