@@ -7,6 +7,7 @@
 #' @param time Numeric or character vector of subject's unique identifier (i).
 #' @param event Vector indicating the observation or episode (j) for a subject (i). This will determine order of events for each subject.
 #' @param group Vector with the lengths of time spent in event of Type I for individual i in episode j.
+#' @param method Method for calculating AUC if neither of the survival curves reaches 0. See Details.
 #'
 #' @return A plot with the ROC curve and an ROCsurv object containing:
 #' \itemize{
@@ -28,8 +29,9 @@
 #'
 #' @export
 #'
-ROCsurv <- function(time, event, group){
+ROCsurv <- function(time, event, group, method){
 
+  if (missing(method)) {method <- "restrict"}
   km_placebo <- survfit(Surv(time, event) ~ 1,
                         subset=(group==0), type='kaplan-meier')
   km_drug <- survfit(Surv(time, event) ~ 1,
@@ -55,16 +57,17 @@ ROCsurv <- function(time, event, group){
   } else {ties_ind <- rep(0, nrow(skm))}
 
   skm = cbind(skm, ties_ind)
-  if (min(skm[,2])==0) {
-      result <- completeROC(skm)
-  } else {
-    if (method=="ph_loglog") {
-      cox <- coxph(Surv(time, event) ~ group, ties="breslow")
-      result <- phmROC(skm, cox)
-    }
-    if (method=="restrict") {
+
+  mskm <- min(skm[,2])
+  if (mskm==0) {result <- completeROC(skm)}
+
+  if (mskm!=0 & method=="restrict") {
       result <- restrictROC(skm)
-    }
+  }
+
+  if (mskm!=0 & method=="ph_loglog") {
+    cox <- coxph(Surv(time, event) ~ group, ties="breslow")
+    result <- phmROC(skm, cox)
   }
 
   return(list(control_km = km_placebo,

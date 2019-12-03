@@ -92,8 +92,8 @@ restrictROC <- function(skm) {
   area = unname(area)
   maxarea = (1-minx)*(1-miny)
   ratio = area / maxarea
-  text(x=0.99, y=0.05, labels = paste("rAUC=", round(area,2), ", rAUCratio=", round(ratio,2), sep=""),
+  text(x=0.99, y=0.05, labels = paste("rA=", round(area,2), ", R_A=", round(ratio,2), sep=""),
        pos=2, cex = 1)
 
-  return(area)
+  return(c(rA = area, R_A = ratio))
 }
