@@ -67,7 +67,7 @@ ROCsurv <- function(time, event, group, method){
 
   if (mskm!=0 & method=="ph_loglog") {
     cox <- coxph(Surv(time, event) ~ group, ties="breslow")
-    result <- phmROC(skm, cox)
+    result <- ph_loglogROC(skm, cox)
   }
 
   return(list(control_km = km_placebo,

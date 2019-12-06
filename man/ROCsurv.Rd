@@ -4,7 +4,7 @@
 \alias{ROCsurv}
 \title{Create an ROC curve for survival data from clinical trials.}
 \usage{
-ROCsurv(time, event, group)
+ROCsurv(time, event, group, method)
 }
 \arguments{
 \item{time}{Numeric or character vector of subject's unique identifier (i).}
@@ -12,6 +12,8 @@ ROCsurv(time, event, group)
 \item{event}{Vector indicating the observation or episode (j) for a subject (i). This will determine order of events for each subject.}
 
 \item{group}{Vector with the lengths of time spent in event of Type I for individual i in episode j.}
+
+\item{method}{Method for calculating AUC if neither of the survival curves reaches 0. See Details.}
 }
 \value{
 A plot with the ROC curve and an ROCsurv object containing:

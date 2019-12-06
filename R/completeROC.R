@@ -13,7 +13,7 @@
 #' @importFrom graphics rect
 #' @importFrom stats na.omit
 #'
-#' @export
+#' @keywords internal
 #' @noRd
 
 completeROC <- function(skm) {

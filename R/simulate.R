@@ -27,11 +27,10 @@
 #'
 #' #Simulate a study of 500 subjects followed for 365 days where the hazard ratio of 0.2 shows treatment prolongs life.
 #' set.seed(28)
-#' n=500
-#' simdata <- simulate(n, 365, 0.2, 0.15)
+#' simdata <- simulate(500, 365, 0.2, 0.15)
 #'
 #' #Check proportion censored and hazard ratio estimates and compare to true.
-#' cens <- unname(table(simdata$event)[1]/n) #estimate proportion censored
+#' cens <- unname(table(simdata$event)[1]/500) #estimate proportion censored
 #' treatment_hr <- unname(exp(coxph(Surv(time, event) ~ treatment, data=simdata, ties="breslow")$coefficients))
 #' cens
 #' treatment_hr
