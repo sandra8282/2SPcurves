@@ -58,7 +58,6 @@ restrictROC <- function(skm) {
 
   forplot <- na.omit(cbind(x,y))
   minx <- min(forplot[,1])
-  miny = min(forplot[,2])
   area <- 0
 
   for (k in 2:nrow(forplot)) {
@@ -67,16 +66,16 @@ restrictROC <- function(skm) {
     #figure out areas and shading
     if (forplot[k,2]==forplot[k-1,2]) {#move horizontally
         rect(xright = coord_new[1], ytop = coord_new[2],
-             xleft = coord_new2[1], ybottom = miny,
+             xleft = coord_new2[1], ybottom = minx,
              col = "pink", border = "pink")
-      area = area + (coord_new[1] - coord_new2[1])*(coord_new[2]-miny)
+      area = area + (coord_new[1] - coord_new2[1])*(coord_new[2]-minx)
       } else {
           if (forplot[k,1]!=forplot[k-1,1] & forplot[k,2]!=forplot[k-1,2]){
            #area and shading for diagonal
               rect(xright = coord_new[1], ytop = coord_new2[2],
-                   xleft = coord_new2[1], ybottom = miny,
+                   xleft = coord_new2[1], ybottom = minx,
                    col = "pink", border = "pink")
-              area_rectang = (coord_new[1] - coord_new2[1])*(coord_new2[2]-miny)
+              area_rectang = (coord_new[1] - coord_new2[1])*(coord_new2[2]-minx)
               polygon(x=c(coord_new[1], coord_new[1], coord_new2[1]),
                       y=c(coord_new[2], coord_new2[2], coord_new2[2]),
                       col = "pink", border = "pink")
@@ -87,10 +86,11 @@ restrictROC <- function(skm) {
     segments(x0=coord_new[1], y0=coord_new[2],
                x1=coord_new2[1], y1=coord_new2[2], col="black")
   }
-  abline(h = miny, col = "red", lty=2)
+  abline(h = minx, col = "red", lty=2)
   abline(v = minx, col = "red", lty=2)
+  abline(c(0,1), col = "black", lty=2)
   area = unname(area)
-  maxarea = (1-minx)*(1-miny)
+  maxarea = (1-minx)^2
   ratio = area / maxarea
   text(x=0.99, y=0.05, labels = paste("rA=", round(area,2), ", R_A=", round(ratio,2), sep=""),
        pos=2, cex = 1)
