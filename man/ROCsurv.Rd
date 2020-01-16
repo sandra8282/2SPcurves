@@ -27,9 +27,16 @@ A plot with the ROC curve and an ROCsurv object containing:
 This function creates ROC curve for survival data from clinical trials and calculates the area under the curve.
 }
 \examples{
-#Simulate a study: 500 subjects, 365 days follow-up, 0.2 hazard ratio where treatment prolongs life.
+
+# Simulate a clinical trial with 500 subjects that were followed for 2 years where the true hazard
+# ratio of 0.2 indicates a large treatment effect, assumming a data comes from a Wiebull(0.5, 1.5).
+n = 500
+maxt = 2
+beta = 0.2
+
 set.seed(28)
-simdata <- simulate(n, 365, 0.2, 0.15)
+simdata <- simSurvTrial(size = n, followup = maxt, beta = beta, dist = "weibull")
+
 #ROC curve
 sim_roc <- with(simdata, ROCsurv(time, event, treatment))
 

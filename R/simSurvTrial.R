@@ -37,16 +37,15 @@
 #'
 #' @examples
 #'
-#' #Simulate a clinical trial with 500 subjects that were followed for 2 years.
-#' #where the true hazard ratio of 0.2 indicates a large treatment effect.
-#'
+#' # Simulate a clinical trial with 500 subjects that were followed for 2 years.
+#' # where the true hazard ratio of 0.2 indicates a large treatment effect.
 #' n = 500
 #' maxt = 2
 #' beta = 0.2
 #'
 #' #1) Assuming data follows Wiebull(0.5, 1.5).
 #'     set.seed(28)
-#'     simdata <- simulate(size = n, followup = maxt, beta = beta, dist = "weibull")
+#'     simdata <- simSurvTrial(size = n, followup = maxt, beta = beta, dist = "weibull")
 #'     # Check the maximum survival time in the data the censoring rate.
 #'      maxt <- max(simdata$time)
 #'      maxt
@@ -55,7 +54,7 @@
 #'
 #' #2) Assuming no distribution and using flexible hazards model with 25% censoring rate.
 #'     set.seed(28)
-#'     simdata2 <- simulate(size = n, followup = maxt, beta = beta, censprop = 0.25)
+#'     simdata2 <- simSurvTrial(size = n, followup = maxt, beta = beta, censprop = 0.25)
 #'     # Check the maximum survival time in the data the censoring rate.
 #'      maxt <- max(simdata2$time)
 #'      maxt

@@ -3,7 +3,6 @@
 #' @description
 #' This function creates ROC curve for survival data from clinical trials and calculates the area under the curve.
 #'
-#'
 #' @param time Numeric or character vector of subject's unique identifier (i).
 #' @param event Vector indicating the observation or episode (j) for a subject (i). This will determine order of events for each subject.
 #' @param group Vector with the lengths of time spent in event of Type I for individual i in episode j.
@@ -21,9 +20,16 @@
 #' @importFrom graphics rect
 #'
 #' @examples
-#' #Simulate a study: 500 subjects, 365 days follow-up, 0.2 hazard ratio where treatment prolongs life.
+#'
+#' # Simulate a clinical trial with 500 subjects that were followed for 2 years where the true hazard
+#' # ratio of 0.2 indicates a large treatment effect, assumming a data comes from a Wiebull(0.5, 1.5).
+#' n = 500
+#' maxt = 2
+#' beta = 0.2
+#'
 #' set.seed(28)
-#' simdata <- simulate(n, 365, 0.2, 0.15)
+#' simdata <- simSurvTrial(size = n, followup = maxt, beta = beta, dist = "weibull")
+#'
 #' #ROC curve
 #' sim_roc <- with(simdata, ROCsurv(time, event, treatment))
 #'
@@ -65,10 +71,10 @@ ROCsurv <- function(time, event, group, method){
       result <- restrictROC(skm)
   }
 
-  if (mskm!=0 & method=="ph_loglog") {
-    cox <- coxph(Surv(time, event) ~ group, ties="breslow")
-    result <- ph_loglogROC(skm, cox)
-  }
+  # if (mskm!=0 & method=="ph_loglog") {
+  #   cox <- coxph(Surv(time, event) ~ group, ties="breslow")
+  #   result <- ph_loglogROC(skm, cox)
+  # }
 
   return(list(control_km = km_placebo,
               drug_km = km_drug,
