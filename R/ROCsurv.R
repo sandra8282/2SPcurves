@@ -25,7 +25,7 @@
 #' # ratio of 0.2 indicates a large treatment effect, assumming a data comes from a Wiebull(0.5, 1.5).
 #' n = 500
 #' maxt = 2
-#' beta = 0.2
+#' beta = log(0.2)
 #'
 #' set.seed(28)
 #' simdata <- simSurvTrial(size = n, followup = maxt, beta = beta, dist = "weibull")
@@ -65,6 +65,7 @@ ROCsurv <- function(time, event, group, method){
   skm = cbind(skm, ties_ind)
 
   mskm <- min(skm[,2])
+
   if (mskm==0) {result <- completeROC(skm)}
 
   if (mskm!=0 & method=="restrict") {
@@ -78,6 +79,7 @@ ROCsurv <- function(time, event, group, method){
 
   return(list(control_km = km_placebo,
               drug_km = km_drug,
-              AUC = result))
+              AUC = result,
+              var = NA))
 
 }

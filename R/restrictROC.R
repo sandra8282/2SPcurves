@@ -58,6 +58,7 @@ restrictROC <- function(skm) {
 
   forplot <- na.omit(cbind(x,y))
   minx <- min(forplot[,1])
+  miny <- min()
   area <- 0
 
   for (k in 2:nrow(forplot)) {

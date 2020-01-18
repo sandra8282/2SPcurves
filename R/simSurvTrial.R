@@ -2,7 +2,7 @@
 #'
 #' @description
 #' This function uses the simsurv and coxed packages to simulate event and censoring times for a proportional hazards
-#' model with either: parametric distribution assumptions, or a user defined hazard function, or in using a flexible-hazard
+#' model with either: dparametric distribution assumptions, or a user defined hazard function, or in using a flexible-hazard
 #' method that needs no distributions to be specified. The user can provide treatment assignments for the subjects or have
 #' them randomly assigned to each subject.
 #'
@@ -13,8 +13,10 @@
 #' The column for treatment assignment must be a logical or numeric vector where values of TRUE or 1 will indicate individual was assigned to the treatment
 #' arm and FALSE or 0 to control arms. Any other values are invalid.
 #' If $X$ is not provided the treatment will be assigned randomly with probability 0.5 and subject id's will be a sequence from 1 to the specified sample size.
-#' @param dist Optional character string specifying the parametric survival distribution to be used. Options include "weibull" (the default), "exponential", or "gompertz"
-#'  with parameters \code{alpha = 0.5, gamma = 1.5}. This is ignored if the \code{hazard} argument is provided. See \strong{Details} and \strong{Examples}.
+#' @param dist Optional character string specifying the parametric survival distribution to be used. Options include "weibull" (the default), "exponential", or "gompertz".
+#' This is ignored if the \code{hazard} argument is provided. See \strong{Details} and \strong{Examples}.
+#' @param params Optional numeric value or vector with paramaters for the chosen distribution where the first paramater will correspond to the shape \eq{\lambda} for the
+#' and the second to the scale \eq{\gamma} of the Weibull, Exponential (only uses the first), and Gompertz distributions.
 #' @param hazard Optional user-defined hazard function, with arguments \code{t}, \code{X}, and \code{beta}. This function should return
 #' the hazard at time \code{t} for an individual with treatment assigment supplied via \code{X} and treatment effect supplied via \code{beta}.
 #' See \strong{Details} and \strong{Examples}.
@@ -41,11 +43,12 @@
 #' # where the true hazard ratio of 0.2 indicates a large treatment effect.
 #' n = 500
 #' maxt = 2
-#' beta = 0.2
+#' beta = log(0.2)
 #'
-#' #1) Assuming data follows Wiebull(0.5, 1.5).
+#' #1) Assuming data follows Wiebull(1, 1.5).
 #'     set.seed(28)
-#'     simdata <- simSurvTrial(size = n, followup = maxt, beta = beta, dist = "weibull")
+#'     simdata <- simSurvTrial(size = n, followup = maxt, beta = beta, dist = "weibull",
+#'     params = c(1, 1.5))
 #'     # Check the maximum survival time in the data the censoring rate.
 #'      maxt <- max(simdata$time)
 #'      maxt
@@ -63,7 +66,8 @@
 #'
 #' @export
 
-simSurvTrial <- function(size, followup, beta, X=NULL, dist=NULL, hazard=NULL, censprop=NULL) {
+simSurvTrial <- function(size, followup, beta, X=NULL,
+                         dist=NULL, params=NULL, hazard=NULL, censprop=NULL) {
 
   if (is.null(X)) {X <- data.frame(id = 1:size, trt = stats::rbinom(size, 1, 0.5))}
 
@@ -71,7 +75,15 @@ simSurvTrial <- function(size, followup, beta, X=NULL, dist=NULL, hazard=NULL, c
   if (is.null(check1)) {stop("Error: Must provide one of the following arguments - dist, hazard or censprop.")}
 
   if (!is.null(dist)) {
-    s1 <- simsurv(dist = dist, lambdas = 0.5, gammas = 1.5, betas = c(trt = beta), x = X, maxt = followup)
+
+    if (is.null(params)) {stop("Error: Must provide params argument for the chosen distribution.")}
+
+    if (dist == "exponential") {
+      s1 <- simsurv(dist = dist, lambdas = params[1], betas = c(trt = beta), x = X, maxt = followup)
+    } else {
+      s1 <- simsurv(dist = dist, lambdas = params[1], gammas = params[2],
+                    betas = c(trt = beta), x = X, maxt = followup)
+      }
     simdata <- data.frame(cbind(id = s1$id, treatment = X$trt, time = s1$eventtime, event = s1$status))
     return(simdata)
   }
