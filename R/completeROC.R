@@ -94,8 +94,6 @@ completeROC <- function(skm, silent) {
 
   } else {
 
-    x=y= c(1, rep(NA, nrow(skm)))
-
     for (k in 2:nrow(forplot)) {
       coord_new = unname(forplot[k-1,])
       coord_new2 = unname(forplot[k,])
