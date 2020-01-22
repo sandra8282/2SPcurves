@@ -1,6 +1,7 @@
 #' Use incomplete ROC to compute AUC by restricting space
 #'
 #' @param skm passed from ROCsurv
+#' @param silent passed from ROCsurv or btsp
 #'
 #' @return A plot of the ROC curve and an ROCsurv object containing:
 #' \itemize{
@@ -15,15 +16,9 @@
 #' @keywords internal
 #' @noRd
 
-restrictROC <- function(skm) {
-
-  plot(c(0,1), c(0, 1), type="n", xlab="", ylab="")
-  title(main="ROC", xlab="Control Group Survival",
-        ylab="Treatment Group Survival",
-        cex.main = 1)
+restrictROC <- function(skm, silent) {
 
   x=y= c(1, rep(NA, nrow(skm)))
-
   i=1
   while (i <= nrow(skm)) {
     if (skm[i,3]==0 & skm[i,4]==0) {#placebo no ties
@@ -61,40 +56,70 @@ restrictROC <- function(skm) {
   miny <- min()
   area <- 0
 
-  for (k in 2:nrow(forplot)) {
-    coord_new = unname(forplot[k-1,])
-    coord_new2 = unname(forplot[k,])
-    #figure out areas and shading
-    if (forplot[k,2]==forplot[k-1,2]) {#move horizontally
+  if (silent == FALSE) {
+    plot(c(0,1), c(0, 1), type="n", xlab="", ylab="")
+    title(main="ROC", xlab="Control Group Survival",
+          ylab="Treatment Group Survival",
+          cex.main = 1)
+
+    for (k in 2:nrow(forplot)) {
+      coord_new = unname(forplot[k-1,])
+      coord_new2 = unname(forplot[k,])
+      #figure out areas and shading
+      if (forplot[k,2]==forplot[k-1,2]) {#move horizontally
         rect(xright = coord_new[1], ytop = coord_new[2],
              xleft = coord_new2[1], ybottom = minx,
              col = "pink", border = "pink")
-      area = area + (coord_new[1] - coord_new2[1])*(coord_new[2]-minx)
+        area = area + (coord_new[1] - coord_new2[1])*(coord_new[2]-minx)
       } else {
-          if (forplot[k,1]!=forplot[k-1,1] & forplot[k,2]!=forplot[k-1,2]){
-           #area and shading for diagonal
-              rect(xright = coord_new[1], ytop = coord_new2[2],
-                   xleft = coord_new2[1], ybottom = minx,
-                   col = "pink", border = "pink")
-              area_rectang = (coord_new[1] - coord_new2[1])*(coord_new2[2]-minx)
-              polygon(x=c(coord_new[1], coord_new[1], coord_new2[1]),
-                      y=c(coord_new[2], coord_new2[2], coord_new2[2]),
-                      col = "pink", border = "pink")
-              area_triang = 0.5 * (coord_new[1] - coord_new2[1]) * (coord_new[2] - coord_new2[2])
-              area = area + area_rectang + area_triang
-          }
+        if (forplot[k,1]!=forplot[k-1,1] & forplot[k,2]!=forplot[k-1,2]){
+          #area and shading for diagonal
+          rect(xright = coord_new[1], ytop = coord_new2[2],
+               xleft = coord_new2[1], ybottom = minx,
+               col = "pink", border = "pink")
+          area_rectang = (coord_new[1] - coord_new2[1])*(coord_new2[2]-minx)
+          polygon(x=c(coord_new[1], coord_new[1], coord_new2[1]),
+                  y=c(coord_new[2], coord_new2[2], coord_new2[2]),
+                  col = "pink", border = "pink")
+          area_triang = 0.5 * (coord_new[1] - coord_new2[1]) * (coord_new[2] - coord_new2[2])
+          area = area + area_rectang + area_triang
         }
-    segments(x0=coord_new[1], y0=coord_new[2],
+      }
+      segments(x0=coord_new[1], y0=coord_new[2],
                x1=coord_new2[1], y1=coord_new2[2], col="black")
-  }
-  abline(h = minx, col = "red", lty=2)
-  abline(v = minx, col = "red", lty=2)
-  abline(c(0,1), col = "black", lty=2)
-  area = unname(area)
-  maxarea = (1-minx)^2
-  ratio = area / maxarea
-  text(x=0.99, y=0.05, labels = paste("rA=", round(area,2), ", R_A=", round(ratio,2), sep=""),
-       pos=2, cex = 1)
+    }
+    abline(h = minx, col = "red", lty=2)
+    abline(v = minx, col = "red", lty=2)
+    abline(c(0,1), col = "black", lty=2)
+    area = unname(area)
+    maxarea = (1-minx)^2
+    ratio = area / maxarea
+    text(x=0.99, y=0.05, labels = paste("A=", round(area,2), ", A/max=", round(ratio,2), sep=""),
+         pos=2, cex = 1)
 
-  return(c(rA = area, R_A = ratio))
+  } else {
+
+    x=y= c(1, rep(NA, nrow(skm)))
+
+    for (k in 2:nrow(forplot)) {
+      coord_new = unname(forplot[k-1,])
+      coord_new2 = unname(forplot[k,])
+      #figure out areas and shading
+      if (forplot[k,2]==forplot[k-1,2]) {#move horizontally
+        area = area + (coord_new[1] - coord_new2[1])*(coord_new[2]-minx)
+      } else {
+        if (forplot[k,1]!=forplot[k-1,1] & forplot[k,2]!=forplot[k-1,2]){
+          #area and shading for diagonal
+          area_rectang = (coord_new[1] - coord_new2[1])*(coord_new2[2]-minx)
+          area_triang = 0.5 * (coord_new[1] - coord_new2[1]) * (coord_new[2] - coord_new2[2])
+          area = area + area_rectang + area_triang
+        }
+      }
+    }
+    area = unname(area)
+    maxarea = (1-minx)^2
+    ratio = area / maxarea
+  }
+
+  return(c(AUC = ratio))
 }

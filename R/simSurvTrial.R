@@ -89,15 +89,15 @@ simSurvTrial <- function(size, followup, beta, X=NULL,
   }
 
   if (!is.null(censprop)) {
-    oldw <- getOption("warn")
-    options(warn = -1)
-    res <- sim.survdata(N=size, T=followup*365, X=data.frame(treatment = X[,2]), beta = log(beta),
+    # oldw <- getOption("warn")
+    # options(warn = -1)
+    res <- sim.survdata(N=300, T=followup*365, X=data.frame(treatment = X[,2]), beta = beta,
                         num.data.frames = 1, censor = censprop)
     simdata <- data.frame(id = seq(1, size, 1))
     simdata <- cbind(simdata, res$data)
     simdata[,4] <- as.numeric(simdata[,4])
     colnames(simdata) <- c("id","treatment", "time", "event")
-    options(warn = oldw)
+    # options(warn = oldw)
     return(simdata)
   }
 
