@@ -19,7 +19,7 @@ btsp <- function(time, event, group, method, B, level) {
     BTest <- rep(0, B)
 
     for (b in 1:B) {
-      set.seed(seeds[b])
+      set.seed(b+7679)
       idsamps <- sample(id, length(id), replace = TRUE)
       btdat <- data.frame(maindat[idsamps,])
       KMests <- with(btdat, getKMtab(time, event, group))
