@@ -10,6 +10,7 @@ simSurvTrial(
   beta,
   X = NULL,
   dist = NULL,
+  params = NULL,
   hazard = NULL,
   censprop = NULL
 )
@@ -26,8 +27,11 @@ The column for treatment assignment must be a logical or numeric vector where va
 arm and FALSE or 0 to control arms. Any other values are invalid.
 If $X$ is not provided the treatment will be assigned randomly with probability 0.5 and subject id's will be a sequence from 1 to the specified sample size.}
 
-\item{dist}{Optional character string specifying the parametric survival distribution to be used. Options include "weibull" (the default), "exponential", or "gompertz"
-with parameters \code{alpha = 0.5, gamma = 1.5}. This is ignored if the \code{hazard} argument is provided. See \strong{Details} and \strong{Examples}.}
+\item{dist}{Optional character string specifying the parametric survival distribution to be used. Options include "weibull" (the default), "exponential", or "gompertz".
+This is ignored if the \code{hazard} argument is provided. See \strong{Details} and \strong{Examples}.}
+
+\item{params}{Optional numeric value or vector with paramaters for the chosen distribution where the first paramater will correspond to the shape \eqn{\lambda} for the
+and the second to the scale \eqn{\gamma} of the Weibull, Exponential (only uses the first), and Gompertz distributions.}
 
 \item{hazard}{Optional user-defined hazard function, with arguments \code{t}, \code{X}, and \code{beta}. This function should return
 the hazard at time \code{t} for an individual with treatment assigment supplied via \code{X} and treatment effect supplied via \code{beta}.
@@ -47,7 +51,7 @@ A data frame containing:
 }
 \description{
 This function uses the simsurv and coxed packages to simulate event and censoring times for a proportional hazards
-model with either: parametric distribution assumptions, or a user defined hazard function, or in using a flexible-hazard
+model with either: dparametric distribution assumptions, or a user defined hazard function, or in using a flexible-hazard
 method that needs no distributions to be specified. The user can provide treatment assignments for the subjects or have
 them randomly assigned to each subject.
 }
@@ -57,11 +61,12 @@ them randomly assigned to each subject.
 # where the true hazard ratio of 0.2 indicates a large treatment effect.
 n = 500
 maxt = 2
-beta = 0.2
+beta = log(0.2)
 
-#1) Assuming data follows Wiebull(0.5, 1.5).
+#1) Assuming data follows Wiebull(1, 1.5).
     set.seed(28)
-    simdata <- simSurvTrial(size = n, followup = maxt, beta = beta, dist = "weibull")
+    simdata <- simSurvTrial(size = n, followup = maxt, beta = beta, dist = "weibull",
+    params = c(1, 1.5))
     # Check the maximum survival time in the data the censoring rate.
      maxt <- max(simdata$time)
      maxt

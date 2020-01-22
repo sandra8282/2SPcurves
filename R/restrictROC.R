@@ -10,7 +10,6 @@
 #'  \item The area under the curve for the ROC in the given plot.
 #' }
 #'
-#' @import survival
 #' @importFrom graphics segments
 #' @importFrom graphics rect
 #' @keywords internal
@@ -53,7 +52,7 @@ restrictROC <- function(skm, silent) {
 
   forplot <- na.omit(cbind(x,y))
   minx <- min(forplot[,1])
-  miny <- min()
+  miny <- min(forplot[,2])
   area <- 0
 
   if (silent == FALSE) {

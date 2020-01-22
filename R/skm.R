@@ -13,6 +13,9 @@
 #'  \item mskm: the lowest value for estimated survival.
 #' }
 #'
+#'@import survival
+#'@keywords internal
+#'
 getKMtab <- function(time, event, group) {
 
   #Data mgmt
@@ -44,6 +47,7 @@ getKMtab <- function(time, event, group) {
 
   mskm <- min(skm[,2])
 
-  return(list(skm, mskm))
+  return(list(skm = skm, mskm = mskm,
+              km_placebo = km_placebo, km_drug = km_drug))
 
 }

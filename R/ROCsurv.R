@@ -17,10 +17,6 @@
 #'  \item The area under the curve for the ROC in the given plot.
 #' }
 #'
-#' @import survival
-#' @importFrom graphics segments
-#' @importFrom graphics rect
-#'
 #' @details
 #' The methods avaiable are "restrict" or "complete"
 #'
@@ -56,21 +52,19 @@ ROCsurv <- function(time, event, group, method, level){
   if (KMests[[2]]==0) {result <- completeROC(KMests[[1]], silent=FALSE)}
   if (KMests[[2]]!=0 & method=="restrict") {result <- restrictROC(KMests[[1]], silent = FALSE)}
 
-  tictoc::tic()
   #Calculate bootstrap variance
   SEandCI <- btsp(time, event, group, method, B = 1000, level)
-  tictoc::toc()
 
   # if (mskm!=0 & method=="ph_loglog") {
   #   cox <- coxph(Surv(time, event) ~ group, ties="breslow")
   #   result <- ph_loglogROC(skm, cox)
   # }
 
-  return(list(control_km = km_placebo,
-              drug_km = km_drug,
+  return(list(control_km = KMests$km_placebo,
+              drug_km = KMests$km_drug,
               AUC = result,
               SEandCI[1],
-              SEandCI[2])
+              SEandCI[2:3])
          )
 
 }

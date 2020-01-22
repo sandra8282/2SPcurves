@@ -15,8 +15,8 @@
 #' If $X$ is not provided the treatment will be assigned randomly with probability 0.5 and subject id's will be a sequence from 1 to the specified sample size.
 #' @param dist Optional character string specifying the parametric survival distribution to be used. Options include "weibull" (the default), "exponential", or "gompertz".
 #' This is ignored if the \code{hazard} argument is provided. See \strong{Details} and \strong{Examples}.
-#' @param params Optional numeric value or vector with paramaters for the chosen distribution where the first paramater will correspond to the shape \eq{\lambda} for the
-#' and the second to the scale \eq{\gamma} of the Weibull, Exponential (only uses the first), and Gompertz distributions.
+#' @param params Optional numeric value or vector with paramaters for the chosen distribution where the first paramater will correspond to the shape \eqn{\lambda} for the
+#' and the second to the scale \eqn{\gamma} of the Weibull, Exponential (only uses the first), and Gompertz distributions.
 #' @param hazard Optional user-defined hazard function, with arguments \code{t}, \code{X}, and \code{beta}. This function should return
 #' the hazard at time \code{t} for an individual with treatment assigment supplied via \code{X} and treatment effect supplied via \code{beta}.
 #' See \strong{Details} and \strong{Examples}.

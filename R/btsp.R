@@ -7,8 +7,9 @@
 #' @param level passed from ROCsurv
 #' @param B number of bootstrap resamples
 #'
-#' @import
 #' @return SE and CI for indicated level
+#'
+#' @importFrom stats sd
 #' @keywords internal
 #' @noRd
 

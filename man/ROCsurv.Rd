@@ -4,7 +4,7 @@
 \alias{ROCsurv}
 \title{Create an ROC curve for survival data from clinical trials.}
 \usage{
-ROCsurv(time, event, group, method)
+ROCsurv(time, event, group, method, level)
 }
 \arguments{
 \item{time}{Numeric or character vector of subject's unique identifier (i).}
@@ -14,6 +14,9 @@ ROCsurv(time, event, group, method)
 \item{group}{Vector with the lengths of time spent in event of Type I for individual i in episode j.}
 
 \item{method}{Method for calculating AUC if neither of the survival curves reaches 0. See Details.}
+
+\item{level}{The confidence level for the confidence interval of the area under the curve.
+Must be between 0.50 and 0.99. Default is 0.95. See details.}
 }
 \value{
 A plot with the ROC curve and an ROCsurv object containing:
@@ -26,18 +29,22 @@ A plot with the ROC curve and an ROCsurv object containing:
 \description{
 This function creates ROC curve for survival data from clinical trials and calculates the area under the curve.
 }
+\details{
+The methods avaiable are "restrict" or "complete"
+}
 \examples{
-
 # Simulate a clinical trial with 500 subjects that were followed for 2 years where the true hazard
 # ratio of 0.2 indicates a large treatment effect, assumming a data comes from a Wiebull(0.5, 1.5).
 n = 500
 maxt = 2
-beta = 0.2
+true_AUC = 0.8
+beta = log((1 - true_AUC)/true_AUC)
 
 set.seed(28)
-simdata <- simSurvTrial(size = n, followup = maxt, beta = beta, dist = "weibull")
+simdata <- simSurvTrial(size = n, followup = maxt, beta = beta, dist = "weibull",
+                         params = c(1, 1.5))
 
 #ROC curve
-sim_roc <- with(simdata, ROCsurv(time, event, treatment))
+sim_roc <- with(simdata, ROCsurv(time = time, event = event, group = treatment))
 
 }
