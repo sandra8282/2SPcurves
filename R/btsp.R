@@ -17,12 +17,17 @@ btsp <- function(time, event, group, method, B, level) {
 
     id <- 1:length(time)
     maindat <- cbind(id, time, event, group)
+    rownames(maindat) <- id
+    g1dat <- maindat[maindat$group==1,]
+    g2dat <- maindat[maindat$group==0,]
+
     BTest <- rep(0, B)
 
     for (b in 1:B) {
       set.seed(b+7679)
-      idsamps <- sample(id, length(id), replace = TRUE)
-      btdat <- data.frame(maindat[idsamps,])
+      g1idsamps <- sample(as.integer(rownames(g1dat)), nrow(g1dat), replace = TRUE)
+      g21idsamps <- sample(as.integer(rownames(g2dat)), nrow(g2dat), replace = TRUE)
+      btdat <- data.frame(rbind(g1dat[g1idsamps, ], g2dat[g2idsamps, ]))
       KMests <- with(btdat, getKMtab(time, event, group))
       if (KMests[[2]]==0) {BTest[b] <- completeROC(KMests[[1]], silent = TRUE)}
       if (KMests[[2]]!=0 & method=="restrict") {BTest[b] <- restrictROC(KMests[[1]], silent = TRUE)}

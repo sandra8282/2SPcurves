@@ -6,9 +6,10 @@
 #' @param time Numeric or character vector of subject's unique identifier (i).
 #' @param event Vector indicating the observation or episode (j) for a subject (i). This will determine order of events for each subject.
 #' @param group Vector with the lengths of time spent in event of Type I for individual i in episode j.
-#' @param method Method for calculating AUC if neither of the survival curves reaches 0. See Details.
 #' @param level The confidence level for the confidence interval of the area under the curve.
 #' Must be between 0.50 and 0.99. Default is 0.95. See details.
+#' @param method choose
+#' @param checkPH to check
 #'
 #' @return A plot with the ROC curve and an ROCsurv object containing:
 #' \itemize{
@@ -21,8 +22,9 @@
 #' The methods avaiable are "restrict" or "complete"
 #'
 #' @examples
-#' # Simulate a clinical trial with 500 subjects that were followed for 2 years where the true hazard
-#' # ratio of 0.2 indicates a large treatment effect, assumming a data comes from a Wiebull(0.5, 1.5).
+#' # Simulate a clinical trial with 300 subjects with 1 year followup and 10% drop-out rate where:
+#' # the true hazard ratio of 2 indicates a large treatment effect.
+#' # We assumming the data comes from a Wiebull(0.5, 1.5).
 #' n = 500
 #' maxt = 2
 #' true_AUC = 0.8
@@ -37,34 +39,49 @@
 #'
 #' @export
 #'
-ROCsurv <- function(time, event, group, method, level){
+ROCsurv <- function(time, event, group, level=NULL, method = NULL, checkPH = NULL){
+  #time = dat$ti ; event = dat$di; group = dat$trt; level = 0.95;
+  #time = leukemia$Time ; event = leukemia$Event; group = leukemia$Group; level = 0.95;
 
   all_lengths = c(length(time), length(event), length(group))
-
   if (length(unique(all_lengths)) != 1) stop("One or more input vectors (time, event, group) differs in length from the rest.")
+  if ((is.null(method) + is.null(checkPH))==2) {checkPH <- TRUE}
+  if (is.null(level)) {level = 0.95}
 
-  if (missing(method)) {method <- "restrict"}
-  if (missing(level)) {level = 0.95}
-
-  KMests <- getKMtab(time, event, group)
-
+  if(checkPH == TRUE) {
+    result <- ROCandPHM(time, event, group)
+    return(result)
+  } else {
+    KMests <- getKMtab(time, event, group)
   #Point Estimate based on
-  if (KMests[[2]]==0) {result <- completeROC(KMests[[1]], silent=FALSE)}
-  if (KMests[[2]]!=0 & method=="restrict") {result <- restrictROC(KMests[[1]], silent = FALSE)}
+    if (KMests[[2]]==0) {
+      result <- completeROC(KMests[[1]], silent=FALSE)
+      return(list(control_km = KMests$km_placebo,
+                drug_km = KMests$km_drug,
+                AUC = result))
+             }
+    if (KMests[[2]]!=0 & is.null(method)) {result <- onlyROC(KMests[[1]])
+      return(list(control_km = KMests$km_placebo,
+                  drug_km = KMests$km_drug))
+
+    } else if (KMests[[2]]!=0 & method=="restrict") {
+      result <- restrictROC(KMests[[1]], silent = FALSE)
+      return(list(control_km = KMests$km_placebo,
+                  drug_km = KMests$km_drug,
+                  AUC = result))
+    }
+  }
 
   #Calculate bootstrap variance
-  SEandCI <- btsp(time, event, group, method, B = 1000, level)
+  #SEandCI <- btsp(time, event, group, method, B = 1000, level)
 
   # if (mskm!=0 & method=="ph_loglog") {
   #   cox <- coxph(Surv(time, event) ~ group, ties="breslow")
   #   result <- ph_loglogROC(skm, cox)
   # }
 
-  return(list(control_km = KMests$km_placebo,
-              drug_km = KMests$km_drug,
-              AUC = result,
-              SEandCI[1],
-              SEandCI[2:3])
-         )
+
+              #SEandCI[1],
+              #SEandCI[2:3]))
 
 }

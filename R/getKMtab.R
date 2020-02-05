@@ -16,6 +16,9 @@
 #'@import survival
 #'@keywords internal
 #'
+#'
+#'
+
 getKMtab <- function(time, event, group) {
 
   #Data mgmt
@@ -23,7 +26,6 @@ getKMtab <- function(time, event, group) {
                         subset=(group==0), type='kaplan-meier')
   km_drug <- survfit(Surv(time, event) ~ 1,
                      subset=(group==1), type='kaplan-meier')
-
   skm_p <- cbind(time = summary(km_placebo)$time,
                  surv = summary(km_placebo)$surv)
   skm_p <- cbind(skm_p, type = rep(0, nrow(skm_p)))

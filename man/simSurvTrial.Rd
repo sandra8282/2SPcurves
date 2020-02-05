@@ -12,7 +12,8 @@ simSurvTrial(
   dist = NULL,
   params = NULL,
   hazard = NULL,
-  censprop = NULL
+  censprop = NULL,
+  nsamps = NULL
 )
 }
 \arguments{
@@ -39,6 +40,8 @@ See \strong{Details} and \strong{Examples}.}
 
 \item{censprop}{Optional the proportion of observations to designate as right-censored when the flexible-hazards model is used. This is ignored if the \code{hazard}
 or \code{dist} arguments are provided. See \strong{Details} and \strong{Examples}.}
+
+\item{nsamps}{Optional integer indicating the number of samples to be drawn from the flexible hazards method. Only valid if the censprop parameter has been provided.}
 }
 \value{
 A data frame containing:
