@@ -21,22 +21,6 @@
 #' @details
 #' The methods avaiable are "restrict" or "complete"
 #'
-#' @examples
-#' # Simulate a clinical trial with 300 subjects with 1 year followup and 10% drop-out rate where:
-#' # the true hazard ratio of 2 indicates a large treatment effect.
-#' # We assumming the data comes from a Wiebull(0.5, 1.5).
-#' n = 500
-#' maxt = 2
-#' true_AUC = 0.8
-#' beta = log((1 - true_AUC)/true_AUC)
-#'
-#' set.seed(28)
-#' simdata <- simSurvTrial(size = n, followup = maxt, beta = beta, dist = "weibull",
-#'                          params = c(1, 1.5))
-#'
-#' #ROC curve
-#' sim_roc <- with(simdata, ROCsurv(time = time, event = event, group = treatment))
-#'
 #' @export
 #'
 ROCsurv <- function(time, event, group, level=NULL, method = NULL, checkPH = NULL){
