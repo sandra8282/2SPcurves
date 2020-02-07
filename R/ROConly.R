@@ -49,10 +49,11 @@ onlyROC <- function(skm) {
   miny <- min(forplot[,2])
   area <- 0
 
-  plot(c(0,1), c(0, 1), type="n", xlab="", ylab="")
+  plot(NULL, type="n", xlab="", ylab="", las=1,
+       xlim=c(0,1), ylim = c(0, 1)) #to make tight axis: xaxs="i", yaxs="i"
   title(main="ROC", xlab="Control Group Survival",
-          ylab="Treatment Group Survival",
-          cex.main = 1)
+        ylab="Treatment Group Survival",
+        cex.main = 1)
 
   for (k in 2:nrow(forplot)) {
       coord_new = unname(forplot[k-1,])
