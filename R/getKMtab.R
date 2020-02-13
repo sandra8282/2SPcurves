@@ -34,7 +34,7 @@ getKMtab <- function(time, event, group) {
   skm_d <- cbind(skm_d, type = rep(1, nrow(skm_d)))
 
   skm <- rbind(skm_p, skm_d)
-  skm <- skm[order(skm[,1]),]
+  skm <- skm[order(skm[,1], skm[,3]),]
 
   ties_check <- unique(table(skm[,1]))
 

@@ -1,7 +1,8 @@
 #' ROC when survival goes to 0 for either group
 #'
-#' @param skm passed from ROCsurv
-#' @param silen passed from ROCsurv or btsp
+#' @param time Numeric or character vector of subject's unique identifier (i).
+#' @param event Vector indicating the observation or episode (j) for a subject (i). This will determine order of events for each subject.
+#' @param group Vector with the lengths of time spent in event of Type I for individual i in episode j.
 #'
 #' @return A plot of the ROC curve and an ROCsurv object containing:
 #' \itemize{
@@ -23,44 +24,11 @@ ROCandPHM <- function(time, event, group) {
 
   KMres <- getKMtab(time, event, group)
   skm <- KMres[[1]]
+  forplot = get4plot(skm)
+
   coxfit <- coxph(Surv(time, event) ~ group, ties = "breslow")
 
-  x=y= c(1, rep(NA, nrow(skm)))
-  i=1
-  while (i <= nrow(skm)) {
-    if (skm[i,3]==0 & skm[i,4]==0) {#placebo no ties
-      # horizontal move
-      x[i+1] = skm[i,2]
-      # vertical stay
-      if (is.na(y[i])) {y[i+1] = y[i-1]
-      } else {y[i+1] = y[i]}
-      i=i+1
-    } else {
-      if (skm[i,3]==1 & skm[i,4]==0) {#drug no ties
-        #vertical move
-        y[i+1] = skm[i,2]
-        #horizontal stay
-        if (is.na(x[i])) {x[i+1] = x[i-1]
-        } else {x[i+1] = x[i]}
-        i=i+1
-      } else {
-        if (skm[i,4]==1) {#tie
-          if (skm[i,2]==0){#horizontal move
-            x[i+1] = skm[i,2]
-            y[i+1] = skm[i+1,2]
-          } else{#vertical move
-            x[i+1] = skm[i,2]
-            y[i+1] = skm[i+1,2]
-          }
-          i=i+2
-        }
-      }
-    }
-  }
-
-  forplot <- na.omit(cbind(x,y))
-  colnames(forplot) <- c("x", "y")
-  area = areaC = sum_sqrres = 0
+  sum_sqrres = 0
 
   plot(NULL, type="n", xlab="", ylab="", las=1,
        xlim=c(0,1), ylim = c(0, 1)) #to make tight axis: xaxs="i", yaxs="i"
