@@ -41,13 +41,13 @@ ROCandPHM <- function(time, event, group) {
   abline(c(0,1), col = "red", lty=2)
 
   #correlations and SSR
-  HRcheck <- cor(forplot[,2], forplot[,1]^exp(coxfit$coefficients))
+  rho <- cor(forplot[,2], forplot[,1]^exp(coxfit$coefficients))
   SSR <- sum((forplot[,2] - forplot[,1]^exp(coxfit$coefficients))^2)
 
   text(x=0.99, y=0.1,
        labels = paste("rho = ", round(HRcheck, 4), sep=""),
        pos=2)
 
-  return(list(KMres = KMres, SSR = SSR, rho = HRcheck))
+  return(list(KMres = KMres, SSR = SSR, rho = rho))
 
 }

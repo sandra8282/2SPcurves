@@ -16,6 +16,21 @@ getSKM4fit <- function(time, fitsurv, group) {
   fitskm = cbind(fitskm, ties_ind)
   fitskm = fitskm[order(fitskm[,1],fitskm[,3]),]
 }
+
+getmat4cor <- function(forplot, forplotfit){
+  all <- matrix(nrow = nrow(forplotfit), ncol=4)
+  all[1,] <- cbind(forplot[1,], forplotfit[1,])
+  for (k in 2:nrow(forplot)){
+    if (forplot[k, 1]!=forplot[k-1,1]) {
+      #there was horizontal or diagonal change
+      ind <- which(forplotfit[,1] < forplot[k-1,1] & forplotfit[,1] > forplot[k,1])
+      all[ind,] <- cbind(matrix(forplotfit[ind,], ncol=2),
+                         matrix(rep(forplot[k,], length(ind)), ncol=2, byrow=TRUE)
+      )
+    }
+  }
+  return(all)
+}
 #' ROC when survival goes to 0 for either group
 #'
 #' @param time Numeric or character vector of subject's unique identifier (i).
@@ -82,11 +97,17 @@ ROCcompare <- function(time, event, group) {
          cex=0.9, bty = "n", xjust = 1, yjust = 0, y.intersp = 0.9)
 
   #correlations and SSR
+  comparetofit1 <- getmat4cor(forplot, forplotfit1)
+  comparetofit2 <- getmat4cor(forplot, forplotfit2)
+  rho = SSR = c(PHM = 0, loglogistic = 0, weibull = 0)
 
-  text(x=0.99, y=0.1,
-       labels = paste("rho = ", round(HRcheck, 4), sep=""),
-       pos=2)
+  rho[1] <- cor(forplot[,2], forplot[,1]^exp(coxfit$coefficients))
+  rho[2] <- cor(comparetofit1[,2], comparetofit1[,4])
+  rho[3] <- cor(comparetofit2[,2], comparetofit2[,4])
+  SSR[1] <- sum((forplot[,2] - forplot[,1]^exp(coxfit$coefficients))^2)
+  SSR[2] <- sum((comparetofit1[,2]- comparetofit1[,4])^2)
+  SSR[3] <- sum((comparetofit2[,2]- comparetofit2[,4])^2)
 
-  return(list(KMres = KMres, SSR = SSR, rho = HRcheck))
+  return(list(KMres = KMres, SSR = SSR, rho = rho))
 
 }

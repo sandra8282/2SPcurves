@@ -10,6 +10,7 @@
 #' Must be between 0.50 and 0.99. Default is 0.95. See details.
 #' @param method choose
 #' @param checkPH to check
+#' @param compare to compare fits
 #'
 #' @return A plot with the ROC curve and an ROCsurv object containing:
 #' \itemize{
@@ -23,7 +24,8 @@
 #'
 #' @export
 #'
-ROCsurv <- function(time, event, group, level=NULL, method = NULL, checkPH = NULL, dist=NULL){
+ROCsurv <- function(time, event, group, level=NULL, method = NULL,
+                    checkPH = TRUE, dist=NULL, compare=FALSE){
   #time = dat$ti ; event = dat$di; group = dat$trt; level = 0.95;
   #time = leukemia$Time ; event = leukemia$Event; group = leukemia$Group; level = 0.95;
 
@@ -37,6 +39,8 @@ ROCsurv <- function(time, event, group, level=NULL, method = NULL, checkPH = NUL
     return(result)
   } else if (!is.null(dist)){
     result <- ROCparametric(time, event, group, dist)
+  } else if (compare) {
+    result <- ROCcompare(time, event, group)
   } else {
     KMests <- getKMtab(time, event, group)
   #Point Estimate based on
@@ -49,7 +53,6 @@ ROCsurv <- function(time, event, group, level=NULL, method = NULL, checkPH = NUL
     if (KMests[[2]]!=0 & is.null(method)) {result <- onlyROC(KMests[[1]])
       return(list(control_km = KMests$km_placebo,
                   drug_km = KMests$km_drug))
-
     } else if (KMests[[2]]!=0 & method=="restrict") {
       result <- restrictROC(KMests[[1]], silent = FALSE)
       return(list(control_km = KMests$km_placebo,

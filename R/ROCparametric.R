@@ -37,7 +37,7 @@ getSKM4fit <- function(time, fitsurv, group) {
 #'
 #' @export
 
-ROCparametric <- function(time, event, group, dist="Weibull") {
+ROCparametric <- function(time, event, group, dist="weibull") {
 
   KMres <- getKMtab(time, event, group)
   skm <- KMres[[1]]
@@ -72,7 +72,17 @@ ROCparametric <- function(time, event, group, dist="Weibull") {
 
   forplotfit = get4plot(fitskm)
 
-  sum_sqrres = 0
+  all <- matrix(nrow = nrow(forplotfit), ncol=4)
+  all[1,] <- cbind(forplot[1,], forplotfit[1,])
+  for (k in 2:nrow(forplot)){
+    if (forplot[k, 1]!=forplot[k-1,1]) {
+      #there was horizontal or diagonal change
+      ind <- which(forplotfit[,1] < forplot[k-1,1] & forplotfit[,1] > forplot[k,1])
+      all[ind,] <- cbind(matrix(forplotfit[ind,], ncol=2),
+                         matrix(rep(forplot[k,], length(ind)), ncol=2, byrow=TRUE)
+      )
+    }
+  }
 
   plot(NULL, type="n", xlab="", ylab="", las=1,
        xlim=c(0,1), ylim = c(0, 1)) #to make tight axis: xaxs="i", yaxs="i"
@@ -86,6 +96,10 @@ ROCparametric <- function(time, event, group, dist="Weibull") {
   abline(c(0,1), col = "red", lty=2)
 
   #correlations and SSR
+  all <- na.omit(all)
+  rho <- cor(all[,2], all[,4])
+  SSR <- sum((all[,2] - all[,4])^2)
+
   text(x=0.99, y=0.4,
        labels = dist,
        pos=2)
