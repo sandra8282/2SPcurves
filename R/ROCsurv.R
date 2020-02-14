@@ -25,7 +25,7 @@
 #' @export
 #'
 ROCsurv <- function(time, event, group, level=NULL, method = NULL,
-                    checkPH = TRUE, dist=NULL, compare=FALSE){
+                    checkPH = FALSE, compare=FALSE){
   #time = dat$ti ; event = dat$di; group = dat$trt; level = 0.95;
   #time = leukemia$Time ; event = leukemia$Event; group = leukemia$Group; level = 0.95;
 
@@ -37,13 +37,14 @@ ROCsurv <- function(time, event, group, level=NULL, method = NULL,
   if(checkPH == TRUE) {
     result <- ROCandPHM(time, event, group)
     return(result)
-  } else if (!is.null(dist)){
-    result <- ROCparametric(time, event, group, dist)
-  } else if (compare) {
+
+  } else if (compare == TRUE) {
     result <- ROCcompare(time, event, group)
+    return(result)
+
   } else {
     KMests <- getKMtab(time, event, group)
-  #Point Estimate based on
+    #Point Estimate based on
     if (KMests[[2]]==0) {
       result <- completeROC(KMests[[1]], silent=FALSE)
       return(list(control_km = KMests$km_placebo,

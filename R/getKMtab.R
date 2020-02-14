@@ -15,7 +15,7 @@
 #'
 #'@import survival
 #'@keywords internal
-#'
+#'@noRd
 #'
 #'
 

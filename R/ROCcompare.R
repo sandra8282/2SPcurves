@@ -29,7 +29,7 @@ getmat4cor <- function(forplot, forplotfit){
       )
     }
   }
-  return(all)
+  return(na.omit(all))
 }
 #' ROC when survival goes to 0 for either group
 #'
@@ -65,7 +65,7 @@ ROCcompare <- function(time, event, group) {
   lambda1 = exp(-unname(fit$coefficients[1])/fit$scale)
   beta1 = -unname(fit$coefficients[2])/fit$scale
   alpha1 = 1/fit$scale
-  fitsurv1 = (1 + lambda*exp(beta*group)*(time^alpha))^(-1)
+  fitsurv1 = (1 + lambda1*exp(beta1*group)*(time^alpha1))^(-1)
   fitskm1 <- getSKM4fit(time, fitsurv1, group)
   forplotfit1 = get4plot(fitskm1)
 
@@ -74,7 +74,7 @@ ROCcompare <- function(time, event, group) {
   beta2 = -unname(fit2$coefficients[2])/fit2$scale
   alpha2 = 1/fit2$scale
   theta = -unname(fit$coefficients[2])
-  fitsurv2 = base_surv_weibull(lambda, alpha, times = time*exp(theta*group))
+  fitsurv2 = base_surv_weibull(lambda2, alpha2, times = time*exp(theta*group))
   fitskm2 <- getSKM4fit(time, fitsurv2, group)
   forplotfit2 = get4plot(fitskm2)
 
@@ -107,7 +107,11 @@ ROCcompare <- function(time, event, group) {
   SSR[1] <- sum((forplot[,2] - forplot[,1]^exp(coxfit$coefficients))^2)
   SSR[2] <- sum((comparetofit1[,2]- comparetofit1[,4])^2)
   SSR[3] <- sum((comparetofit2[,2]- comparetofit2[,4])^2)
+  bestindex = which(rho == max(rho))
+  best = names(rho)[bestindex]
+  bestindex2 = which(SSR == min(SSR))
+  best2 = names(SSR)[bestindex2]
 
-  return(list(KMres = KMres, SSR = SSR, rho = rho))
+  return(list(KMres = KMres, best_rho = best, best_SSR = best2))
 
 }

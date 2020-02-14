@@ -45,7 +45,7 @@ ROCandPHM <- function(time, event, group) {
   SSR <- sum((forplot[,2] - forplot[,1]^exp(coxfit$coefficients))^2)
 
   text(x=0.99, y=0.1,
-       labels = paste("rho = ", round(HRcheck, 4), sep=""),
+       labels = paste("rho = ", round(rho, 4), sep=""),
        pos=2)
 
   return(list(KMres = KMres, SSR = SSR, rho = rho))

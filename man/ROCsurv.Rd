@@ -4,7 +4,15 @@
 \alias{ROCsurv}
 \title{Create an ROC curve for survival data from clinical trials.}
 \usage{
-ROCsurv(time, event, group, level = NULL, method = NULL, checkPH = NULL)
+ROCsurv(
+  time,
+  event,
+  group,
+  level = NULL,
+  method = NULL,
+  checkPH = TRUE,
+  compare = FALSE
+)
 }
 \arguments{
 \item{time}{Numeric or character vector of subject's unique identifier (i).}
@@ -19,6 +27,8 @@ Must be between 0.50 and 0.99. Default is 0.95. See details.}
 \item{method}{choose}
 
 \item{checkPH}{to check}
+
+\item{compare}{to compare fits}
 }
 \value{
 A plot with the ROC curve and an ROCsurv object containing:
