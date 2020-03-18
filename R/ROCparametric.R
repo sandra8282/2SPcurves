@@ -3,6 +3,19 @@ base_surv_weibull <- function(lambda, alpha, times){
   return(s0)
 }
 
+getSKM4fit <- function(time, fitsurv, group) {
+  fitskm <- cbind(time, fitsurv, group)
+  fitskm <- fitskm[!duplicated(fitskm),]
+  ties_check <- unique(table(fitskm[,1]))
+  if (length(ties_check) > 1) {
+    ties_times = fitskm[duplicated(fitskm[,1]),1]
+    ties_ind <- rep(0, nrow(fitskm))
+    ties_ind[which(fitskm[,1] %in% ties_times)]=1
+  } else {ties_ind <- rep(0, nrow(fitskm))}
+  fitskm = cbind(fitskm, ties_ind)
+  fitskm = fitskm[order(fitskm[,1],fitskm[,3]),]
+}
+
 #' ROC when survival goes to 0 for either group
 #'
 #' @param time Numeric or character vector of subject's unique identifier (i).
@@ -36,7 +49,7 @@ ROCparametric <- function(time, event, group, method="weibull") {
   if (method=="cox") {
     coxfit <- coxph(Surv(time, event) ~ group, ties = "breslow")
     baseline <- c(forplot[,1], seq(forplot[nrow(forplot),1], 0, length.out = round(nrow(forplot)/4, 0)))
-    paramsuv <- cbind(baseline, baseline^exp(coxfit$coefficients))
+    paramsurv <- cbind(baseline, baseline^exp(coxfit$coefficients))
   }
 
   if (method == "loglogistic") {
@@ -47,6 +60,15 @@ ROCparametric <- function(time, event, group, method="weibull") {
     fitsurv1 = (1 + lambda1*exp(beta1*group)*(time^alpha1))^(-1)
     fitskm1 <- getSKM4fit(time, fitsurv1, group)
     forplotfit1 = get4plot(fitskm1)
+    newsurv <- seq( min(fitskm1[,1]), 0.00000000001, length.out = round(nrow(forplotfit1)/10, 0) )
+    time0 <- ((1 + lambda1*exp(0))*newsurv)^(-alpha1)
+    time1 <- ((1 + lambda1*exp(beta1))*newsurv)^(-alpha1)
+    newskm1 <- getSKM4fit(time = c(time0, time1), fitsurv = c(newsurv, newsurv),
+                          group = c(rep(0, length(newsurv)), rep(1, length(newsurv)))
+                          )
+    new4plot <- get4plot(newskm1)
+
+
 
 
 
