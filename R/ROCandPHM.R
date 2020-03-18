@@ -38,7 +38,7 @@ ROCandPHM <- function(time, event, group) {
 
   points(forplot[,1], forplot[,2])
   lines(forplot[,1], forplot[,1]^exp(coxfit$coefficients), col="blue")
-  abline(c(0,1), col = "red", lty=2)
+  abline(c(0,1), col = "red", lty=3)
 
   #correlations and SSR
   rho <- cor(forplot[,2], forplot[,1]^exp(coxfit$coefficients))

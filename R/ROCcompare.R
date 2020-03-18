@@ -8,10 +8,9 @@ getSKM4fit <- function(time, fitsurv, group) {
   fitskm <- fitskm[!duplicated(fitskm),]
   ties_check <- unique(table(fitskm[,1]))
   if (length(ties_check) > 1) {
-    ties_times = as.integer(names(which(table(fitskm[,1])>1)))
-    ties_ind <- rep(NA, nrow(fitskm))
+    ties_times = fitskm[duplicated(fitskm[,1]),1]
+    ties_ind <- rep(0, nrow(fitskm))
     ties_ind[which(fitskm[,1] %in% ties_times)]=1
-    ties_ind[-which(fitskm[,1] %in% ties_times)]=0
   } else {ties_ind <- rep(0, nrow(fitskm))}
   fitskm = cbind(fitskm, ties_ind)
   fitskm = fitskm[order(fitskm[,1],fitskm[,3]),]
@@ -73,7 +72,7 @@ ROCcompare <- function(time, event, group) {
   lambda2 = exp(-unname(fit2$coefficients[1])/fit2$scale)
   beta2 = -unname(fit2$coefficients[2])/fit2$scale
   alpha2 = 1/fit2$scale
-  theta = -unname(fit$coefficients[2])
+  theta = -unname(fit2$coefficients[2])
   fitsurv2 = base_surv_weibull(lambda2, alpha2, times = time*exp(theta*group))
   fitskm2 <- getSKM4fit(time, fitsurv2, group)
   forplotfit2 = get4plot(fitskm2)
@@ -88,11 +87,11 @@ ROCcompare <- function(time, event, group) {
 
   points(forplot[,1], forplot[,2])
   lines(forplot[,1], forplot[,1]^exp(coxfit$coefficients), col="blue")
-  lines(forplotfit1[,1], forplotfit1[,2], col="red")
-  lines(forplotfit2[,1], forplotfit2[,2], col="green")
-  abline(c(0,1), col = "red", lty=2)
+  lines(forplotfit1[,1], forplotfit1[,2], col="red", lty = 2)
+  lines(forplotfit2[,1], forplotfit2[,2], col="green", lty = 4)
+  abline(c(0,1), col = "black", lty=3)
 
-  legend("bottomright", legend=c("Cox PH", "Log-logistic", "Weibull"), lty = 1,
+  legend("bottomright", legend=c("Cox PH", "Log-logistic", "Weibull"), lty = c(1, 2, 4),
          col=c("blue", "red", "green"),
          cex=0.9, bty = "n", xjust = 1, yjust = 0, y.intersp = 0.9)
 
@@ -112,6 +111,7 @@ ROCcompare <- function(time, event, group) {
   bestindex2 = which(SSR == min(SSR))
   best2 = names(SSR)[bestindex2]
 
-  return(list(KMres = KMres, best_rho = best, best_SSR = best2))
+  return(list(KMres = KMres, bestRHO = best,
+              bestSSR = best2, RHO = rho, SSR = SSR))
 
 }

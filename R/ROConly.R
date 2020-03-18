@@ -62,6 +62,6 @@ onlyROC <- function(skm) {
                x1=coord_new2[1], y1=coord_new2[2], col="black")
     }
 
-  abline(c(0,1), col = "black", lty=2)
+  abline(c(0,1), col = "red", lty=3)
 
 }

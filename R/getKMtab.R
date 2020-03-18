@@ -39,10 +39,9 @@ getKMtab <- function(time, event, group) {
   ties_check <- unique(table(skm[,1]))
 
   if (length(ties_check) > 1) {
-    ties_times = as.integer(names(which(table(skm[,1])>1)))
-    ties_ind <- rep(NA, nrow(skm))
+    ties_times = skm[duplicated(skm[,1]),1]
+    ties_ind <- rep(0, nrow(skm))
     ties_ind[which(skm[,1] %in% ties_times)]=1
-    ties_ind[-which(skm[,1] %in% ties_times)]=0
   } else {ties_ind <- rep(0, nrow(skm))}
 
   skm = cbind(skm, ties_ind)

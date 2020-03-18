@@ -3,14 +3,15 @@
 #' @description
 #' This function creates ROC curve for survival data from clinical trials and calculates the area under the curve.
 #'
-#' @param time Numeric or character vector of subject's unique identifier (i).
-#' @param event Vector indicating the observation or episode (j) for a subject (i). This will determine order of events for each subject.
-#' @param group Vector with the lengths of time spent in event of Type I for individual i in episode j.
+#' @param time Time to event or censoring.
+#' @param event Vector indicating if the event occurred (event=1) or if the time was censored (event=0).
+#' @param group Vector indicating if the individual was in the treatment arm (group=1) or the control arm (group=0).
 #' @param level The confidence level for the confidence interval of the area under the curve.
 #' Must be between 0.50 and 0.99. Default is 0.95. See details.
-#' @param method choose
+#' @param method Method to be used to obtain a complete curve.
 #' @param checkPH to check
 #' @param compare to compare fits
+#' @param area TRUE/FALSE argument to indicate if user wants an estimate for area under the curve.
 #'
 #' @return A plot with the ROC curve and an ROCsurv object containing:
 #' \itemize{
@@ -25,7 +26,7 @@
 #' @export
 #'
 ROCsurv <- function(time, event, group, level=NULL, method = NULL,
-                    checkPH = FALSE, compare=FALSE){
+                    checkPH = FALSE, compare=FALSE, area=NULL){
   #time = dat$ti ; event = dat$di; group = dat$trt; level = 0.95;
   #time = leukemia$Time ; event = leukemia$Event; group = leukemia$Group; level = 0.95;
 
@@ -44,21 +45,32 @@ ROCsurv <- function(time, event, group, level=NULL, method = NULL,
 
   } else {
     KMests <- getKMtab(time, event, group)
-    #Point Estimate based on
-    if (KMests[[2]]==0) {
-      result <- completeROC(KMests[[1]], silent=FALSE)
-      return(list(control_km = KMests$km_placebo,
-                drug_km = KMests$km_drug,
-                AUC = result))
-             }
-    if (KMests[[2]]!=0 & is.null(method)) {result <- onlyROC(KMests[[1]])
-      return(list(control_km = KMests$km_placebo,
-                  drug_km = KMests$km_drug))
-    } else if (KMests[[2]]!=0 & method=="restrict") {
-      result <- restrictROC(KMests[[1]], silent = FALSE)
-      return(list(control_km = KMests$km_placebo,
-                  drug_km = KMests$km_drug,
-                  AUC = result))
+
+    if (area==FALSE) {
+        result <- onlyROC(KMests[[1]])
+        return(list(control_km = KMests$km_placebo,
+                drug_km = KMests$km_drug))
+    } else {
+
+      #Point Estimate based on
+      if (KMests[[2]]) {
+
+          result <- completeROC(KMests[[1]], silent=FALSE)
+          return(list(control_km = KMests$km_placebo,
+                      drug_km = KMests$km_drug,
+                      AUC = result))}
+
+      if (KMests[[2]]!=0 & is.null(method)) {result <- onlyROC(KMests[[1]])
+          return(list(control_km = KMests$km_placebo,
+                      drug_km = KMests$km_drug))
+      } else if (KMests[[2]]!=0 & method=="restrict") {
+          result <- restrictROC(KMests[[1]], silent = FALSE)
+
+    }
+
+
+
+
     }
   }
 

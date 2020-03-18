@@ -2,19 +2,7 @@ base_surv_weibull <- function(lambda, alpha, times){
   s0 <- exp(-lambda*(times)^alpha)
   return(s0)
 }
-getSKM4fit <- function(time, fitsurv, group) {
-  fitskm <- cbind(time, fitsurv, group)
-  fitskm <- fitskm[!duplicated(fitskm),]
-  ties_check <- unique(table(fitskm[,1]))
-  if (length(ties_check) > 1) {
-    ties_times = as.integer(names(which(table(fitskm[,1])>1)))
-    ties_ind <- rep(NA, nrow(fitskm))
-    ties_ind[which(fitskm[,1] %in% ties_times)]=1
-    ties_ind[-which(fitskm[,1] %in% ties_times)]=0
-  } else {ties_ind <- rep(0, nrow(fitskm))}
-  fitskm = cbind(fitskm, ties_ind)
-  fitskm = fitskm[order(fitskm[,1],fitskm[,3]),]
-}
+
 #' ROC when survival goes to 0 for either group
 #'
 #' @param time Numeric or character vector of subject's unique identifier (i).
@@ -37,81 +25,45 @@ getSKM4fit <- function(time, fitsurv, group) {
 #'
 #' @export
 
-ROCparametric <- function(time, event, group, dist="weibull") {
+ROCparametric <- function(time, event, group, method="weibull") {
 
   KMres <- getKMtab(time, event, group)
   skm <- KMres[[1]]
   forplot = get4plot(skm)
 
-  dat <- cbind(time, event, group)
-  if (!is.character(dist)) {stop("Argument dist must be a string.")}
+  if (!is.character(method)) {stop("Argument dist must be a string.")}
 
-  fit <- survreg(Surv(time, event) ~ group, dist=dist)
-  lambda = exp(-unname(fit$coefficients[1])/fit$scale)
-  beta = -unname(fit$coefficients[2])/fit$scale
-  alpha = 1/fit$scale
-
-  if (dist=="loglogistic") {
-    fitsurv = (1 + lambda*exp(beta*group)*(time^alpha))^(-1)
-  } else {
-    theta = -unname(fit$coefficients[2])
-    fitsurv = base_surv_weibull(lambda, alpha, times = time*exp(theta*group))
+  if (method=="cox") {
+    coxfit <- coxph(Surv(time, event) ~ group, ties = "breslow")
+    baseline <- c(forplot[,1], seq(forplot[nrow(forplot),1], 0, length.out = round(nrow(forplot)/4, 0)))
+    paramsuv <- cbind(baseline, baseline^exp(coxfit$coefficients))
   }
 
-  fitskm <- cbind(time, fitsurv, group)
-  fitskm <- fitskm[!duplicated(fitskm),]
-  ties_check <- unique(table(fitskm[,1]))
-  if (length(ties_check) > 1) {
-    ties_times = as.integer(names(which(table(fitskm[,1])>1)))
-    ties_ind <- rep(NA, nrow(fitskm))
-    ties_ind[which(fitskm[,1] %in% ties_times)]=1
-    ties_ind[-which(fitskm[,1] %in% ties_times)]=0
-  } else {ties_ind <- rep(0, nrow(fitskm))}
-  fitskm = cbind(fitskm, ties_ind)
-  fitskm = fitskm[order(fitskm[,1], fitskm[,3]),]
+  if (method == "loglogistic") {
+    fit <- survreg(Surv(time, event) ~ group, dist="loglogistic")
+    lambda1 = exp(-unname(fit$coefficients[1])/fit$scale)
+    beta1 = -unname(fit$coefficients[2])/fit$scale
+    alpha1 = 1/fit$scale
+    fitsurv1 = (1 + lambda1*exp(beta1*group)*(time^alpha1))^(-1)
+    fitskm1 <- getSKM4fit(time, fitsurv1, group)
+    forplotfit1 = get4plot(fitskm1)
 
-  forplotfit = get4plot(fitskm)
 
-  all <- matrix(nrow = nrow(forplotfit), ncol=4)
-  all[1,] <- cbind(forplot[1,], forplotfit[1,])
-  for (k in 2:nrow(forplot)){
-    if (forplot[k, 1]!=forplot[k-1,1]) {
-      #there was horizontal or diagonal change
-      ind <- which(forplotfit[,1] < forplot[k-1,1] & forplotfit[,1] > forplot[k,1])
-      all[ind,] <- cbind(matrix(forplotfit[ind,], ncol=2),
-                         matrix(rep(forplot[k,], length(ind)), ncol=2, byrow=TRUE)
-      )
-    }
+
   }
 
-  plot(NULL, type="n", xlab="", ylab="", las=1,
-       xlim=c(0,1), ylim = c(0, 1)) #to make tight axis: xaxs="i", yaxs="i"
-  title(main="ROC", xlab="Control Group Survival",
-        ylab="Treatment Group Survival",
-        cex.main = 1)
+  fit2 <- survreg(Surv(time, event) ~ group, dist="weibull")
+  lambda2 = exp(-unname(fit2$coefficients[1])/fit2$scale)
+  beta2 = -unname(fit2$coefficients[2])/fit2$scale
+  alpha2 = 1/fit2$scale
+  theta = -unname(fit2$coefficients[2])
+  fitsurv2 = base_surv_weibull(lambda2, alpha2, times = time*exp(theta*group))
+  fitskm2 <- getSKM4fit(time, fitsurv2, group)
+  forplotfit2 = get4plot(fitskm2)
 
-  forplotfit <- forplotfit[-which(forplotfit[,1]<min(forplot[,1])),]
-  points(forplot[,1], forplot[,2])
-  lines(forplotfit[,1], forplotfit[,2], col="blue")
-  abline(c(0,1), col = "red", lty=2)
 
-  #correlations and SSR
-  all <- na.omit(all)
-  rho <- cor(all[,2], all[,4])
-  SSR <- sum((all[,2] - all[,4])^2)
 
-  text(x=0.99, y=0.4,
-       labels = dist,
-       pos=2)
-  text(x=0.99, y=0.3,
-       labels = paste("lambda = ", round(lambda, 2), sep=""),
-       pos=2)
-  text(x=0.99, y=0.2,
-       labels = paste("beta = ", round(beta, 2), sep=""),
-       pos=2)
-  text(x=0.99, y=0.1,
-       labels = paste("alpha = ", round(alpha, 2), sep=""),
-       pos=2)
+
 
   return(parametricfit = fit)
 

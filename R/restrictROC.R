@@ -87,9 +87,9 @@ restrictROC <- function(skm, silent) {
       segments(x0=coord_new[1], y0=coord_new[2],
                x1=coord_new2[1], y1=coord_new2[2], col="black")
     }
-    abline(h = minx, col = "red", lty=2)
-    abline(v = minx, col = "red", lty=2)
-    abline(c(0,1), col = "black", lty=2)
+    abline(h = minx, col = "red", lty=3)
+    abline(v = minx, col = "red", lty=3)
+    abline(c(0,1), col = "red", lty=3)
     area = unname(area)
     maxarea = (1-minx)^2
     ratio = area / maxarea

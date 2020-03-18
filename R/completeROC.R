@@ -55,7 +55,7 @@ completeROC <- function(skm, silent) {
       segments(x0=coord_new[1], y0=coord_new[2],
                x1=coord_new2[1], y1=coord_new2[2], col="black")
     }
-    abline(c(0,1), col = "black", lty=2)
+    abline(c(0,1), col = "black", lty=3)
     area = unname(area)
     text(x=0.99, y=0.05, labels = paste("AUC=", round(area,2), sep=""),
          pos=2, cex = 1)

@@ -10,25 +10,28 @@ ROCsurv(
   group,
   level = NULL,
   method = NULL,
-  checkPH = TRUE,
-  compare = FALSE
+  checkPH = FALSE,
+  compare = FALSE,
+  area = NULL
 )
 }
 \arguments{
-\item{time}{Numeric or character vector of subject's unique identifier (i).}
+\item{time}{Time to event or censoring.}
 
-\item{event}{Vector indicating the observation or episode (j) for a subject (i). This will determine order of events for each subject.}
+\item{event}{Vector indicating if the event occurred (event=1) or if the time was censored (event=0).}
 
-\item{group}{Vector with the lengths of time spent in event of Type I for individual i in episode j.}
+\item{group}{Vector indicating if the individual was in the treatment arm (group=1) or the control arm (group=0).}
 
 \item{level}{The confidence level for the confidence interval of the area under the curve.
 Must be between 0.50 and 0.99. Default is 0.95. See details.}
 
-\item{method}{choose}
+\item{method}{Method to be used to obtain a complete curve.}
 
 \item{checkPH}{to check}
 
 \item{compare}{to compare fits}
+
+\item{area}{TRUE/FALSE argument to indicate if user wants an estimate for area under the curve.}
 }
 \value{
 A plot with the ROC curve and an ROCsurv object containing:
