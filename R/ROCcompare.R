@@ -6,28 +6,35 @@ base_surv_weibull <- function(lambda, alpha, times){
 getSKM4fit <- function(time, fitsurv, group) {
   fitskm <- cbind(time, fitsurv, group)
   fitskm <- fitskm[!duplicated(fitskm),]
-  ties_check <- unique(table(fitskm[,1]))
+  ties_check <- unique(table(fitskm[,1])) #how many times are repeated
   if (length(ties_check) > 1) {
     ties_times = fitskm[duplicated(fitskm[,1]),1]
     ties_ind <- rep(0, nrow(fitskm))
     ties_ind[which(fitskm[,1] %in% ties_times)]=1
   } else {ties_ind <- rep(0, nrow(fitskm))}
   fitskm = cbind(fitskm, ties_ind)
-  fitskm = fitskm[order(fitskm[,1],fitskm[,3]),]
+  fitskm <- fitskm[order(fitskm[,1], fitskm[,3]),]
+  return(fitskm)
+
 }
 
 getmat4cor <- function(forplot, forplotfit){
-  all <- matrix(nrow = nrow(forplotfit), ncol=4)
+  all <- matrix(nrow = nrow(forplot), ncol=4)
   all[1,] <- cbind(forplot[1,], forplotfit[1,])
-  for (k in 2:nrow(forplot)){
-    if (forplot[k, 1]!=forplot[k-1,1]) {
-      #there was horizontal or diagonal change
-      ind <- which(forplotfit[,1] < forplot[k-1,1] & forplotfit[,1] > forplot[k,1])
-      all[ind,] <- cbind(matrix(forplotfit[ind,], ncol=2),
-                         matrix(rep(forplot[k,], length(ind)), ncol=2, byrow=TRUE)
-      )
-    }
+  for (q in 2:nrow(forplot)) {
+    absdiff = (abs(forplotfit[,1]-forplot[q,1]))
+    index <- which(absdiff==min(absdiff))
+    all[q,] <- cbind(forplot[q,], forplotfit[index[1],])
   }
+  # for (k in 2:nrow(forplot)){
+  #   if (forplot[k, 1]!=forplot[k-1,1]) {
+  #     #there was horizontal or diagonal change
+  #     ind <- which(forplotfit[[i]][,1] < forplot[k-1,1] & forplotfit[[i]][,1] > forplot[k,1])
+  #     all[ind,] <- cbind(matrix(forplotfit[ind,], ncol=2),
+  #                        matrix(rep(forplot[k,], length(ind)), ncol=2, byrow=TRUE)
+  #     )
+  #   }
+  #}
   return(na.omit(all))
 }
 #' ROC when survival goes to 0 for either group
@@ -46,6 +53,7 @@ getmat4cor <- function(forplot, forplotfit){
 #' @importFrom graphics segments
 #' @importFrom graphics rect
 #' @importFrom stats na.omit
+#' @importFrom stats pnorm
 #' @import survival
 #' @importFrom stats cor
 #'
@@ -54,30 +62,33 @@ getmat4cor <- function(forplot, forplotfit){
 
 ROCcompare <- function(time, event, group) {
 
+  d <- c("exponential", "weibull", "lognormal", "loglogistic")
   KMres <- getKMtab(time, event, group)
   skm <- KMres[[1]]
   forplot = get4plot(skm)
 
-  coxfit <- coxph(Surv(time, event) ~ group, ties = "breslow")
+  lambda = beta = alpha = mu = gamma = sigma = c()
+  for (i in 1:4) {
+    fit = survreg(Surv(time, event) ~ group, dist=d[i])
+    tmu = fit$coefficients[1];  tgamma = fit$coefficients[2]; tsigma = fit$scale;
+    mu = c(mu, tmu); gamma = c(gamma, tgamma); sigma = c(sigma, tsigma);
+    l = exp(-unname(tmu/tsigma)); b = (-unname(tgamma)/tsigma); a = 1/tsigma;
+    lambda = c(lambda, l); beta = c(beta, b); alpha = c(alpha, a);
+  }
 
-  fit <- survreg(Surv(time, event) ~ group, dist="loglogistic")
-  lambda1 = exp(-unname(fit$coefficients[1])/fit$scale)
-  beta1 = -unname(fit$coefficients[2])/fit$scale
-  alpha1 = 1/fit$scale
-  fitsurv1 = (1 + lambda1*exp(beta1*group)*(time^alpha1))^(-1)
-  fitskm1 <- getSKM4fit(time, fitsurv1, group)
-  forplotfit1 = get4plot(fitskm1)
+  theta = beta / alpha
+  surv_exp = base_surv_weibull(lambda[1], alpha[1], times = time*exp(theta[1]*group))
+  surv_weib = base_surv_weibull(lambda[2], alpha[2], times = time*exp(theta[2]*group))
+  surv_lognorm = 1 - pnorm((log(time)- mu[3] - gamma[3]*group)/sigma[3])
+  surv_loglogis = (1 + lambda[4]*exp(beta[4]*group)*(time^alpha[4]))^(-1)
+  fitsurv <- list(surv_exp, surv_weib, surv_lognorm, surv_loglogis)
 
-  fit2 <- survreg(Surv(time, event) ~ group, dist="weibull")
-  lambda2 = exp(-unname(fit2$coefficients[1])/fit2$scale)
-  beta2 = -unname(fit2$coefficients[2])/fit2$scale
-  alpha2 = 1/fit2$scale
-  theta = -unname(fit2$coefficients[2])
-  fitsurv2 = base_surv_weibull(lambda2, alpha2, times = time*exp(theta*group))
-  fitskm2 <- getSKM4fit(time, fitsurv2, group)
-  forplotfit2 = get4plot(fitskm2)
-
-  sum_sqrres = 0
+  forplotfit = list()
+  for (i in 1:4) {
+    fitskm <- getSKM4fit(time, fitsurv[[i]], group)
+    forplotfit[[i]] = get4plot(fitskm)
+  }
+  names(forplotfit) <- d
 
   plot(NULL, type="n", xlab="", ylab="", las=1,
        xlim=c(0,1), ylim = c(0, 1)) #to make tight axis: xaxs="i", yaxs="i"
@@ -85,33 +96,37 @@ ROCcompare <- function(time, event, group) {
         ylab="Treatment Group Survival",
         cex.main = 1)
 
-  points(forplot[,1], forplot[,2])
-  lines(forplot[,1], forplot[,1]^exp(coxfit$coefficients), col="blue")
-  lines(forplotfit1[,1], forplotfit1[,2], col="red", lty = 2)
-  lines(forplotfit2[,1], forplotfit2[,2], col="green", lty = 4)
-  abline(c(0,1), col = "black", lty=3)
+  points(forplot[,1], forplot[,2], col = "grey50", cex = 0.75)
+  lines(forplotfit[[1]][,1], forplotfit[[1]][,2], col="darkred")
+  lines(forplotfit[[2]][,1], forplotfit[[2]][,2], col="orange")
+  lines(forplotfit[[3]][,1], forplotfit[[3]][,2], col="darkblue")
+  lines(forplotfit[[4]][,1], forplotfit[[4]][,2], col="darkgreen")
+  abline(c(0,1), col = "black", lty=2)
 
-  legend("bottomright", legend=c("Cox PH", "Log-logistic", "Weibull"), lty = c(1, 2, 4),
-         col=c("blue", "red", "green"),
-         cex=0.9, bty = "n", xjust = 1, yjust = 0, y.intersp = 0.9)
+  legend("bottomright", legend= c("Exponential", "Weibull", "Lognormal", "Loglogistic"),
+         lty = 1, col=c("darkred", "orange","darkblue", "darkgreen"),
+         cex=0.75, bty = "n", xjust = 1, yjust = 0, y.intersp = 0.9)
 
   #correlations and SSR
-  comparetofit1 <- getmat4cor(forplot, forplotfit1)
-  comparetofit2 <- getmat4cor(forplot, forplotfit2)
-  rho = SSR = c(PHM = 0, loglogistic = 0, weibull = 0)
 
-  rho[1] <- cor(forplot[,2], forplot[,1]^exp(coxfit$coefficients))
-  rho[2] <- cor(comparetofit1[,2], comparetofit1[,4])
-  rho[3] <- cor(comparetofit2[,2], comparetofit2[,4])
-  SSR[1] <- sum((forplot[,2] - forplot[,1]^exp(coxfit$coefficients))^2)
-  SSR[2] <- sum((comparetofit1[,2]- comparetofit1[,4])^2)
-  SSR[3] <- sum((comparetofit2[,2]- comparetofit2[,4])^2)
+  rho = SSR = rep(0,4)
+  names(rho) = names(SSR) = d
+  for (i in 1:4) {
+    comparetofit <- getmat4cor(forplot, forplotfit[[i]])
+    rho[i] <- cor(comparetofit[,2], comparetofit[,4])
+    SSR[i] <- sum((comparetofit[,2]- comparetofit[,4])^2)
+  }
+
   bestindex = which(rho == max(rho))
   best = names(rho)[bestindex]
   bestindex2 = which(SSR == min(SSR))
   best2 = names(SSR)[bestindex2]
 
+  coefficients = rbind(mu, gamma, sigma)
+  rownames(coefficients) <- c("(Intercept)", "group", "scale")
+  colnames(coefficients) <- d
+
   return(list(KMres = KMres, bestRHO = best,
-              bestSSR = best2, RHO = rho, SSR = SSR))
+              bestSSR = best2, RHO = rho, SSR = SSR, coefficients = coefficients))
 
 }
