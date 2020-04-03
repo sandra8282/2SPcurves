@@ -41,11 +41,14 @@ ROCandPHM <- function(time, event, group) {
   resid <- forplot[,2] - forplot[,1]^exp(coxfit$coefficients)
   SSR <- (sum(resid))^2; sumresid = sum(resid);
 
-  text(x=0.99, y=0.1,
+  text(x=0.99, y=0.05,
        labels = paste("rho = ", round(rho, 4), sep=""),
        pos=2)
-  text(x=0.99, y=0.2,
+  text(x=0.99, y=0.15,
        labels = paste("SSR = ", round(SSR, 4), sep=""),
+       pos=2)
+  text(x=0.99, y=0.25,
+       labels = paste("Residual sum = ", round(sumresid, 4), sep=""),
        pos=2)
 
   return(list(KMres = KMres, SSR = SSR, SR = sumresid, rho = rho))
