@@ -39,11 +39,10 @@ ROCmodifier <- function(time, event, group, modifier, area=FALSE, mlabels) {
   skm1 <- KMres1[[1]]
   forplot1 = get4plot(skm1)
 
-  plot(NULL, type="n", xlab="", ylab="", las=1,
-       xlim=c(0,1), ylim = c(0, 1)) #to make tight axis: xaxs="i", yaxs="i"
-  title(main="ROC", xlab="Control Group Survival",
-        ylab="Treatment Group Survival",
-        cex.main = 1)
+  plot(NULL, type="n", las=1,
+       xlim=c(0,1), ylim = c(0, 1), #to make tight axis: xaxs="i", yaxs="i"
+       xlab="Control Group Survival", ylab="Treatment Group Survival",
+       cex.axis = 1.25, cex.lab = 1.25)
 
   for (k0 in 2:nrow(forplot0)) {
     coord_new = unname(forplot0[k0-1,])

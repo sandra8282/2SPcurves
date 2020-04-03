@@ -28,26 +28,26 @@ ROCandPHM <- function(time, event, group) {
 
   coxfit <- coxph(Surv(time, event) ~ group, ties = "breslow")
 
-  sum_sqrres = 0
-
-  plot(NULL, type="n", xlab="", ylab="", las=1,
-       xlim=c(0,1), ylim = c(0, 1)) #to make tight axis: xaxs="i", yaxs="i"
-  title(main="ROC", xlab="Control Group Survival",
-          ylab="Treatment Group Survival",
-          cex.main = 1)
-
+  plot(NULL, type="n", las=1,
+       xlim=c(0,1), ylim = c(0, 1), #to make tight axis: xaxs="i", yaxs="i"
+       xlab="Control Group Survival", ylab="Treatment Group Survival",
+       cex.axis = 1.25, cex.lab = 1.25)
   points(forplot[,1], forplot[,2])
   lines(forplot[,1], forplot[,1]^exp(coxfit$coefficients), col="blue")
   abline(c(0,1), col = "red", lty=3)
 
   #correlations and SSR
   rho <- cor(forplot[,2], forplot[,1]^exp(coxfit$coefficients))
-  SSR <- sum((forplot[,2] - forplot[,1]^exp(coxfit$coefficients))^2)
+  resid <- forplot[,2] - forplot[,1]^exp(coxfit$coefficients)
+  SSR <- (sum(resid))^2; sumresid = sum(resid);
 
   text(x=0.99, y=0.1,
        labels = paste("rho = ", round(rho, 4), sep=""),
        pos=2)
+  text(x=0.99, y=0.2,
+       labels = paste("SSR = ", round(SSR, 4), sep=""),
+       pos=2)
 
-  return(list(KMres = KMres, SSR = SSR, rho = rho))
+  return(list(KMres = KMres, SSR = SSR, SR = sumresid, rho = rho))
 
 }

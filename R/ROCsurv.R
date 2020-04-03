@@ -53,8 +53,7 @@ ROCsurv <- function(time, event, group, level=NULL, method = NULL,
     } else {
 
       #Point Estimate based on
-      if (KMests[[2]]) {
-
+      if (KMests[[2]]==0) {
           result <- completeROC(KMests[[1]], silent=FALSE)
           return(list(control_km = KMests$km_placebo,
                       drug_km = KMests$km_drug,

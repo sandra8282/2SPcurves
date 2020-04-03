@@ -24,10 +24,10 @@ completeROC <- function(skm, silent) {
   area <- 0
 
   if (silent == FALSE) {
-    plot(c(0,1), c(0, 1), type="n", xlab="", ylab="")
-    title(main="ROC", xlab="Control Group Survival",
-          ylab="Treatment Group Survival",
-          cex.main = 1)
+    plot(NULL, type="n", las=1,
+         xlim=c(0,1), ylim = c(0, 1), #to make tight axis: xaxs="i", yaxs="i"
+         xlab="Control Group Survival", ylab="Treatment Group Survival",
+         cex.axis = 1.25, cex.lab = 1.25)
 
     for (k in 2:nrow(forplot)) {
       coord_new = unname(forplot[k-1,])
