@@ -39,7 +39,7 @@ ROCandPHM <- function(time, event, group) {
   #correlations and SSR
   rho <- cor(forplot[,2], forplot[,1]^exp(coxfit$coefficients))
   resid <- forplot[,2] - forplot[,1]^exp(coxfit$coefficients)
-  SSR <- (sum(resid))^2; sumresid = sum(resid);
+  SSR <- sum(resid^2); sumresid = sum(resid);
 
   text(x=0.99, y=0.05,
        labels = paste("rho = ", round(rho, 4), sep=""),
@@ -54,3 +54,5 @@ ROCandPHM <- function(time, event, group) {
   return(list(KMres = KMres, SSR = SSR, SR = sumresid, rho = rho))
 
 }
+
+setwd("C:/Users/Sandra/Documents/GitHub/ROCsurv")

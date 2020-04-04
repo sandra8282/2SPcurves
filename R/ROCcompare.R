@@ -104,14 +104,16 @@ ROCcompare <- function(time, event, group) {
          cex=1, bty = "n", xjust = 1, yjust = 0, y.intersp = 1)
 
   #correlations and SSR
-  rho = SSR = rep(0,3)
+  rho = SSR = SR = rep(0,3)
   names(rho) = names(SSR) = c("Cox", d)
   rho[1] <- cor(forplot[,2], forplot[,1]^exp(coxfit$coefficients))
-  SSR[1] <- sum((forplot[,2] - forplot[,1]^exp(coxfit$coefficients))^2)
+  resid <- forplot[,2] - forplot[,1]^exp(coxfit$coefficients)
+  SSR[1] <- sum(resid^2); SR <- sum(resid);
   for (i in 2:3) {
     comparetofit <- getmat4cor(forplot, forplotfit[[i-1]])
     rho[i] <- cor(comparetofit[,2], comparetofit[,4])
-    SSR[i] <- sum((comparetofit[,2]- comparetofit[,4])^2)
+    resid <- comparetofit[,2] - comparetofit[,4]
+    SSR[i] <- sum(resid^2); SR[i] <- sum(resid);
   }
 
   #find best
@@ -125,6 +127,6 @@ ROCcompare <- function(time, event, group) {
   colnames(coefficients) <- d
 
   return(list(KMres = KMres, bestRHO = best, HR = coxfit$coefficients,
-              bestSSR = best2, RHO = rho, SSR = SSR, coefficients = coefficients))
+              bestSSR = best2, RHO = rho, SR = SR, SSR = SSR, coefficients = coefficients))
 
 }
