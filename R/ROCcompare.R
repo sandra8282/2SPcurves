@@ -25,9 +25,10 @@ getmat4cor <- function(forplot, forplotfit){
 }
 #' ROC when survival goes to 0 for either group
 #'
-#' @param time Numeric or character vector of subject's unique identifier (i).
-#' @param event Vector indicating the observation or episode (j) for a subject (i). This will determine order of events for each subject.
-#' @param group Vector with the lengths of time spent in event of Type I for individual i in episode j.
+#' @param time passed from ROCsurv.
+#' @param event passed from ROCsurv.
+#' @param group passed from ROCsurv.
+#' @param silent passed from ROCsurv.
 #'
 #' @return A plot of the ROC curve and an ROCsurv object containing:
 #' \itemize{
@@ -47,7 +48,7 @@ getmat4cor <- function(forplot, forplotfit){
 #' @keywords internal
 #' @noRd
 
-ROCcompare <- function(time, event, group) {
+ROCcompare <- function(time, event, group, silent) {
 
   d <- c("lognormal", "loglogistic")
   KMres <- getKMtab(time, event, group)
@@ -82,7 +83,8 @@ ROCcompare <- function(time, event, group) {
   #Get cox model
   coxfit <- coxph(Surv(time, event) ~ group, ties = "breslow")
 
-  plot(NULL, type="n", las=1,
+  if (silent==FALSE){
+      plot(NULL, type="n", las=1,
        xlim=c(0,1), ylim = c(0, 1), #to make tight axis: xaxs="i", yaxs="i"
        xlab="Control Group Survival", ylab="Treatment Group Survival",
        cex.axis = 1.25, cex.lab = 1.25)
@@ -94,6 +96,7 @@ ROCcompare <- function(time, event, group) {
   legend("bottomright", legend= c("Cox PHM", "Lognormal", "Loglogistic"),
          lty = 1, col=c("darkred", "darkblue", "darkgreen"),
          cex=1, bty = "n", xjust = 1, yjust = 0, y.intersp = 1)
+  }
 
   #correlations and SSR
   rho = SSR = areaBTWcurves = rep(0,3)

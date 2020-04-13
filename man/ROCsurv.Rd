@@ -12,7 +12,8 @@ ROCsurv(
   method = NULL,
   checkPH = FALSE,
   compare = FALSE,
-  area = NULL
+  area = NULL,
+  silent
 )
 }
 \arguments{
@@ -31,7 +32,9 @@ Must be between 0.50 and 0.99. Default is 0.95. See details.}
 
 \item{compare}{to compare fits}
 
-\item{area}{TRUE/FALSE argument to indicate if user wants an estimate for area under the curve.}
+\item{area}{logical argument to indicate if user wants an estimate for area under the curve (default is TRUE).}
+
+\item{silent}{logical argument to indicate if user wants ROC plots (default is TRUE).}
 }
 \value{
 A plot with the ROC curve and an ROCsurv object containing:

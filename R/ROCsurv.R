@@ -11,7 +11,8 @@
 #' @param method Method to be used to obtain a complete curve.
 #' @param checkPH to check
 #' @param compare to compare fits
-#' @param area TRUE/FALSE argument to indicate if user wants an estimate for area under the curve.
+#' @param area logical argument to indicate if user wants an estimate for area under the curve (default is TRUE).
+#' @param silent logical argument to indicate if user wants ROC plots (default is TRUE).
 #'
 #' @return A plot with the ROC curve and an ROCsurv object containing:
 #' \itemize{
@@ -26,7 +27,7 @@
 #' @export
 #'
 ROCsurv <- function(time, event, group, level=NULL, method = NULL,
-                    checkPH = FALSE, compare=FALSE, area=NULL){
+                    checkPH = FALSE, compare=FALSE, area=NULL, silent){
   #time = dat$ti ; event = dat$di; group = dat$trt; level = 0.95;
   #time = leukemia$Time ; event = leukemia$Event; group = leukemia$Group; level = 0.95;
 
@@ -34,13 +35,14 @@ ROCsurv <- function(time, event, group, level=NULL, method = NULL,
   if (length(unique(all_lengths)) != 1) stop("One or more input vectors (time, event, group) differs in length from the rest.")
   if ((is.null(method) + is.null(checkPH))==2) {checkPH <- TRUE}
   if (is.null(level)) {level = 0.95}
+  if (missing(silent)) {silent=FALSE}
 
-  if(checkPH == TRUE) {
-    result <- ROCandPHM(time, event, group)
+  if(checkPH == TRUE) { #CHECK IF PROPORTIONAL HAZARDS
+    result <- ROCandPHM(time, event, group, silent)
     return(result)
 
-  } else if (compare == TRUE) {
-    result <- ROCcompare(time, event, group)
+  } else if (compare == TRUE) { #COMPARE TO LOGLOGISTIC AND LOGNORMAL
+    result <- ROCcompare(time, event, group, silent)
     return(result)
 
   } else {
@@ -54,7 +56,7 @@ ROCsurv <- function(time, event, group, level=NULL, method = NULL,
 
       #Point Estimate based on
       if (KMests[[2]]==0) {
-          result <- completeROC(KMests[[1]], silent=FALSE)
+          result <- completeROC(KMests[[1]], silent)
           return(list(control_km = KMests$km_placebo,
                       drug_km = KMests$km_drug,
                       AUC = result))}
@@ -63,7 +65,7 @@ ROCsurv <- function(time, event, group, level=NULL, method = NULL,
           return(list(control_km = KMests$km_placebo,
                       drug_km = KMests$km_drug))
       } else if (KMests[[2]]!=0 & method=="restrict") {
-          result <- restrictROC(KMests[[1]], silent = FALSE)
+          result <- restrictROC(KMests[[1]], silent)
 
     }
 
