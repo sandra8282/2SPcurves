@@ -16,6 +16,7 @@
 #' @importFrom stats na.omit
 #' @import survival
 #' @importFrom stats cor
+#' @importFrom pathmapping CreateMap
 #'
 #' @keywords internal
 #' @noRd
@@ -32,26 +33,33 @@ ROCandPHM <- function(time, event, group) {
        xlim=c(0,1), ylim = c(0, 1), #to make tight axis: xaxs="i", yaxs="i"
        xlab="Control Group Survival", ylab="Treatment Group Survival",
        cex.axis = 1.25, cex.lab = 1.25)
-  points(forplot[,1], forplot[,2])
+  lines(forplot[,1], forplot[,2])
   lines(forplot[,1], forplot[,1]^exp(coxfit$coefficients), col="blue")
   abline(c(0,1), col = "red", lty=3)
 
-  #correlations and SSR
-  rho <- cor(forplot[,2], forplot[,1]^exp(coxfit$coefficients))
-  resid <- forplot[,2] - forplot[,1]^exp(coxfit$coefficients)
-  SSR <- sum(resid^2); sumresid = sum(resid);
 
-  text(x=0.99, y=0.05,
+  #correlations, SSR and area between curves
+  cox_surv1 <- forplot[,1]^exp(coxfit$coefficients) #surv1 = surv0^HR
+  rho <- cor(forplot[,2], cox_surv1)
+  resid <- forplot[,2] - cox_surv1
+  SSR <- sum(resid^2)
+  forplot <- cbind(forplot, cox = cox_surv1)
+  invisible(capture.output(out <- pathmapping::CreateMap(forplot[,c(1,2)], forplot[,c(1,3)],
+                                plotgrid=F, verbose=F, insertopposites=F)))
+  areaBTWcurves <- out$deviation
+
+  text(x=0.99, y=0.25,
        labels = paste("rho = ", round(rho, 4), sep=""),
        pos=2)
   text(x=0.99, y=0.15,
        labels = paste("SSR = ", round(SSR, 4), sep=""),
        pos=2)
-  text(x=0.99, y=0.25,
-       labels = paste("Residual sum = ", round(sumresid, 4), sep=""),
+  text(x=0.99, y=0.05,
+       labels = paste("Area between curves = ", round(areaBTWcurves, 4), sep=""),
        pos=2)
 
-  return(list(KMres = KMres, SSR = SSR, SR = sumresid, rho = rho))
+
+  return(list(KMres = KMres, SSR = SSR, rho = rho, areaBTWcurves = areaBTWcurves))
 
 }
 

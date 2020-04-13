@@ -15,21 +15,12 @@ getSKM4fit <- function(time, fitsurv, group) {
 
 getmat4cor <- function(forplot, forplotfit){
   all <- matrix(nrow = nrow(forplot), ncol=4)
-  all[1,] <- cbind(forplot[1,], forplotfit[1,])
+  all[1,] <- cbind(forplot[1, 1:2], forplotfit[1,])
   for (q in 2:nrow(forplot)) {
     absdiff = (abs(forplotfit[,1]-forplot[q,1]))
     index <- which(absdiff==min(absdiff))
-    all[q,] <- cbind(forplot[q,], forplotfit[index[1],])
+    all[q,] <- cbind(forplot[q,1:2], forplotfit[index[1],])
   }
-  # for (k in 2:nrow(forplot)){
-  #   if (forplot[k, 1]!=forplot[k-1,1]) {
-  #     #there was horizontal or diagonal change
-  #     ind <- which(forplotfit[[i]][,1] < forplot[k-1,1] & forplotfit[[i]][,1] > forplot[k,1])
-  #     all[ind,] <- cbind(matrix(forplotfit[ind,], ncol=2),
-  #                        matrix(rep(forplot[k,], length(ind)), ncol=2, byrow=TRUE)
-  #     )
-  #   }
-  #}
   return(na.omit(all))
 }
 #' ROC when survival goes to 0 for either group
@@ -49,6 +40,7 @@ getmat4cor <- function(forplot, forplotfit){
 #' @importFrom graphics rect
 #' @importFrom stats na.omit
 #' @importFrom stats pnorm
+#' @importFrom stats qnorm
 #' @import survival
 #' @importFrom stats cor
 #'
@@ -104,29 +96,51 @@ ROCcompare <- function(time, event, group) {
          cex=1, bty = "n", xjust = 1, yjust = 0, y.intersp = 1)
 
   #correlations and SSR
-  rho = SSR = SR = rep(0,3)
-  names(rho) = names(SSR) = c("Cox", d)
-  rho[1] <- cor(forplot[,2], forplot[,1]^exp(coxfit$coefficients))
-  resid <- forplot[,2] - forplot[,1]^exp(coxfit$coefficients)
-  SSR[1] <- sum(resid^2); SR <- sum(resid);
+  rho = SSR = areaBTWcurves = rep(0,3)
+  cox_surv1 <- forplot[,1]^exp(coxfit$coefficients)
+  rho[1] <- cor(forplot[,2], cox_surv1)
+  resid <- forplot[,2] - cox_surv1
+  SSR[1] = sum(resid^2)
+  forplot <- cbind(forplot, cox = cox_surv1)
+  invisible(capture.output(out <- pathmapping::CreateMap(forplot[,c(1,2)], forplot[,c(1,3)],
+                                                         plotgrid=F, verbose=F, insertopposites=F)))
+  areaBTWcurves[1] <- out$deviation
+
   for (i in 2:3) {
     comparetofit <- getmat4cor(forplot, forplotfit[[i-1]])
     rho[i] <- cor(comparetofit[,2], comparetofit[,4])
-    resid <- comparetofit[,2] - comparetofit[,4]
-    SSR[i] <- sum(resid^2); SR[i] <- sum(resid);
+    temp <- comparetofit[,2] - comparetofit[,4]
+    SSR[i] <- sum(temp^2)
+    invisible(capture.output(
+      out <- pathmapping::CreateMap(forplot[,c(1,2)], forplotfit[[i-1]],
+                                    plotgrid=F, verbose=F, insertopposites=F)))
+    areaBTWcurves[i] <- out$deviation
   }
+  areaBTWcurves = as.numeric(areaBTWcurves)
+  names(rho) = names(SSR) = names(areaBTWcurves) = c("Cox", d)
+  # plot(resid[,1], col = "darkred", pch = 20)
+  # points(resid[,2], col = "darkblue", pch = 20)
+  # points(resid[,3], col = "darkgreen", pch = 20)
+  # abline(h=0, col="black", lty = 2)
+  # legend("topleft", legend= c("Cox PHM", "Lognormal", "Loglogistic"),
+  #        col=c("darkred", "darkblue", "darkgreen"), pch = 20,
+  #        cex=1, bty = "n", xjust = 1, yjust = 0, y.intersp = 1)
 
   #find best
   bestindex = which(rho == max(rho))
   best = names(rho)[bestindex]
   bestindex2 = which(SSR == min(SSR))
   best2 = names(SSR)[bestindex2]
+  bestindex3 = which(areaBTWcurves == min(areaBTWcurves))
+  best3 = names(areaBTWcurves)[bestindex3]
 
   coefficients = rbind(mu, gamma, sigma)
   rownames(coefficients) <- c("(Intercept)", "group", "scale")
   colnames(coefficients) <- d
 
-  return(list(KMres = KMres, bestRHO = best, HR = coxfit$coefficients,
-              bestSSR = best2, RHO = rho, SR = SR, SSR = SSR, coefficients = coefficients))
+  return(list(KMres = KMres,  HR = exp(coxfit$coefficients),
+              BestRHO = best, BestSSR = best2, BestAreaBTWcurves = best3,
+              RHO = rho, SSR = SSR, areaBTWcurves = areaBTWcurves,
+              coefficients = coefficients))
 
 }
