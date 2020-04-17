@@ -1,19 +1,15 @@
-base_surv_weibull <- function(lambda, alpha, times){
-  s0 <- exp(-lambda*(times)^alpha)
-  return(s0)
-}
-
 getSKM4fit <- function(time, fitsurv, group) {
   fitskm <- cbind(time, fitsurv, group)
   fitskm <- fitskm[!duplicated(fitskm),]
-  ties_check <- unique(table(fitskm[,1]))
+  ties_check <- unique(table(fitskm[,1])) #how many times are repeated
   if (length(ties_check) > 1) {
     ties_times = fitskm[duplicated(fitskm[,1]),1]
     ties_ind <- rep(0, nrow(fitskm))
     ties_ind[which(fitskm[,1] %in% ties_times)]=1
   } else {ties_ind <- rep(0, nrow(fitskm))}
   fitskm = cbind(fitskm, ties_ind)
-  fitskm = fitskm[order(fitskm[,1],fitskm[,3]),]
+  fitskm <- fitskm[order(fitskm[,1], fitskm[,3]),]
+  return(fitskm)
 }
 
 #' ROC when survival goes to 0 for either group
@@ -38,55 +34,73 @@ getSKM4fit <- function(time, fitsurv, group) {
 #'
 #' @export
 
-ROCparametric <- function(time, event, group, method="weibull") {
+ROCparametric <- function(time, event, group, dist="loglogistic") {
 
   KMres <- getKMtab(time, event, group)
   skm <- KMres[[1]]
   forplot = get4plot(skm)
 
-  if (!is.character(method)) {stop("Argument dist must be a string.")}
+  #obtain coefficients and parameters to calculate survival fcts
+  fit = survreg(Surv(time, event) ~ group, dist=dist)
+  mu = fit$coefficients[1]; gamma = fit$coefficients[2]; sigma = fit$scale;
+  lambda = exp(-unname(mu/sigma)); beta = -unname(gamma)/sigma; alpha = 1/sigma;
 
-  if (method=="cox") {
-    coxfit <- coxph(Surv(time, event) ~ group, ties = "breslow")
-    baseline <- c(forplot[,1], seq(forplot[nrow(forplot),1], 0, length.out = round(nrow(forplot)/4, 0)))
-    paramsurv <- cbind(baseline, baseline^exp(coxfit$coefficients))
-  }
+  #calculate survival fcts
+  if (dist=="loglogistic") {
+    fitsurv <- (1 + lambda*exp(beta*group)*(time^alpha))^(-1)
+    fitskm <- getSKM4fit(time, fitsurv, group)
+    forplotfit = get4plot(fitskm)
+    newsurv0 <- seq(min(forplotfit[,1]), 0, length.out = round(nrow(forplotfit)*0.15, 0))
+    forplotfit <- rbind(forplotfit, cbind(newsurv0, rep(0, length(newsurv0))))
+    forplotfit[,2] = 1 / (1 + (exp(- gamma/sigma) * (1/forplotfit[,1] - 1)))
 
-  if (method == "loglogistic") {
-    fit <- survreg(Surv(time, event) ~ group, dist="loglogistic")
-    lambda1 = exp(-unname(fit$coefficients[1])/fit$scale)
-    beta1 = -unname(fit$coefficients[2])/fit$scale
-    alpha1 = 1/fit$scale
-    fitsurv1 = (1 + lambda1*exp(beta1*group)*(time^alpha1))^(-1)
-    fitskm1 <- getSKM4fit(time, fitsurv1, group)
-    forplotfit1 = get4plot(fitskm1)
-    newsurv <- seq( min(fitskm1[,1]), 0.00000000001, length.out = round(nrow(forplotfit1)/10, 0) )
-    time0 <- ((1 + lambda1*exp(0))*newsurv)^(-alpha1)
-    time1 <- ((1 + lambda1*exp(beta1))*newsurv)^(-alpha1)
-    newskm1 <- getSKM4fit(time = c(time0, time1), fitsurv = c(newsurv, newsurv),
-                          group = c(rep(0, length(newsurv)), rep(1, length(newsurv)))
-                          )
-    new4plot <- get4plot(newskm1)
-
-
-
-
+  } else {
+    fitsurv <- 1 - pnorm((log(time)- mu - gamma*group)/sigma)
+    fitskm <- getSKM4fit(time, fitsurv, group)
+    forplotfit = get4plot(fitskm)
+    newsurv0 <- seq(min(forplotfit[,1]), 0, length.out = round(nrow(forplotfit)*0.15, 0))
+    forplotfit <- rbind(forplotfit, cbind(newsurv0, rep(0, length(newsurv0))))
+    forplotfit[,2] = 1 - pnorm(qnorm(1 - forplotfit[,1]) - gamma/sigma)
 
   }
 
-  fit2 <- survreg(Surv(time, event) ~ group, dist="weibull")
-  lambda2 = exp(-unname(fit2$coefficients[1])/fit2$scale)
-  beta2 = -unname(fit2$coefficients[2])/fit2$scale
-  alpha2 = 1/fit2$scale
-  theta = -unname(fit2$coefficients[2])
-  fitsurv2 = base_surv_weibull(lambda2, alpha2, times = time*exp(theta*group))
-  fitskm2 <- getSKM4fit(time, fitsurv2, group)
-  forplotfit2 = get4plot(fitskm2)
+   area = 0
+   plot(NULL, type="n", las=1,
+         xlim=c(0,1), ylim = c(0, 1), #to make tight axis: xaxs="i", yaxs="i"
+         xlab="Control Group Survival", ylab="Treatment Group Survival",
+         cex.axis = 1.25, cex.lab = 1.25)
 
+   for (k in 2:nrow(forplotfit)) {
+     coord_new = unname(forplotfit[k-1,])
+     coord_new2 = unname(forplotfit[k,])
+     #figure out areas and shading
+     if (forplotfit[k,2]==forplotfit[k-1,2]) {#move horizontally
+       rect(xright = coord_new[1], ytop = coord_new[2],
+            xleft = coord_new2[1], ybottom = 0,
+            col = "pink", border = "pink")
+       area = area + (coord_new[1] - coord_new2[1])*(coord_new[2])
+     } else {
+       if (forplotfit[k,1]!=forplotfit[k-1,1] & forplotfit[k,2]!=forplotfit[k-1,2]){
+         #area and shading for diagonal
+         rect(xright = coord_new[1], ytop = coord_new2[2],
+              xleft = coord_new2[1], ybottom = 0,
+              col = "pink", border = "pink")
+         area_rectang = (coord_new[1] - coord_new2[1])*(coord_new2[2])
+         polygon(x=c(coord_new[1], coord_new[1], coord_new2[1]),
+                 y=c(coord_new[2], coord_new2[2], coord_new2[2]),
+                 col = "pink", border = "pink")
+         area_triang = 0.5 * (coord_new[1] - coord_new2[1]) * (coord_new[2] - coord_new2[2])
+         area = area + area_rectang + area_triang
+       }
+     }
+   }
 
+   points(forplot[,1], forplot[,2], col = "grey50", cex = 0.75)
+   lines(forplotfit[,1], forplotfit[,2], col="black")
+   abline(c(0,1), col = "red", lty=2)
+   text(x=0.99, y=0.05, labels = paste("AUC=", round(area,2), sep=""),
+        pos=2, cex = 1)
 
-
-
-  return(parametricfit = fit)
+   return(list(fit, area))
 
 }

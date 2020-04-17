@@ -27,7 +27,7 @@
 #' @export
 #'
 ROCsurv <- function(time, event, group, level=NULL, method = NULL,
-                    checkPH = FALSE, compare=FALSE, area=NULL, silent){
+                    checkPH = FALSE, compare=FALSE, area=NULL, silent, abtwc){
   #time = dat$ti ; event = dat$di; group = dat$trt; level = 0.95;
   #time = leukemia$Time ; event = leukemia$Event; group = leukemia$Group; level = 0.95;
 
@@ -36,13 +36,14 @@ ROCsurv <- function(time, event, group, level=NULL, method = NULL,
   if ((is.null(method) + is.null(checkPH))==2) {checkPH <- TRUE}
   if (is.null(level)) {level = 0.95}
   if (missing(silent)) {silent=FALSE}
+  if (missing(abtwc)) {abtwc=TRUE}
 
   if(checkPH == TRUE) { #CHECK IF PROPORTIONAL HAZARDS
-    result <- ROCandPHM(time, event, group, silent)
+    result <- ROCandPHM(time, event, group, silent, abtwc)
     return(result)
 
   } else if (compare == TRUE) { #COMPARE TO LOGLOGISTIC AND LOGNORMAL
-    result <- ROCcompare(time, event, group, silent)
+    result <- ROCcompare(time, event, group, silent, abtwc)
     return(result)
 
   } else {

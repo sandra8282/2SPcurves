@@ -4,6 +4,7 @@
 #' @param event passed from ROCsurv.
 #' @param group passed from ROCsurv.
 #' @param silent passed from ROCsurv.
+#' @param abtwc passed from ROCsurv.
 #'
 #' @return A plot of the ROC curve and an ROCsurv object containing:
 #' \itemize{
@@ -22,13 +23,25 @@
 #' @keywords internal
 #' @noRd
 
-ROCandPHM <- function(time, event, group, silent) {
+ROCandPHM <- function(time, event, group, silent, abtwc) {
 
   KMres <- getKMtab(time, event, group)
   skm <- KMres[[1]]
   forplot = get4plot(skm)
 
   coxfit <- coxph(Surv(time, event) ~ group, ties = "breslow")
+
+  #correlations, SSR and area between curves
+  cox_surv1 <- forplot[,1]^exp(coxfit$coefficients) #surv1 = surv0^HR
+  rho <- cor(forplot[,2], cox_surv1)
+  resid <- forplot[,2] - cox_surv1
+  SSR <- sum(resid^2)
+  forplot <- cbind(forplot, cox = cox_surv1)
+  if (abtwc == TRUE){
+      invisible(capture.output(out <- CreateMap(forplot[,c(1,2)], forplot[,c(1,3)],
+                                            plotgrid=F, verbose=F, insertopposites=F)))
+      areaBTWcurves <- out$deviation
+  }
 
   if(silent==FALSE){
   plot(NULL, type="n", las=1,
@@ -38,17 +51,6 @@ ROCandPHM <- function(time, event, group, silent) {
   lines(forplot[,1], forplot[,2])
   lines(forplot[,1], forplot[,1]^exp(coxfit$coefficients), col="blue")
   abline(c(0,1), col = "red", lty=3)
-  }
-
-  #correlations, SSR and area between curves
-  cox_surv1 <- forplot[,1]^exp(coxfit$coefficients) #surv1 = surv0^HR
-  rho <- cor(forplot[,2], cox_surv1)
-  resid <- forplot[,2] - cox_surv1
-  SSR <- sum(resid^2)
-  forplot <- cbind(forplot, cox = cox_surv1)
-  invisible(capture.output(out <- pathmapping::CreateMap(forplot[,c(1,2)], forplot[,c(1,3)],
-                                plotgrid=F, verbose=F, insertopposites=F)))
-  areaBTWcurves <- out$deviation
 
   text(x=0.99, y=0.25,
        labels = paste("rho = ", round(rho, 4), sep=""),
@@ -56,13 +58,20 @@ ROCandPHM <- function(time, event, group, silent) {
   text(x=0.99, y=0.15,
        labels = paste("SSR = ", round(SSR, 4), sep=""),
        pos=2)
-  text(x=0.99, y=0.05,
-       labels = paste("Area between curves = ", round(areaBTWcurves, 4), sep=""),
-       pos=2)
+    if (abtwc == TRUE){
+      text(x=0.99, y=0.05,
+           labels = paste("Area between curves = ", round(areaBTWcurves, 4), sep=""),
+           pos=2)
+    }
 
 
-  return(list(KMres = KMres, SSR = SSR, rho = rho, areaBTWcurves = areaBTWcurves))
+  }
+
+  if (abtwc == TRUE){
+    res <- list(KMres = KMres, SSR = SSR, rho = rho, areaBTWcurves = areaBTWcurves)
+    } else {res <- list(KMres = KMres, SSR = SSR, rho = rho)}
+
+  return(res)
 
 }
 
-setwd("C:/Users/Sandra/Documents/GitHub/ROCsurv")

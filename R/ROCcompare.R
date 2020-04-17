@@ -10,7 +10,6 @@ getSKM4fit <- function(time, fitsurv, group) {
   fitskm = cbind(fitskm, ties_ind)
   fitskm <- fitskm[order(fitskm[,1], fitskm[,3]),]
   return(fitskm)
-
 }
 
 getmat4cor <- function(forplot, forplotfit){
@@ -29,6 +28,7 @@ getmat4cor <- function(forplot, forplotfit){
 #' @param event passed from ROCsurv.
 #' @param group passed from ROCsurv.
 #' @param silent passed from ROCsurv.
+#' @param abtwc passed from ROCsurv.
 #'
 #' @return A plot of the ROC curve and an ROCsurv object containing:
 #' \itemize{
@@ -44,11 +44,12 @@ getmat4cor <- function(forplot, forplotfit){
 #' @importFrom stats qnorm
 #' @import survival
 #' @importFrom stats cor
+#' @importFrom pathmapping CreateMap
 #'
 #' @keywords internal
 #' @noRd
 
-ROCcompare <- function(time, event, group, silent) {
+ROCcompare <- function(time, event, group, silent, abtwc) {
 
   d <- c("lognormal", "loglogistic")
   KMres <- getKMtab(time, event, group)
@@ -83,21 +84,6 @@ ROCcompare <- function(time, event, group, silent) {
   #Get cox model
   coxfit <- coxph(Surv(time, event) ~ group, ties = "breslow")
 
-  if (silent==FALSE){
-      plot(NULL, type="n", las=1,
-       xlim=c(0,1), ylim = c(0, 1), #to make tight axis: xaxs="i", yaxs="i"
-       xlab="Control Group Survival", ylab="Treatment Group Survival",
-       cex.axis = 1.25, cex.lab = 1.25)
-  points(forplot[,1], forplot[,2], col = "grey50", cex = 0.75)
-  lines(forplot[,1], forplot[,1]^exp(coxfit$coefficients), col="darkred")
-  lines(forplotfit[[1]][,1], forplotfit[[1]][,2], col="darkblue")
-  lines(forplotfit[[2]][,1], forplotfit[[2]][,2], col="darkgreen")
-  abline(c(0,1), col = "grey", lty=2)
-  legend("bottomright", legend= c("Cox PHM", "Lognormal", "Loglogistic"),
-         lty = 1, col=c("darkred", "darkblue", "darkgreen"),
-         cex=1, bty = "n", xjust = 1, yjust = 0, y.intersp = 1)
-  }
-
   #correlations and SSR
   rho = SSR = areaBTWcurves = rep(0,3)
   cox_surv1 <- forplot[,1]^exp(coxfit$coefficients)
@@ -105,19 +91,23 @@ ROCcompare <- function(time, event, group, silent) {
   resid <- forplot[,2] - cox_surv1
   SSR[1] = sum(resid^2)
   forplot <- cbind(forplot, cox = cox_surv1)
-  invisible(capture.output(out <- pathmapping::CreateMap(forplot[,c(1,2)], forplot[,c(1,3)],
-                                                         plotgrid=F, verbose=F, insertopposites=F)))
-  areaBTWcurves[1] <- out$deviation
+  if (abtwc==TRUE) {
+      invisible(capture.output(out <- CreateMap(forplot[,c(1,2)], forplot[,c(1,3)],
+                      plotgrid=F, verbose=F, insertopposites=F)))
+      areaBTWcurves[1] <- out$deviation
+  }
+
 
   for (i in 2:3) {
     comparetofit <- getmat4cor(forplot, forplotfit[[i-1]])
     rho[i] <- cor(comparetofit[,2], comparetofit[,4])
     temp <- comparetofit[,2] - comparetofit[,4]
     SSR[i] <- sum(temp^2)
-    invisible(capture.output(
-      out <- pathmapping::CreateMap(forplot[,c(1,2)], forplotfit[[i-1]],
-                                    plotgrid=F, verbose=F, insertopposites=F)))
-    areaBTWcurves[i] <- out$deviation
+    if (abtwc==TRUE){
+      invisible(capture.output(out <- CreateMap(forplot[,c(1,2)], forplotfit[[i-1]],
+                                                plotgrid=F, verbose=F, insertopposites=F)))
+      areaBTWcurves[i] <- out$deviation
+    }
   }
   areaBTWcurves = as.numeric(areaBTWcurves)
   names(rho) = names(SSR) = names(areaBTWcurves) = c("Cox", d)
@@ -141,9 +131,29 @@ ROCcompare <- function(time, event, group, silent) {
   rownames(coefficients) <- c("(Intercept)", "group", "scale")
   colnames(coefficients) <- d
 
-  return(list(KMres = KMres,  HR = exp(coxfit$coefficients),
-              BestRHO = best, BestSSR = best2, BestAreaBTWcurves = best3,
-              RHO = rho, SSR = SSR, areaBTWcurves = areaBTWcurves,
-              coefficients = coefficients))
+  if (silent==FALSE){
+    plot(NULL, type="n", las=1,
+         xlim=c(0,1), ylim = c(0, 1), #to make tight axis: xaxs="i", yaxs="i"
+         xlab="Control Group Survival", ylab="Treatment Group Survival",
+         cex.axis = 1.25, cex.lab = 1.25)
+    points(forplot[,1], forplot[,2], col = "grey50", cex = 0.75)
+    lines(forplot[,1], forplot[,1]^exp(coxfit$coefficients), col="darkred")
+    lines(forplotfit[[1]][,1], forplotfit[[1]][,2], col="darkblue")
+    lines(forplotfit[[2]][,1], forplotfit[[2]][,2], col="darkgreen")
+    abline(c(0,1), col = "grey", lty=2)
+    legend("bottomright", legend= c("Cox PHM", "Lognormal", "Loglogistic"),
+           lty = 1, col=c("darkred", "darkblue", "darkgreen"),
+           cex=1, bty = "n", xjust = 1, yjust = 0, y.intersp = 1)
+  }
+
+  if (abtwc==TRUE) {
+    return(list(KMres = KMres,  HR = exp(coxfit$coefficients),
+                BestRHO = best, BestSSR = best2, BestAreaBTWcurves = best3,
+                RHO = rho, SSR = SSR, areaBTWcurves = areaBTWcurves,
+                coefficients = coefficients))
+  } else {return(list(KMres = KMres,  HR = exp(coxfit$coefficients),
+                      BestRHO = best, BestSSR = best2,
+                      RHO = rho, SSR = SSR, coefficients = coefficients))}
+
 
 }
