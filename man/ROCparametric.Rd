@@ -4,7 +4,7 @@
 \alias{ROCparametric}
 \title{ROC when survival goes to 0 for either group}
 \usage{
-ROCparametric(time, event, group, method = "weibull")
+ROCparametric(time, event, group, dist = "loglogistic")
 }
 \arguments{
 \item{time}{Numeric or character vector of subject's unique identifier (i).}

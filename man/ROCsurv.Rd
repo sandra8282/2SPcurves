@@ -13,7 +13,8 @@ ROCsurv(
   checkPH = FALSE,
   compare = FALSE,
   area = NULL,
-  silent
+  silent,
+  abtwc
 )
 }
 \arguments{

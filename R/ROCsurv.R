@@ -13,6 +13,7 @@
 #' @param compare to compare fits
 #' @param area logical argument to indicate if user wants an estimate for area under the curve (default is TRUE).
 #' @param silent logical argument to indicate if user wants ROC plots (default is TRUE).
+#' @param abtwc logical argument to indicate if area between curves is needed as part of checking PHM assumption or in model comparison.
 #'
 #' @return A plot with the ROC curve and an ROCsurv object containing:
 #' \itemize{
@@ -36,13 +37,14 @@ ROCsurv <- function(time, event, group, level=NULL, method = NULL,
   if ((is.null(method) + is.null(checkPH))==2) {checkPH <- TRUE}
   if (is.null(level)) {level = 0.95}
   if (missing(silent)) {silent=FALSE}
-  if (missing(abtwc)) {abtwc=TRUE}
 
   if(checkPH == TRUE) { #CHECK IF PROPORTIONAL HAZARDS
+    if (missing(abtwc)) {abtwc=TRUE}
     result <- ROCandPHM(time, event, group, silent, abtwc)
     return(result)
 
   } else if (compare == TRUE) { #COMPARE TO LOGLOGISTIC AND LOGNORMAL
+    if (missing(abtwc)) {abtwc=TRUE}
     result <- ROCcompare(time, event, group, silent, abtwc)
     return(result)
 
@@ -57,7 +59,7 @@ ROCsurv <- function(time, event, group, level=NULL, method = NULL,
 
       #Point Estimate based on
       if (KMests[[2]]==0) {
-          result <- completeROC(KMests[[1]], silent)
+          result <- completeROC(KMests[[1]], silent) #time, event, group
           return(list(control_km = KMests$km_placebo,
                       drug_km = KMests$km_drug,
                       AUC = result))}

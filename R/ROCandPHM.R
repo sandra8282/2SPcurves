@@ -19,6 +19,7 @@
 #' @import survival
 #' @importFrom stats cor
 #' @importFrom pathmapping CreateMap
+#' @importFrom utils capture.output
 #'
 #' @keywords internal
 #' @noRd
@@ -27,6 +28,7 @@ ROCandPHM <- function(time, event, group, silent, abtwc) {
 
   KMres <- getKMtab(time, event, group)
   skm <- KMres[[1]]
+  skm <- skm[,-3]
   forplot = get4plot(skm)
 
   coxfit <- coxph(Surv(time, event) ~ group, ties = "breslow")

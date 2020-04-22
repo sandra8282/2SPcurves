@@ -54,6 +54,7 @@ ROCcompare <- function(time, event, group, silent, abtwc) {
   d <- c("lognormal", "loglogistic")
   KMres <- getKMtab(time, event, group)
   skm <- KMres[[1]]
+  skm <- skm[,-3]
   forplot = get4plot(skm)
 
   #obtain coefficients and parameters to calculate survival fcts
