@@ -28,7 +28,8 @@
 #' @export
 #'
 ROCsurv <- function(time, event, group, level=NULL, method = NULL,
-                    checkPH = FALSE, compare=FALSE, area=NULL, silent, abtwc){
+                    checkPH = FALSE, compare=FALSE, area=NULL, silent, abtwc,
+                    xlabel, ylabel, main){
   #time = dat$ti ; event = dat$di; group = dat$trt; level = 0.95;
   #time = leukemia$Time ; event = leukemia$Event; group = leukemia$Group; level = 0.95;
 
@@ -37,29 +38,34 @@ ROCsurv <- function(time, event, group, level=NULL, method = NULL,
   if ((is.null(method) + is.null(checkPH))==2) {checkPH <- TRUE}
   if (is.null(level)) {level = 0.95}
   if (missing(silent)) {silent=FALSE}
+  if (missing(xlabel)) {xlab <- "Control Group Survival"} else {
+    xlab <- paste(xlabel, "Survival", sep = " ")}
+  if (missing(ylabel)) {ylab <- "Treatment Group Survival"} else {
+    ylab <- paste(ylabel, "Survival", sep = " ")}
+  if (missing(main)) {main <- ""}
 
   if(checkPH == TRUE) { #CHECK IF PROPORTIONAL HAZARDS
     if (missing(abtwc)) {abtwc=TRUE}
-    result <- ROCandPHM(time, event, group, silent, abtwc)
+    result <- ROCandPHM(time, event, group, silent, abtwc, xlab, ylab, main)
     return(result)
 
   } else if (compare == TRUE) { #COMPARE TO LOGLOGISTIC AND LOGNORMAL
     if (missing(abtwc)) {abtwc=TRUE}
-    result <- ROCcompare(time, event, group, silent, abtwc)
+    result <- ROCcompare(time, event, group, silent, abtwc, xlab, ylab, main)
     return(result)
 
   } else {
     KMests <- getKMtab(time, event, group)
 
     if (area==FALSE) {
-        result <- onlyROC(KMests[[1]])
+        result <- onlyROC(KMests[[1]], xlab, ylab, main)
         return(list(control_km = KMests$km_placebo,
                 drug_km = KMests$km_drug))
     } else {
 
       #Point Estimate based on
       if (KMests[[2]]==0) {
-          result <- completeROC(KMests[[1]], silent) #time, event, group
+          result <- completeROC(KMests[[1]], silent, xlab, ylab, main) #time, event, group
           return(list(control_km = KMests$km_placebo,
                       drug_km = KMests$km_drug,
                       AUC = result))}
@@ -71,9 +77,6 @@ ROCsurv <- function(time, event, group, level=NULL, method = NULL,
           result <- restrictROC(KMests[[1]], silent)
 
     }
-
-
-
 
     }
   }

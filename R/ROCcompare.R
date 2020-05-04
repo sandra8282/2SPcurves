@@ -29,6 +29,9 @@ getmat4cor <- function(forplot, forplotfit){
 #' @param group passed from ROCsurv.
 #' @param silent passed from ROCsurv.
 #' @param abtwc passed from ROCsurv.
+#' @param xlab passed from ROCsurv.
+#' @param ylab passed from ROCsurv.
+#' @param main passed from ROCsurv.
 #'
 #' @return A plot of the ROC curve and an ROCsurv object containing:
 #' \itemize{
@@ -49,7 +52,7 @@ getmat4cor <- function(forplot, forplotfit){
 #' @keywords internal
 #' @noRd
 
-ROCcompare <- function(time, event, group, silent, abtwc) {
+ROCcompare <- function(time, event, group, silent, abtwc, xlab, ylab, main) {
 
   d <- c("lognormal", "loglogistic")
   KMres <- getKMtab(time, event, group)
@@ -135,8 +138,7 @@ ROCcompare <- function(time, event, group, silent, abtwc) {
   if (silent==FALSE){
     plot(NULL, type="n", las=1,
          xlim=c(0,1), ylim = c(0, 1), #to make tight axis: xaxs="i", yaxs="i"
-         xlab="Control Group Survival", ylab="Treatment Group Survival",
-         cex.axis = 1.25, cex.lab = 1.25)
+         xlab=xlab, ylab=ylab, main=main, cex.axis = 1.5, cex.lab = 1.5)
     points(forplot[,1], forplot[,2], col = "grey50", cex = 0.75)
     lines(forplot[,1], forplot[,1]^exp(coxfit$coefficients), col="darkred")
     lines(forplotfit[[1]][,1], forplotfit[[1]][,2], col="darkblue")

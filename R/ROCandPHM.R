@@ -5,6 +5,9 @@
 #' @param group passed from ROCsurv.
 #' @param silent passed from ROCsurv.
 #' @param abtwc passed from ROCsurv.
+#' @param xlab passed from ROCsurv
+#' @param ylab passed from ROCsurv
+#' @param main passed from ROCsurv
 #'
 #' @return A plot of the ROC curve and an ROCsurv object containing:
 #' \itemize{
@@ -24,11 +27,10 @@
 #' @keywords internal
 #' @noRd
 
-ROCandPHM <- function(time, event, group, silent, abtwc) {
+ROCandPHM <- function(time, event, group, silent, abtwc, xlab, ylab, main) {
 
   KMres <- getKMtab(time, event, group)
   skm <- KMres[[1]]
-  skm <- skm[,-3]
   forplot = get4plot(skm)
 
   coxfit <- coxph(Surv(time, event) ~ group, ties = "breslow")
@@ -46,13 +48,15 @@ ROCandPHM <- function(time, event, group, silent, abtwc) {
   }
 
   if(silent==FALSE){
-  plot(NULL, type="n", las=1,
-       xlim=c(0,1), ylim = c(0, 1), #to make tight axis: xaxs="i", yaxs="i"
-       xlab="Control Group Survival", ylab="Treatment Group Survival",
-       cex.axis = 1.25, cex.lab = 1.25)
+    plot(NULL, type="n", las=1,
+         xlim=c(0,1), ylim = c(0, 1), #to make tight axis: xaxs="i", yaxs="i"
+         xlab=xlab, ylab=ylab, main=main, cex.axis = 1.5, cex.lab = 1.5)
   lines(forplot[,1], forplot[,2])
   lines(forplot[,1], forplot[,1]^exp(coxfit$coefficients), col="blue")
   abline(c(0,1), col = "red", lty=3)
+  legend("topleft", c("Estimated ROC", "Cox Model ROC"), col = c("black", "blue"),
+         lty = 1, inset=0.02, cex=1.5, bg = "white", bty='n', seg.len = 0.8,
+         x.intersp=0.9, y.intersp = 0.85)
 
   text(x=0.99, y=0.25,
        labels = paste("rho = ", round(rho, 4), sep=""),

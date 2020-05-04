@@ -3,6 +3,9 @@
 #'
 #' @param skm passed from ROCsurv
 #' @param silen passed from ROCsurv or btsp
+#' @param xlab passed from ROCsurv
+#' @param ylab passed from ROCsurv
+#' @param main passed from ROCsurv
 #'
 #' @return A plot of the ROC curve and an ROCsurv object containing:
 #' \itemize{
@@ -18,7 +21,7 @@
 #' @keywords internal
 #' @noRd
 
-completeROC <- function(skm, silent) {
+completeROC <- function(skm, silent, xlab, ylab, main) {
 
   forplot = get4plot(skm)
 
@@ -27,8 +30,7 @@ completeROC <- function(skm, silent) {
   if (silent == FALSE) {
     plot(NULL, type="n", las=1,
          xlim=c(0,1), ylim = c(0, 1), #to make tight axis: xaxs="i", yaxs="i"
-         xlab="Control Group Survival", ylab="Treatment Group Survival",
-         cex.axis = 1.25, cex.lab = 1.25)
+         xlab=xlab, ylab=ylab, main=main, cex.axis = 1.5, cex.lab = 1.5)
 
     for (k in 2:nrow(forplot)) {
       coord_new = unname(forplot[k-1,])

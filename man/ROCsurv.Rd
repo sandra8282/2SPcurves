@@ -36,6 +36,8 @@ Must be between 0.50 and 0.99. Default is 0.95. See details.}
 \item{area}{logical argument to indicate if user wants an estimate for area under the curve (default is TRUE).}
 
 \item{silent}{logical argument to indicate if user wants ROC plots (default is TRUE).}
+
+\item{abtwc}{logical argument to indicate if area between curves is needed as part of checking PHM assumption or in model comparison.}
 }
 \value{
 A plot with the ROC curve and an ROCsurv object containing:
