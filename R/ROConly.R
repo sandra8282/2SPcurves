@@ -54,7 +54,7 @@ onlyROC <- function(skm, xlab, ylab, main) {
 
   plot(NULL, type="n", las=1,
        xlim=c(0,1), ylim = c(0, 1), #to make tight axis: xaxs="i", yaxs="i"
-       xlab=xlab, ylab=ylab, main=main, cex.axis = 1.25, cex.lab = 1.25)
+       xlab=xlab, ylab=ylab, main=main, cex.axis = 1.5, cex.lab = 1.5)
 
   for (k in 2:nrow(forplot)) {
       coord_new = unname(forplot[k-1,])
