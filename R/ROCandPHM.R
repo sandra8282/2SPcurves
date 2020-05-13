@@ -54,7 +54,7 @@ ROCandPHM <- function(time, event, group, silent, abtwc, xlab, ylab, main) {
   lines(forplot[,1], forplot[,2])
   lines(forplot[,1], forplot[,1]^exp(coxfit$coefficients), col="blue")
   abline(c(0,1), col = "red", lty=3)
-  legend("topleft", c("Estimated ROC", "Cox Model ROC"), col = c("black", "blue"),
+  legend("topleft", c("KMROC", "Cox ROC"), col = c("black", "blue"),
          lty = 1, inset=0.02, cex=1.5, bg = "white", bty='n', seg.len = 0.8,
          x.intersp=0.9, y.intersp = 0.85)
 
