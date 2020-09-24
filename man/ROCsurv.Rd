@@ -14,7 +14,10 @@ ROCsurv(
   compare = FALSE,
   area = NULL,
   silent,
-  abtwc
+  abtwc,
+  xlabel,
+  ylabel,
+  main
 )
 }
 \arguments{

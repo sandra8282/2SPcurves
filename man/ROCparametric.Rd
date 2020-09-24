@@ -4,7 +4,7 @@
 \alias{ROCparametric}
 \title{ROC when survival goes to 0 for either group}
 \usage{
-ROCparametric(time, event, group, dist = "lognormal")
+ROCparametric(time, event, group, dist = "lognormal", silent, xlab, ylab, main)
 }
 \arguments{
 \item{time}{Numeric or character vector of subject's unique identifier (i).}
@@ -14,6 +14,12 @@ ROCparametric(time, event, group, dist = "lognormal")
 \item{group}{Vector with the lengths of time spent in event of Type I for individual i in episode j.}
 
 \item{dist}{String indicating the distribution.}
+
+\item{xlab}{passed from ROCsurv}
+
+\item{ylab}{passed from ROCsurv}
+
+\item{main}{passed from ROCsurv}
 }
 \value{
 A plot of the ROC curve and an ROCsurv object containing:

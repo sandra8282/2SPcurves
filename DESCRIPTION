@@ -9,10 +9,9 @@ Description: Analysis of survival data from clinical trials combining the Kaplan
 License: GPL-3
 Encoding: UTF-8
 LazyData: true
-Imports: survival, graphics, coxed, stats, simsurv, pathmapping
+Imports: survival, graphics, coxed, stats, simsurv, pathmapping, rootSolve
 Language: en-US
-RoxygenNote: 7.0.2
+RoxygenNote: 7.1.1
 URL: https://github.com/SandraCastroPearson/ROCsurv
 BugReports: https://github.com/SandraCastroPearson/ROCsurv/issues
-Suggests: 
-    testthat
+Suggests: testthat

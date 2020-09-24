@@ -4,7 +4,17 @@
 \alias{ROCmodifier}
 \title{ROC when survival goes to 0 for either group}
 \usage{
-ROCmodifier(time, event, group, modifier, area = FALSE, mlabels)
+ROCmodifier(
+  time,
+  event,
+  group,
+  modifier,
+  area = FALSE,
+  mlabels,
+  xlab,
+  ylab,
+  main
+)
 }
 \arguments{
 \item{time}{Numeric vector with times to event.}
@@ -18,6 +28,12 @@ ROCmodifier(time, event, group, modifier, area = FALSE, mlabels)
 \item{area}{TRUE/FALSE argument to indicate if user wants an estimate for area under the curve.}
 
 \item{mlabels}{A vector with two strings to label the levels (0, 1) of the modifier.}
+
+\item{xlab}{passed from ROCsurv}
+
+\item{ylab}{passed from ROCsurv}
+
+\item{main}{passed from ROCsurv}
 }
 \value{
 A plot of the ROC curve and an ROCsurv object containing:
