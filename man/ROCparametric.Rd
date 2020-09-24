@@ -15,6 +15,8 @@ ROCparametric(time, event, group, dist = "lognormal", silent, xlab, ylab, main)
 
 \item{dist}{String indicating the distribution.}
 
+\item{silent}{passed from ROCsurv}
+
 \item{xlab}{passed from ROCsurv}
 
 \item{ylab}{passed from ROCsurv}

@@ -23,7 +23,7 @@ ROCsurv(
 \arguments{
 \item{time}{Time to event or censoring.}
 
-\item{event}{Vector indicating if the event occurred (event=1) or if the time was censored (event=0).}
+\item{event}{Vector indicating if the event occurred (event=1) or if the subject was censored (event=0).}
 
 \item{group}{Vector indicating if the individual was in the treatment arm (group=1) or the control arm (group=0).}
 
@@ -32,18 +32,24 @@ Must be between 0.50 and 0.99. Default is 0.95. See details.}
 
 \item{method}{Method to be used to obtain a complete curve.}
 
-\item{checkPH}{to check}
+\item{checkPH}{logical argument to indicate if user wants to compare an ROC from the Cox Proportional Hazards Model to the KMROC (default is FALSE).}
 
-\item{compare}{to compare fits}
+\item{compare}{logical argument to indicate if user wants want to compare the KMROC to ROM curves from a Cox model, a loglogistic AFT model and a lognormal AFT model (default is FALSE).}
 
 \item{area}{logical argument to indicate if user wants an estimate for area under the curve (default is TRUE).}
 
-\item{silent}{logical argument to indicate if user wants ROC plots (default is TRUE).}
+\item{silent}{logical argument, FALSE indicates the user wants ROC plots and TRUE indicates no plots only AUC calculations (default is FALSE).}
 
-\item{abtwc}{logical argument to indicate if area between curves is needed as part of checking PHM assumption or in model comparison.}
+\item{abtwc}{logical argument to indicate if area between curves is needed as part of model comparisons (checkPHM or compare must be TRUE).}
+
+\item{xlabel}{string argument to use as label for the horizontal axis of the ROC curve.}
+
+\item{ylabel}{string argument to use as label for the vertical axis of the ROC curve.}
+
+\item{main}{string argument to use as the title of the ROC curve.}
 }
 \value{
-A plot with the ROC curve and an ROCsurv object containing:
+An optional plot with the ROC curve and an ROCsurv object containing:
 \itemize{
  \item A survfit object containing the survival curve for the treatment group.
  \item A survfit object containing the survival curve for the control group.

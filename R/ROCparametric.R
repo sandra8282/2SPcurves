@@ -20,6 +20,7 @@ getSKM4fit <- function(time, fitsurv, group) {
 #' @param dist String indicating the distribution.
 #' @param xlab passed from ROCsurv
 #' @param ylab passed from ROCsurv
+#' @param silent passed from ROCsurv
 #' @param main passed from ROCsurv
 #'
 #' @return A plot of the ROC curve and an ROCsurv object containing:

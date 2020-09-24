@@ -17,9 +17,15 @@ ROCSSnonparam(
 )
 }
 \arguments{
-\item{AUC}{Numeric value for the size of the AUC = P(T1 >  T0) that is expected. Must be between 0.55 and 1.0.}
+\item{AUC}{numeric value for the size of the AUC = P(T1 >  T0) that is expected. Must be between 0.55 and 1.0.}
 
-\item{HR}{Only needed is AUC cannot be provided. Numeric value for the size of the hazard ratio.}
+\item{HR}{numeric value for the size of the hazard ratio. Only needed if AUC cannot be provided.}
+
+\item{ctrl.event.rate}{Anticipated event rate in the control group.}
+
+\item{trt.event.rate}{Anticipated event rate in the treatment group.}
+
+\item{cens.rate}{Anticipated censorting rate.}
 
 \item{sig.level}{Numeric value for the type 1 Error Rate. Default is 0.05.}
 
@@ -27,11 +33,7 @@ ROCSSnonparam(
 
 \item{alternative}{Character string. Options: "two.sided" or "one.sided".}
 
-\item{method}{Character string for method to be used to obtain sample size or power. Options: "parametric binormal", "nonparametric"}
-
-\item{type}{Character string. Options: "biomarker" or "survival".}
-
-\item{variance}{Required only when method = "parametric binormal". Numeric value for the variance to use when calculating sample size and power.}
+\item{method}{Character string. Options: "biomarker" or "survival".}
 }
 \value{
 The sample size for each of the two trial arms (n) or power.

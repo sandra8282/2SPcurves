@@ -12,14 +12,15 @@ fnpBiomark <- function(n, Za, Zb, theta1){
 #' This function finds the needed sample size to .
 #'
 #'AUC, sig.level, power, variance, alternative = "two.sided"
-#' @param AUC Numeric value for the size of the AUC = P(T1 >  T0) that is expected. Must be between 0.55 and 1.0.
-#' @param HR Only needed is AUC cannot be provided. Numeric value for the size of the hazard ratio.
+#' @param AUC numeric value for the size of the AUC = P(T1 >  T0) that is expected. Must be between 0.55 and 1.0.
+#' @param HR numeric value for the size of the hazard ratio. Only needed if AUC cannot be provided.
 #' @param sig.level Numeric value for the type 1 Error Rate. Default is 0.05.
 #' @param power Numeric value for the target power. Must be between 0.2 and 1. Default is 0.8.
 #' @param alternative Character string. Options: "two.sided" or "one.sided".
-#' @param method Character string for method to be used to obtain sample size or power. Options: "parametric binormal", "nonparametric"
-#' @param type Character string. Options: "biomarker" or "survival".
-#' @param variance Required only when method = "parametric binormal". Numeric value for the variance to use when calculating sample size and power.
+#' @param method Character string. Options: "biomarker" or "survival".
+#' @param ctrl.event.rate Anticipated event rate in the control group.
+#' @param trt.event.rate Anticipated event rate in the treatment group.
+#' @param cens.rate Anticipated censorting rate.
 #'
 #' @return The sample size for each of the two trial arms (n) or power.
 #'
