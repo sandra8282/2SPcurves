@@ -17,6 +17,12 @@
 #' @param xlabel string argument to use as label for the horizontal axis of the ROC curve.
 #' @param ylabel string argument to use as label for the vertical axis of the ROC curve.
 #' @param main string argument to use as the title of the ROC curve.
+#' @param cex.axis Optional graphical parameter controling magnification of axis annotation relative to cex. See \link[graphics]{par} for more details.
+#' @param cex.lab Optional graphical parameter controling magnification of x and y labels relative to cex. See \link[graphics]{par} for more details.
+#' @param lty Optional graphical parameter controling size of axis labels. See \link[graphics]{par} for more details.
+#' @param legend.inset Optional graphical parameter controling inset of the legend.
+#' @param legend.cex Optional graphical parameter controling magnification of text for the legend.
+#' @param lwd Optional graphical parameter for line width relative to the default. See \link[graphics]{par} for more details.
 #'
 #' @return An optional plot with the ROC curve and an ROCsurv object containing:
 #' \itemize{
@@ -32,10 +38,10 @@
 #'
 ROCsurv <- function(time, event, group, level=NULL, method = NULL,
                     checkPH = FALSE, compare=FALSE, area=NULL, silent, abtwc,
-                    xlabel, ylabel, main){
-  #time = dat$ti ; event = dat$di; group = dat$trt; level = 0.95;
-  #time = leukemia$Time ; event = leukemia$Event; group = leukemia$Group; level = 0.95;
+                    xlabel, ylabel, main, cex.axis = 1.5, cex.lab = 1.5,
+                    lty = c(3,1,6), legend.inset=0.02, legend.cex=1.5, lwd = 1.5){
 
+  #### basic checks for missing parameters
   all_lengths = c(length(time), length(event), length(group))
   if (length(unique(all_lengths)) != 1) stop("One or more input vectors (time, event, group) differs in length from the rest.")
   if ((is.null(method) + is.null(checkPH))==2) {checkPH <- TRUE}
@@ -46,54 +52,53 @@ ROCsurv <- function(time, event, group, level=NULL, method = NULL,
   if (missing(ylabel)) {ylab <- "Treatment Group Survival"} else {
     ylab <- paste(ylabel, "Survival", sep = " ")}
   if (missing(main)) {main <- ""}
+  label.inset=legend.inset; label.cex=legend.cex
+
+  ###########################################
 
   if(checkPH == TRUE) { #CHECK IF PROPORTIONAL HAZARDS
     if (missing(abtwc)) {abtwc=TRUE}
-    result <- ROCandPHM(time, event, group, silent, abtwc, xlab, ylab, main)
+    result <- ROCandPHM(time, event, group, silent, abtwc, xlab, ylab, main, cex.axis = cex.axis,
+                        cex.lab = cex.lab, lty = lty, label.inset = label.inset,
+                        label.cex = label.cex, lwd = lwd)
     return(result)
-
+    #############################################
   } else if (compare == TRUE) { #COMPARE TO LOGLOGISTIC AND LOGNORMAL
-    if (missing(abtwc)) {abtwc=TRUE}
-    result <- ROCcompare(time, event, group, silent, abtwc, xlab, ylab, main)
+    if (missing(abtwc)) {abtwc=FALSE}
+    result <- ROCcompare(time, event, group, silent, abtwc, xlab, ylab, main, cex.axis = cex.axis,
+                         cex.lab = cex.lab, lty = lty, label.inset = label.inset,
+                         label.cex = label.cex, lwd = lwd)
     return(result)
-
+    #############################################
   } else {
     KMests <- getKMtab(time, event, group)
 
-    if (area==FALSE) {
-        result <- onlyROC(KMests[[1]], xlab, ylab, main)
-        return(list(control_km = KMests$km_placebo,
-                drug_km = KMests$km_drug))
+    if (area==FALSE) {#plot AUC
+        result <- onlyROC(KMests[[1]], xlab, ylab, main, cex.axis = cex.axis,
+                          cex.lab = cex.lab, lty = lty, label.inset = label.inset,
+                          label.cex = label.cex, lwd = lwd)
+        return(list(control_km = KMests$km_placebo, drug_km = KMests$km_drug))
+        #############################################
     } else {
-
-      #Point Estimate based on
+      #Return area for uncensored data
       if (KMests[[2]]==0) {
-          result <- completeROC(KMests[[1]], silent, xlab, ylab, main) #time, event, group
+          result <- completeROC(KMests[[1]], silent, xlab, ylab, main,cex.axis = cex.axis,
+                                cex.lab = cex.lab, lty = lty, label.inset = label.inset,
+                                label.cex = label.cex, lwd = lwd) #time, event, group
           return(list(control_km = KMests$km_placebo,
                       drug_km = KMests$km_drug,
                       AUC = result))}
-
-      if (KMests[[2]]!=0 & is.null(method)) {result <- onlyROC(KMests[[1]])
+      #Return area for censored data
+      if (KMests[[2]]!=0 & is.null(method)) {result <- onlyROC(KMests[[1]], lwd = lwd)
           return(list(control_km = KMests$km_placebo,
                       drug_km = KMests$km_drug))
-      } else if (KMests[[2]]!=0 & method=="restrict") {
-          result <- restrictROC(KMests[[1]], silent)
-
-    }
+      } else {
+        if (KMests[[2]]!=0 & method=="restrict") {
+          result <- restrictROC(KMests[[1]], silent, lwd = lwd)
+        }
+      }
 
     }
   }
-
-  #Calculate bootstrap variance
-  #SEandCI <- btsp(time, event, group, method, B = 1000, level)
-
-  # if (mskm!=0 & method=="ph_loglog") {
-  #   cox <- coxph(Surv(time, event) ~ group, ties="breslow")
-  #   result <- ph_loglogROC(skm, cox)
-  # }
-
-
-              #SEandCI[1],
-              #SEandCI[2:3]))
 
 }

@@ -39,7 +39,7 @@ getSKM4fit <- function(time, fitsurv, group) {
 #' @importFrom stats qnorm
 #' @importFrom utils capture.output
 #'
-#' @export
+#' @noRd
 
 ROCparametric <- function(time, event, group, dist="lognormal",
                           silent, xlab, ylab, main) {
@@ -123,7 +123,7 @@ ROCparametric <- function(time, event, group, dist="lognormal",
 
      points(forplot[,1], forplot[,2], col = "grey50", cex = 0.75)
      lines(forplotfit[,1], forplotfit[,2], lty=1)
-     abline(c(0,1), col = "red", lty=2)
+     abline(c(0,1), col = "grey", lty=1)
      text(x=0.99, y=0.05, labels = paste("AUC=", round(area,2), sep=""),
           pos=2, cex = 1)
    }

@@ -1,4 +1,4 @@
-#' Use incomplete ROC to compute AUC by restricting space
+#' Plot an ROC curve
 #'
 #' @param skm passed from ROCsurv
 #' @param xlab passed from ROCsurv.
@@ -12,7 +12,8 @@
 #' @keywords internal
 #' @noRd
 
-onlyROC <- function(skm, xlab, ylab, main) {
+onlyROC <- function(skm, xlab, ylab, main, cex.axis,
+                    cex.lab, lty, label.inset, label.cex, lwd) {
 
   x=y= c(1, rep(NA, nrow(skm)))
   i=1
@@ -54,15 +55,15 @@ onlyROC <- function(skm, xlab, ylab, main) {
 
   plot(NULL, type="n", las=1,
        xlim=c(0,1), ylim = c(0, 1), #to make tight axis: xaxs="i", yaxs="i"
-       xlab=xlab, ylab=ylab, main=main, cex.axis = 1.5, cex.lab = 1.5)
+       xlab=xlab, ylab=ylab, main=main, cex.axis = cex.axis, cex.lab = cex.lab)
 
   for (k in 2:nrow(forplot)) {
       coord_new = unname(forplot[k-1,])
       coord_new2 = unname(forplot[k,])
       segments(x0=coord_new[1], y0=coord_new[2],
-               x1=coord_new2[1], y1=coord_new2[2], col="black")
-    }
+               x1=coord_new2[1], y1=coord_new2[2], col="black", lwd = lwd)
+  }
 
-  abline(c(0,1), col = "red", lty=3)
+  abline(c(0,1), col = "grey", lty=1, lwd = lwd-0.25)
 
 }

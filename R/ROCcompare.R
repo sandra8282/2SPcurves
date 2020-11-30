@@ -52,7 +52,8 @@ getmat4cor <- function(forplot, forplotfit){
 #' @keywords internal
 #' @noRd
 
-ROCcompare <- function(time, event, group, silent, abtwc, xlab, ylab, main) {
+ROCcompare <- function(time, event, group, silent, abtwc, xlab, ylab, main, cex.axis,
+                       cex.lab, lty, label.inset, label.cex) {
 
   d <- c("lognormal", "loglogistic")
   KMres <- getKMtab(time, event, group)
@@ -88,7 +89,7 @@ ROCcompare <- function(time, event, group, silent, abtwc, xlab, ylab, main) {
   #Get cox model
   coxfit <- coxph(Surv(time, event) ~ group, ties = "breslow")
 
-  #correlations and SSR
+  #correlations, SSR, ABTC
   rho = SSR = areaBTWcurves = rep(0,3)
   cox_surv1 <- forplot[,1]^exp(coxfit$coefficients)
   rho[1] <- cor(forplot[,2], cox_surv1)
@@ -111,19 +112,13 @@ ROCcompare <- function(time, event, group, silent, abtwc, xlab, ylab, main) {
       invisible(capture.output(out <- CreateMap(forplot[,c(1,2)], forplotfit[[i-1]],
                                                 plotgrid=F, verbose=F, insertopposites=F)))
       areaBTWcurves[i] <- out$deviation
+
     }
   }
+
   areaBTWcurves = as.numeric(areaBTWcurves)
   names(rho) = names(SSR) = names(areaBTWcurves) = c("Cox", d)
-  # plot(resid[,1], col = "darkred", pch = 20)
-  # points(resid[,2], col = "darkblue", pch = 20)
-  # points(resid[,3], col = "darkgreen", pch = 20)
-  # abline(h=0, col="black", lty = 2)
-  # legend("topleft", legend= c("Cox PHM", "Lognormal", "Loglogistic"),
-  #        col=c("darkred", "darkblue", "darkgreen"), pch = 20,
-  #        cex=1, bty = "n", xjust = 1, yjust = 0, y.intersp = 1)
 
-  #find best
   bestindex = which(rho == max(rho))
   best = names(rho)[bestindex]
   bestindex2 = which(SSR == min(SSR))
@@ -138,15 +133,15 @@ ROCcompare <- function(time, event, group, silent, abtwc, xlab, ylab, main) {
   if (silent==FALSE){
     plot(NULL, type="n", las=1,
          xlim=c(0,1), ylim = c(0, 1), #to make tight axis: xaxs="i", yaxs="i"
-         xlab=xlab, ylab=ylab, main=main, cex.axis = 1.5, cex.lab = 1.5)
-    points(forplot[,1], forplot[,2], col = "grey50", cex = 0.75)
-    lines(forplot[,1], forplot[,1]^exp(coxfit$coefficients), col="darkred")
-    lines(forplotfit[[1]][,1], forplotfit[[1]][,2], col="darkblue")
-    lines(forplotfit[[2]][,1], forplotfit[[2]][,2], col="darkgreen")
-    abline(c(0,1), col = "grey", lty=2)
+         xlab=xlab, ylab=ylab, main=main, cex.axis = cex.axis, cex.lab = cex.lab)
+    points(forplot[,1], forplot[,2], col = "grey", cex = 1)
+    lines(forplot[,1], forplot[,1]^exp(coxfit$coefficients), lty=lty[1], lwd = lwd)
+    lines(forplotfit[[1]][,1], forplotfit[[1]][,2], lty=lty[2], lwd = lwd)
+    lines(forplotfit[[2]][,1], forplotfit[[2]][,2], lty=lty[3], lwd = lwd)
+    abline(c(0,1), col = "grey", lty=1, lwd = lwd-0.25)
     legend("bottomright", legend= c("Cox PHM", "Lognormal", "Loglogistic"),
-           lty = 1, col=c("darkred", "darkblue", "darkgreen"),
-           cex=1, bty = "n", xjust = 1, yjust = 0, y.intersp = 1)
+           lty = lty, cex=label.cex, xjust = 1, yjust = 0, bg = "white",
+           bty='n', seg.len = 0.8, x.intersp=0.9, y.intersp = 0.85)
   }
 
   if (abtwc==TRUE) {

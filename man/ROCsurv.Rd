@@ -17,7 +17,13 @@ ROCsurv(
   abtwc,
   xlabel,
   ylabel,
-  main
+  main,
+  cex.axis = 1.5,
+  cex.lab = 1.5,
+  lty = c(3, 1, 6),
+  label.inset = 0.02,
+  label.cex = 1.5,
+  lwd = 1.5
 )
 }
 \arguments{
@@ -47,6 +53,18 @@ Must be between 0.50 and 0.99. Default is 0.95. See details.}
 \item{ylabel}{string argument to use as label for the vertical axis of the ROC curve.}
 
 \item{main}{string argument to use as the title of the ROC curve.}
+
+\item{cex.axis}{Optional graphical parameter controling magnification of axis annotation relative to cex. See \link[graphics]{par} for more details.}
+
+\item{cex.lab}{Optional graphical parameter controling magnification of x and y labels relative to cex. See \link[graphics]{par} for more details.}
+
+\item{lty}{Optional graphical parameter controling size of axis labels. See \link[graphics]{par} for more details.}
+
+\item{label.inset}{Optional graphical parameter controling size of axis labels. See \link[graphics]{par} for more details.}
+
+\item{label.cex}{Optional graphical parameter controling magnification of text relative to cex for label boxes.}
+
+\item{lwd}{Optional graphical parameter for line width relative to the default. See \link[graphics]{par} for more details.}
 }
 \value{
 An optional plot with the ROC curve and an ROCsurv object containing:

@@ -13,14 +13,13 @@ fnpBiomark <- function(n, Za, Zb, theta1){
 #'
 #'AUC, sig.level, power, variance, alternative = "two.sided"
 #' @param AUC numeric value for the size of the AUC = P(T1 >  T0) that is expected. Must be between 0.55 and 1.0.
-#' @param HR numeric value for the size of the hazard ratio. Only needed if AUC cannot be provided.
 #' @param sig.level Numeric value for the type 1 Error Rate. Default is 0.05.
 #' @param power Numeric value for the target power. Must be between 0.2 and 1. Default is 0.8.
 #' @param alternative Character string. Options: "two.sided" or "one.sided".
 #' @param method Character string. Options: "biomarker" or "survival".
-#' @param ctrl.event.rate Anticipated event rate in the control group.
-#' @param trt.event.rate Anticipated event rate in the treatment group.
-#' @param cens.rate Anticipated censorting rate.
+#' @param control.prop The proportion of participants in the control group.
+#' @param event.rate Anticipated event rate.
+#' @param cens.rate Anticipated censoring rate.
 #'
 #' @return The sample size for each of the two trial arms (n) or power.
 #'
@@ -32,7 +31,7 @@ fnpBiomark <- function(n, Za, Zb, theta1){
 #' @export
 #'
 
-ROCSSnonparam <- function(AUC, HR, ctrl.event.rate, trt.event.rate, cens.rate=0, sig.level=0.05, power=0.8,
+ROCsurvSize <- function(AUC, control.prop, event.rate, cens.rate=0, sig.level=0.05, power=0.8,
                           alternative = "two.sided", method="survival"){
 
   Za <- ifelse(alternative == "two.sided", qnorm(1-sig.level/2), qnorm(1-sig.level))
@@ -40,21 +39,21 @@ ROCSSnonparam <- function(AUC, HR, ctrl.event.rate, trt.event.rate, cens.rate=0,
 
   if (method=="survival"){
     #Survival Specific
-    if (missing(AUC)) {
-      if (missing(HR)) {stop("Must provide either AUC or HR.")} else {AUC=HR/(HR+1)}
+    if (missing(AUC)) {stop("Must provide an AUC for the alternate hypothesis.")
       } else {HR = AUC/(1-AUC)}
-    if (missing(ctrl.event.rate)) {stop("Must provide ctrl.event.rate")}
-    p0tinv <- 1/ ctrl.event.rate
-    if (missing(trt.event.rate)) {p1tinv <- 1/(ctrl.event.rate/HR)
-    } else{ p1tinv <- 1/trt.event.rate}
-    sqrt1 <- sqrt(p0tinv/8)
-    sqrt2 <- sqrt((exp(2*log(HR))*(p1tinv + p0tinv))/((1+HR)^4))
-    denom <- (1-cens.rate)*((AUC-0.5)^2)
-    res <- (Za*sqrt1 + Zb*sqrt2)^2 / denom
+    if (missing(control.prop)) {stop("Must provide control.prop")}
+    if (missing(event.rate)) {stop("Must provide event.rate")}
+
+    P0 <- control.prop; P1 <- 1-control.prop; d <- event.rate;
+
+    numerator <- Za/4 + Zb*sqrt((exp(2*log(HR)))/((1+HR)^4))
+    denom <- 2*(1-cens.rate)*((AUC-0.5)^2)*d*P0*P1
+    res <- ((numerator)^2) / denom
   } else {
     #Biomarker/General as in Obuchowski paper
     res <- uniroot.all(fnpBiomark, c(0, 1.79e+300), maxiter = 10000, tol = 0.00001,
                        Za = Za, Zb = Zb, theta1=AUC)}
   return(res)
 }
+
 

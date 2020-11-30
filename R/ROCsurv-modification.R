@@ -22,16 +22,17 @@
 #' @importFrom stats na.omit
 #' @import survival
 #' @importFrom stats cor
+#' @importFrom data.table data.table
 #'
 #' @export
 
-ROCmodifier <- function(time, event, group, modifier, area=FALSE,
+ROCsurvModifier <- function(time, event, group, modifier, area=FALSE,
                         mlabels, xlab, ylab, main){
 
   all_lengths = c(length(time), length(event), length(group), length(modifier))
   if (length(unique(all_lengths)) != 1) stop("One or more input vectors (time, event, group, modifier) differs in length from the rest.")
 
-  dat <- data.frame(time, event, group, modifier)
+  dat <- data.table(time, event, group, modifier)
   dat0 <- dat[dat$modifier == 0, ]
   dat1 <- dat[dat$modifier == 1, ]
 
@@ -53,19 +54,19 @@ ROCmodifier <- function(time, event, group, modifier, area=FALSE,
     coord_new = unname(forplot0[k0-1,])
     coord_new2 = unname(forplot0[k0,])
     segments(x0=coord_new[1], y0=coord_new[2],
-             x1=coord_new2[1], y1=coord_new2[2], col="blue", lty = 1)
+             x1=coord_new2[1], y1=coord_new2[2], col="black", lty = 1)
   }
 
   for (k1 in 2:nrow(forplot1)) {
     coord_new = unname(forplot1[k1-1,])
     coord_new2 = unname(forplot1[k1,])
     segments(x0=coord_new[1], y0=coord_new[2],
-             x1=coord_new2[1], y1=coord_new2[2], col="black", lty = 2)
+             x1=coord_new2[1], y1=coord_new2[2], col="black", lty = 3)
   }
 
-  abline(c(0,1), col = "red", lty=3)
+  abline(c(0,1), col = "grey", lty=1)
 
-  legend("topleft", mlabels, col = c("blue", "black"), lty = c(1,2),
+  legend("topleft", mlabels, lty = c(1,3),
          inset=0.02, bg = "white", bty='n', seg.len = 0.7,
          x.intersp=0.9, y.intersp = 0.85, cex=1.5)
   return(list(coxfit = coxfit,
