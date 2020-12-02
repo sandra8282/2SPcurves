@@ -12,14 +12,14 @@
 #' @param area Logical argument to indicate if user wants an estimate for area under the curve (default is TRUE).
 #' @param abtwc Logical argument to indicate if area between curves is needed as part of model comparisons (checkPHM or compare must be TRUE).
 #' @param silent Logical argument, FALSE indicates the user wants ROC plots and TRUE indicates no plots only AUC calculations (default is FALSE).
-#' @param xlabel String argument for the horizontal axis label of the ROC curve.
-#' @param ylabel String argument for the vertical axis label of the ROC curve.
+#' @param xlab String argument for the horizontal axis label of the ROC curve.
+#' @param ylab String argument for the vertical axis label of the ROC curve.
 #' @param main String argument for the title of the ROC curve.
 #' @param cex.axis Optional graphical parameter for magnification of axis annotation. See \link[graphics]{par} for more details.
 #' @param cex.lab Optional graphical parameter for magnification of x and y labels. See \link[graphics]{par} for more details.
 #' @param legend.inset Optional graphical parameter controling the inset of the legend.
 #' @param legend.cex Optional graphical parameter for magnification of the legend's text.
-#' @param lty Optional graphical parameter to set the type of line to use. See \link[graphics]{par} for more details.
+#' @param lty Optional graphical parameter to set the type of line to use. Can be a number or a vector. See \link[graphics]{par} for more details.
 #' @param lwd Optional graphical parameter for line width relative to the default. See \link[graphics]{par} for more details.
 #'
 #' @return A plot of the ROC curve (if \code{silent=FALSE}) and an ROCsurv object containing:
@@ -34,13 +34,14 @@
 #'
 #' @export
 #'
-###### #' @param level The confidence level for the confidence interval of the area under the curve.
-#' Must be between 0.50 and 0.99. Default is 0.95. See details.
-#'
+
+###### # @param level The confidence level for the confidence interval of the area under the curve.
+###### # Must be between 0.50 and 0.99. Default is 0.95. See details.
+
 ROCsurv <- function(time, event, group, method = NULL,
                     checkPH = FALSE, compare=FALSE, area=NULL, silent=FALSE, abtwc=FALSE,
-                    xlabel, ylabel, main, cex.axis = 1.5, cex.lab = 1.5,
-                    legend.inset=0.02, legend.cex=1.5, lty = c(3,1,6), lwd = 1.5){
+                    xlab, ylab, main, cex.axis = 1.5, cex.lab = 1.5,
+                    legend.inset=0.02, legend.cex=1.5, lty = c(2,1,3), lwd = 1.5){
 
   #level=NULL,
   #### basic checks for missing parameters
@@ -48,10 +49,8 @@ ROCsurv <- function(time, event, group, method = NULL,
   if (length(unique(all_lengths)) != 1) stop("One or more input vectors (time, event, group) differs in length from the rest.")
   if ((is.null(method) + is.null(checkPH))==2) {checkPH <- TRUE}
   #if (is.null(level)) {level = 0.95}
-  if (missing(xlabel)) {xlab <- "Control Group Survival"} else {
-    xlab <- paste(xlabel, "Survival", sep = " ")}
-  if (missing(ylabel)) {ylab <- "Treatment Group Survival"} else {
-    ylab <- paste(ylabel, "Survival", sep = " ")}
+  if (missing(xlab)) {xlab <- "Control Group Survival"}
+  if (missing(ylab)) {ylab <- "Treatment Group Survival"}
   if (missing(main)) {main <- ""}
   label.inset=legend.inset; label.cex=legend.cex
 

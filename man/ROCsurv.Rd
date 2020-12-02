@@ -8,66 +8,62 @@ ROCsurv(
   time,
   event,
   group,
-  level = NULL,
   method = NULL,
   checkPH = FALSE,
   compare = FALSE,
   area = NULL,
-  silent,
-  abtwc,
-  xlabel,
-  ylabel,
+  silent = FALSE,
+  abtwc = FALSE,
+  xlab,
+  ylab,
   main,
   cex.axis = 1.5,
   cex.lab = 1.5,
-  lty = c(3, 1, 6),
-  label.inset = 0.02,
-  label.cex = 1.5,
+  legend.inset = 0.02,
+  legend.cex = 1.5,
+  lty = c(6, 1, 3),
   lwd = 1.5
 )
 }
 \arguments{
 \item{time}{Time to event or censoring.}
 
-\item{event}{Vector indicating if the event occurred (event=1) or if the subject was censored (event=0).}
+\item{event}{An indicator vector with values of 1 for individuals who had the event occurred or 0 if the participant was censored.}
 
-\item{group}{Vector indicating if the individual was in the treatment arm (group=1) or the control arm (group=0).}
-
-\item{level}{The confidence level for the confidence interval of the area under the curve.
-Must be between 0.50 and 0.99. Default is 0.95. See details.}
+\item{group}{An indicator vector with values of 1 if the the participant was in the treatment arm and 0 otherwise.}
 
 \item{method}{Method to be used to obtain a complete curve.}
 
-\item{checkPH}{logical argument to indicate if user wants to compare an ROC from the Cox Proportional Hazards Model to the KMROC (default is FALSE).}
+\item{checkPH}{Logical argument to indicate if user wants to compare an ROC from the Cox Proportional Hazards Model to the KMROC (default is FALSE).}
 
-\item{compare}{logical argument to indicate if user wants want to compare the KMROC to ROM curves from a Cox model, a loglogistic AFT model and a lognormal AFT model (default is FALSE).}
+\item{compare}{Logical argument to indicate if user wants want to compare the KMROC to ROM curves from a Cox model, a loglogistic AFT model and a lognormal AFT model (default is FALSE).}
 
-\item{area}{logical argument to indicate if user wants an estimate for area under the curve (default is TRUE).}
+\item{area}{Logical argument to indicate if user wants an estimate for area under the curve (default is TRUE).}
 
-\item{silent}{logical argument, FALSE indicates the user wants ROC plots and TRUE indicates no plots only AUC calculations (default is FALSE).}
+\item{silent}{Logical argument, FALSE indicates the user wants ROC plots and TRUE indicates no plots only AUC calculations (default is FALSE).}
 
-\item{abtwc}{logical argument to indicate if area between curves is needed as part of model comparisons (checkPHM or compare must be TRUE).}
+\item{abtwc}{Logical argument to indicate if area between curves is needed as part of model comparisons (checkPHM or compare must be TRUE).}
 
-\item{xlabel}{string argument to use as label for the horizontal axis of the ROC curve.}
+\item{xlab}{String argument for the horizontal axis label of the ROC curve.}
 
-\item{ylabel}{string argument to use as label for the vertical axis of the ROC curve.}
+\item{ylab}{String argument for the vertical axis label of the ROC curve.}
 
-\item{main}{string argument to use as the title of the ROC curve.}
+\item{main}{String argument for the title of the ROC curve.}
 
-\item{cex.axis}{Optional graphical parameter controling magnification of axis annotation relative to cex. See \link[graphics]{par} for more details.}
+\item{cex.axis}{Optional graphical parameter for magnification of axis annotation. See \link[graphics]{par} for more details.}
 
-\item{cex.lab}{Optional graphical parameter controling magnification of x and y labels relative to cex. See \link[graphics]{par} for more details.}
+\item{cex.lab}{Optional graphical parameter for magnification of x and y labels. See \link[graphics]{par} for more details.}
 
-\item{lty}{Optional graphical parameter controling size of axis labels. See \link[graphics]{par} for more details.}
+\item{legend.inset}{Optional graphical parameter controling the inset of the legend.}
 
-\item{label.inset}{Optional graphical parameter controling size of axis labels. See \link[graphics]{par} for more details.}
+\item{legend.cex}{Optional graphical parameter for magnification of the legend's text.}
 
-\item{label.cex}{Optional graphical parameter controling magnification of text relative to cex for label boxes.}
+\item{lty}{Optional graphical parameter to set the type of line to use. Can be a number or a vector. See \link[graphics]{par} for more details.}
 
 \item{lwd}{Optional graphical parameter for line width relative to the default. See \link[graphics]{par} for more details.}
 }
 \value{
-An optional plot with the ROC curve and an ROCsurv object containing:
+A plot of the ROC curve (if \code{silent=FALSE}) and an ROCsurv object containing:
 \itemize{
  \item A survfit object containing the survival curve for the treatment group.
  \item A survfit object containing the survival curve for the control group.

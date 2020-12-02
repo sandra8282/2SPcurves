@@ -28,7 +28,7 @@
 #' @noRd
 
 ROCandPHM <- function(time, event, group, silent, abtwc, xlab, ylab, main, cex.axis,
-                      cex.lab, lty, label.inset, label.cex) {
+                      cex.lab, lty, label.inset, label.cex, lwd) {
 
   KMres <- getKMtab(time, event, group)
   skm <- KMres[[1]]
@@ -57,10 +57,10 @@ ROCandPHM <- function(time, event, group, silent, abtwc, xlab, ylab, main, cex.a
   abline(c(0,1), col = "grey", lty=1, lwd = lwd-0.25)
   legend("topleft", c("KMROC", "Cox ROC"), lty = lty,
          inset=label.inset, cex=label.cex, bg = "white", bty='n', seg.len = 0.8,
-         x.intersp=0.9, y.intersp = 0.85, lwd = lwd-0.25)
+         x.intersp=0.9, y.intersp = 0.85, lwd = lwd)
 
   text(x=0.99, y=0.25,
-       labels = paste(expression(rho), "=", round(rho, 4), sep=""),
+       labels = bquote(hat(rho) == .(round(rho, 4))),
        pos=2, cex=label.cex)
   text(x=0.99, y=0.15,
        labels = paste("SSR = ", round(SSR, 4), sep=""),

@@ -13,27 +13,45 @@ ROCsurvModifier(
   mlabels,
   xlab,
   ylab,
-  main
+  main,
+  cex.axis = 1.5,
+  cex.lab = 1.5,
+  legend.inset = 0.02,
+  legend.cex = 1.5,
+  lty = c(6, 1, 3),
+  lwd = 1.5
 )
 }
 \arguments{
-\item{time}{Numeric vector with times to event.}
+\item{time}{Time to event or censoring.}
 
-\item{event}{Vector of indicators with value 1 subject experienced the event ocurred and 0 when censored.}
+\item{event}{An indicator vector with values of 1 for individuals who had the event occurred or 0 if the participant was censored.}
 
-\item{group}{Vector of indicators for the treatment group with value 1 for treatment and 0 for control.}
+\item{group}{An indicator vector with values of 1 if the the participant was in the treatment arm and 0 otherwise.}
 
-\item{modifier}{Vector of indicators for the modifier with values of 1 when modifier is present and 0 otherwise.}
+\item{modifier}{An indicator vector with values of 1 for a certain level of the modifier and 0 otherwise. Example: 0 for male and 1 for female.}
 
-\item{area}{TRUE/FALSE argument to indicate if user wants an estimate for area under the curve.}
+\item{area}{Logical argument to indicate if user wants an estimate for area under the curve. Default is TRUE.}
 
-\item{mlabels}{A vector with two strings to label the levels (0, 1) of the modifier.}
+\item{mlabels}{A vector with two strings to label the levels of the modifier.}
 
-\item{xlab}{passed from ROCsurv}
+\item{xlab}{String argument for the horizontal axis label of the ROC curve.}
 
-\item{ylab}{passed from ROCsurv}
+\item{ylab}{String argument for the vertical axis label of the ROC curve.}
 
-\item{main}{passed from ROCsurv}
+\item{main}{String argument for the title of the ROC curve.}
+
+\item{cex.axis}{Optional graphical parameter for magnification of axis annotation. See \link[graphics]{par} for more details.}
+
+\item{cex.lab}{Optional graphical parameter for magnification of x and y labels. See \link[graphics]{par} for more details.}
+
+\item{legend.inset}{Optional graphical parameter controling the inset of the legend.}
+
+\item{legend.cex}{Optional graphical parameter for magnification of the legend's text.}
+
+\item{lty}{Optional graphical parameter to set the type of line to use. Can be a number or a vector. See \link[graphics]{par} for more details.}
+
+\item{lwd}{Optional graphical parameter for line width relative to the default. See \link[graphics]{par} for more details.}
 }
 \value{
 A plot of the ROC curve and an ROCsurv object containing:

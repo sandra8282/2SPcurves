@@ -56,6 +56,7 @@ onlyROC <- function(skm, xlab, ylab, main, cex.axis,
   plot(NULL, type="n", las=1,
        xlim=c(0,1), ylim = c(0, 1), #to make tight axis: xaxs="i", yaxs="i"
        xlab=xlab, ylab=ylab, main=main, cex.axis = cex.axis, cex.lab = cex.lab)
+  abline(c(0,1), col = "grey", lty=1, lwd = lwd-0.25)
 
   for (k in 2:nrow(forplot)) {
       coord_new = unname(forplot[k-1,])
@@ -64,6 +65,6 @@ onlyROC <- function(skm, xlab, ylab, main, cex.axis,
                x1=coord_new2[1], y1=coord_new2[2], col="black", lwd = lwd)
   }
 
-  abline(c(0,1), col = "grey", lty=1, lwd = lwd-0.25)
+
 
 }
