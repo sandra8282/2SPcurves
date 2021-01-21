@@ -50,7 +50,7 @@ ROCsurvSize <- function(AUC, control.prop, event.rate, cens.rate=0, sig.level=0.
     denom <- 2*(1-cens.rate)*((AUC-0.5)^2)*d*P0*P1
     res <- ((numerator)^2) / denom
   } else {
-    #Biomarker/General as in Obuchowski paper
+    #Biomarker/General based on Hanley Variance
     res <- uniroot.all(fnpBiomark, c(0, 1.79e+300), maxiter = 10000, tol = 0.00001,
                        Za = Za, Zb = Zb, theta1=AUC)}
   return(res)

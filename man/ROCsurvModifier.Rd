@@ -18,7 +18,7 @@ ROCsurvModifier(
   cex.lab = 1.5,
   legend.inset = 0.02,
   legend.cex = 1.5,
-  lty = c(6, 1, 3),
+  lty = c(1, 6),
   lwd = 1.5
 )
 }

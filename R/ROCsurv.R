@@ -21,6 +21,7 @@
 #' @param legend.cex Optional graphical parameter for magnification of the legend's text.
 #' @param lty Optional graphical parameter to set the type of line to use. Can be a number or a vector. See \link[graphics]{par} for more details.
 #' @param lwd Optional graphical parameter for line width relative to the default. See \link[graphics]{par} for more details.
+#' @param km Optional logical parameter. If TRUE the result will include survfit object containing survival information for each group.
 #'
 #' @return A plot of the ROC curve (if \code{silent=FALSE}) and an ROCsurv object containing:
 #' \itemize{
@@ -38,20 +39,22 @@
 ###### # @param level The confidence level for the confidence interval of the area under the curve.
 ###### # Must be between 0.50 and 0.99. Default is 0.95. See details.
 
-ROCsurv <- function(time, event, group, method = NULL,
-                    checkPH = FALSE, compare=FALSE, area=NULL, silent=FALSE, abtwc=FALSE,
-                    xlab, ylab, main, cex.axis = 1.5, cex.lab = 1.5,
+ROCsurv <- function(time, event, group, method,
+                    checkPH = FALSE, compare=FALSE, area=TRUE, silent=FALSE, abtwc=FALSE,
+                    xlab=NULL, ylab=NULL, main=NULL, KM, cex.axis = 1.5, cex.lab = 1.5,
                     legend.inset=0.02, legend.cex=1.5, lty = c(2,1,3), lwd = 1.5){
 
   #level=NULL,
   #### basic checks for missing parameters
   all_lengths = c(length(time), length(event), length(group))
   if (length(unique(all_lengths)) != 1) stop("One or more input vectors (time, event, group) differs in length from the rest.")
-  if ((is.null(method) + is.null(checkPH))==2) {checkPH <- TRUE}
+  if ((missing(method) + is.null(checkPH))==2) {checkPH <- TRUE}
   #if (is.null(level)) {level = 0.95}
-  if (missing(xlab)) {xlab <- "Control Group Survival"}
-  if (missing(ylab)) {ylab <- "Treatment Group Survival"}
-  if (missing(main)) {main <- ""}
+  if (is.null(xlab)) {xlab <- "Control Group Survival"}
+  if (is.null(ylab)) {ylab <- "Treatment Group Survival"}
+  if (is.null(main)) {main <- ""}
+  if (missing(method)) {method <- ""}
+  if (missing(KM)) {KM <- FALSE}
   label.inset=legend.inset; label.cex=legend.cex
 
   ###########################################
@@ -61,44 +64,49 @@ ROCsurv <- function(time, event, group, method = NULL,
     result <- ROCandPHM(time, event, group, silent, abtwc, xlab, ylab, main, cex.axis = cex.axis,
                         cex.lab = cex.lab, lty = lty, label.inset = label.inset,
                         label.cex = label.cex, lwd = lwd)
-    return(result)
-    #############################################
-  } else if (compare == TRUE) { #COMPARE TO LOGLOGISTIC AND LOGNORMAL
-    if (missing(abtwc)) {abtwc=FALSE}
-    result <- ROCcompare(time, event, group, silent, abtwc, xlab, ylab, main, cex.axis = cex.axis,
-                         cex.lab = cex.lab, lty = lty, label.inset = label.inset,
-                         label.cex = label.cex, lwd = lwd)
-    return(result)
     #############################################
   } else {
-    KMests <- getKMtab(time, event, group)
 
-    if (area==FALSE) {#plot AUC
-        result <- onlyROC(KMests[[1]], xlab, ylab, main, cex.axis = cex.axis,
-                          cex.lab = cex.lab, lty = lty, label.inset = label.inset,
-                          label.cex = label.cex, lwd = lwd)
-        return(list(control_km = KMests$km_placebo, drug_km = KMests$km_drug))
-        #############################################
+    if (compare == TRUE) { #COMPARE TO LOGLOGISTIC AND LOGNORMAL
+      if (missing(abtwc)) {abtwc=FALSE}
+      result <- ROCcompare(time, event, group, silent, abtwc, xlab, ylab, main, cex.axis = cex.axis,
+                           cex.lab = cex.lab, lty = lty, label.inset = label.inset,
+                           label.cex = label.cex, lwd = lwd)
+
+    #############################################
     } else {
-      #Return area for uncensored data
-      if (KMests[[2]]==0) {
-          result <- completeROC(KMests[[1]], silent, xlab, ylab, main,cex.axis = cex.axis,
-                                cex.lab = cex.lab, lty = lty, label.inset = label.inset,
-                                label.cex = label.cex, lwd = lwd) #time, event, group
-          return(list(control_km = KMests$km_placebo,
-                      drug_km = KMests$km_drug,
-                      AUC = result))}
-      #Return area for censored data
-      if (KMests[[2]]!=0 & is.null(method)) {result <- onlyROC(KMests[[1]], lwd = lwd)
-          return(list(control_km = KMests$km_placebo,
-                      drug_km = KMests$km_drug))
-      } else {
-        if (KMests[[2]]!=0 & method=="restrict") {
-          result <- restrictROC(KMests[[1]], silent, lwd = lwd)
-        }
-      }
+        KMests <- getKMtab(time, event, group)
 
+        if (area==FALSE) {#plot AUC
+            result <- onlyROC(KMests[[1]], xlab, ylab, main, cex.axis = cex.axis,
+                              cex.lab = cex.lab, lty = lty, label.inset = label.inset,
+                              label.cex = label.cex, lwd = lwd)
+            #############################################
+        } else {
+          #Return area for uncensored data
+          if (KMests[[2]]==0) {
+              result <- completeROC(KMests[[1]], silent, xlab, ylab, main,cex.axis = cex.axis,
+                                    cex.lab = cex.lab, lty = lty, label.inset = label.inset,
+                                    label.cex = label.cex, lwd = lwd)} #time, event, group
+
+          #Return area for censored data
+          if (KMests[[2]]!=0 & method=="") {
+            result <- completeROC(skm=KMests[[1]], silent, xlab, ylab, main, cex.axis,
+                                  cex.lab, lty, label.inset, label.cex, lwd)
+            } else {
+              if (KMests[[2]]!=0 & method=="restrict") {
+              result <- restrictROC(skm=KMests[[1]], silent, xlab, ylab, main, cex.axis = cex.axis,
+                                    cex.lab = cex.lab, lty = lty, label.inset = label.inset,
+                                    label.cex = label.cex, lwd = lwd)}}
+
+        }
+
+        if (is.null(result)) {temp <- list(control_km=KMests[[3]], drug_km = KMests[[4]])
+          } else {temp <- list(result, control_km=KMests[[3]], drug_km = KMests[[4]])}
+
+        if(KM==TRUE){result <- temp}
     }
   }
-
+  return(result)
 }
+

@@ -22,16 +22,34 @@
 getKMtab <- function(time, event, group) {
 
   #Data mgmt
-  km_placebo <- survfit(Surv(time, event) ~ 1,
+  check0 = check1 = 1
+  if (length(unique(event[group==0]))==1) {
+    if (unique(event[group==0])==0) {check0=0}}
+
+  if (length(unique(event[group==1]))==1) {
+    if (unique(event[group==1])==0) {check1=0}}
+
+  if (check0==1) {
+      km_placebo <- survfit(Surv(time, event) ~ 1,
                         subset=(group==0), type='kaplan-meier')
-  km_drug <- survfit(Surv(time, event) ~ 1,
-                     subset=(group==1), type='kaplan-meier')
-  skm_p <- cbind(time = summary(km_placebo)$time,
-                 surv = summary(km_placebo)$surv)
-  skm_p <- cbind(skm_p, type = rep(0, nrow(skm_p)))
-  skm_d <- cbind(time = summary(km_drug)$time,
-                 surv = summary(km_drug)$surv)
-  skm_d <- cbind(skm_d, type = rep(1, nrow(skm_d)))
+      skm_p <- cbind(time = summary(km_placebo)$time, surv = summary(km_placebo)$surv)
+      skm_p <- cbind(skm_p, type = rep(0, nrow(skm_p)))
+
+  } else {
+     km_placebo <- NA
+     skm_p <- cbind(time = max(time[group==0]), surv = 1, type=0)
+  }
+
+  if (check1==1) {
+    km_drug <- survfit(Surv(time, event) ~ 1,
+                       subset=(group==1), type='kaplan-meier')
+    skm_d <- cbind(time = summary(km_drug)$time, surv = summary(km_drug)$surv)
+    skm_d <- cbind(skm_d, type = rep(1, nrow(skm_d)))
+
+  } else {
+    km_drug <- NA
+    skm_d <- cbind(time = max(time[group==1]), surv = 1, type=1)
+  }
 
   skm <- rbind(skm_p, skm_d)
   skm <- skm[order(skm[,1], skm[,3]),]
@@ -50,5 +68,7 @@ getKMtab <- function(time, event, group) {
 
   return(list(skm = skm, mskm = mskm,
               km_placebo = km_placebo, km_drug = km_drug))
+
+
 
 }

@@ -8,20 +8,21 @@ ROCsurv(
   time,
   event,
   group,
-  method = NULL,
+  method,
   checkPH = FALSE,
   compare = FALSE,
-  area = NULL,
+  area = TRUE,
   silent = FALSE,
   abtwc = FALSE,
-  xlab,
-  ylab,
-  main,
+  xlab = NULL,
+  ylab = NULL,
+  main = NULL,
+  KM,
   cex.axis = 1.5,
   cex.lab = 1.5,
   legend.inset = 0.02,
   legend.cex = 1.5,
-  lty = c(6, 1, 3),
+  lty = c(2, 1, 3),
   lwd = 1.5
 )
 }
@@ -61,6 +62,8 @@ ROCsurv(
 \item{lty}{Optional graphical parameter to set the type of line to use. Can be a number or a vector. See \link[graphics]{par} for more details.}
 
 \item{lwd}{Optional graphical parameter for line width relative to the default. See \link[graphics]{par} for more details.}
+
+\item{km}{Optional logical parameter. If TRUE the result will include survfit object containing survival information for each group.}
 }
 \value{
 A plot of the ROC curve (if \code{silent=FALSE}) and an ROCsurv object containing:

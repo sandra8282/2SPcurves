@@ -13,7 +13,7 @@
 get4plot <- function(skm) {
   x=y= c(1, rep(NA, nrow(skm)))
   i=1
-  while (i <= nrow(skm)) {
+  while (i < nrow(skm)) {
     if (skm[i,3]==0 & skm[i,4]==0) {#placebo no ties
       # horizontal move
       x[i+1] = skm[i,2]

@@ -65,6 +65,6 @@ onlyROC <- function(skm, xlab, ylab, main, cex.axis,
                x1=coord_new2[1], y1=coord_new2[2], col="black", lwd = lwd)
   }
 
-
+return(NULL)
 
 }

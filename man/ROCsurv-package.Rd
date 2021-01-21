@@ -4,7 +4,7 @@
 \name{ROCsurv-package}
 \alias{ROCsurv-package}
 \alias{_PACKAGE}
-\title{ROC Models for Survival Data from Clinical Trials}
+\title{A  Package  for  the  Analysis  of  Time  to  Event  OutcomesSubject  to    Right-Censoring  Using  ROC  Curves  in  Two-Arm  Randomized  Trials.}
 \description{
 Survival data is often used in clinical trials to determine effectiveness of a new treatment.
 Analysis of such data is usually completed using two separate Kaplan-Meier curves, a Log Rank Test and Cox Proportional Hazard models.

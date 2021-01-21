@@ -53,7 +53,7 @@ getmat4cor <- function(forplot, forplotfit){
 #' @noRd
 
 ROCcompare <- function(time, event, group, silent, abtwc, xlab, ylab, main, cex.axis,
-                       cex.lab, lty, label.inset, label.cex) {
+                       cex.lab, lty, label.inset, label.cex, lwd) {
 
   d <- c("lognormal", "loglogistic")
   KMres <- getKMtab(time, event, group)
@@ -91,7 +91,7 @@ ROCcompare <- function(time, event, group, silent, abtwc, xlab, ylab, main, cex.
 
   #correlations, SSR, ABTC
   rho = SSR = areaBTWcurves = rep(0,3)
-  cox_surv1 <- forplot[,1]^exp(coxfit$coefficients)
+  cox_surv1 <- forplot[,1]^exp(1/coxfit$coefficients)
   rho[1] <- cor(forplot[,2], cox_surv1)
   resid <- forplot[,2] - cox_surv1
   SSR[1] = sum(resid^2)
@@ -145,7 +145,7 @@ ROCcompare <- function(time, event, group, silent, abtwc, xlab, ylab, main, cex.
   }
 
   if (abtwc==TRUE) {
-    return(list(KMres = KMres,  HR = exp(coxfit$coefficients),
+    return(list(HR = exp(coxfit$coefficients),
                 BestRHO = best, BestSSR = best2, BestAreaBTWcurves = best3,
                 RHO = rho, SSR = SSR, areaBTWcurves = areaBTWcurves,
                 coefficients = coefficients))

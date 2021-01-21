@@ -39,7 +39,7 @@ getSKM4fit <- function(time, fitsurv, group) {
 #' @importFrom stats qnorm
 #' @importFrom utils capture.output
 #'
-#' @noRd
+#' @export
 
 ROCparametric <- function(time, event, group, dist="lognormal",
                           silent, xlab, ylab, main) {
@@ -50,11 +50,12 @@ ROCparametric <- function(time, event, group, dist="lognormal",
 
   #obtain coefficients and parameters to calculate survival fcts
   fit = survreg(Surv(time, event) ~ group, dist=dist)
-  mu = fit$coefficients[1]; gamma = fit$coefficients[2]; sigma = fit$scale;
+  mu = b0= fit$coefficients[1]; gamma = b1=fit$coefficients[2]; sigma = fit$scale;
   lambda = exp(-unname(mu/sigma)); beta = -unname(gamma)/sigma; alpha = 1/sigma;
   covmat <- vcov(fit)
 
-  #calculate survival fcts
+  #calculate survival fcts///////////////////////////////////////////////
+
   if (dist=="loglogistic") {
     fitsurv <- (1 + lambda*exp(beta*group)*(time^alpha))^(-1)
     fitskm <- getSKM4fit(time, fitsurv, group)
@@ -62,6 +63,8 @@ ROCparametric <- function(time, event, group, dist="lognormal",
     newsurv0 <- seq(min(forplotfit[,1]), 0.001, length.out = round(nrow(forplotfit)*0.1, 0))
     forplotfit <- rbind(forplotfit, cbind(newsurv0, rep(0, length(newsurv0))))
     forplotfit[,2] = 1 / (1 + (exp(- gamma/sigma) * (1/forplotfit[,1] - 1)))
+    eb1 <- exp(b1/sigma)
+    area.frml <- eb1*(eb1-log(eb1)-1)/((eb1-1)^2)
   }
 
   if (dist == "lognormal") {
@@ -71,6 +74,7 @@ ROCparametric <- function(time, event, group, dist="lognormal",
     newsurv0 <- seq(min(forplotfit[,1]), 0.001, length.out = round(nrow(forplotfit)*0.1, 0))
     forplotfit <- rbind(forplotfit, cbind(newsurv0, rep(0, length(newsurv0))))
     forplotfit[,2] = 1 - pnorm(qnorm(1 - forplotfit[,1]) - gamma/sigma)
+    area.frml <- pnorm((b1/sigma)/sqrt(2))
   }
 
    area = 0
@@ -129,6 +133,6 @@ ROCparametric <- function(time, event, group, dist="lognormal",
    }
 
    colnames(forplotfit) = c("u", "R(u)")
-   return(list(fit, area, parametricROC = forplotfit))
+   return(list(fit, area, area.frml = area.frml, parametricROC = forplotfit))
 
 }

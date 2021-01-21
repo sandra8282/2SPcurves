@@ -23,6 +23,7 @@
 #' @importFrom stats cor
 #' @importFrom pathmapping CreateMap
 #' @importFrom utils capture.output
+#' @import data.table
 #'
 #' @keywords internal
 #' @noRd
@@ -30,20 +31,30 @@
 ROCandPHM <- function(time, event, group, silent, abtwc, xlab, ylab, main, cex.axis,
                       cex.lab, lty, label.inset, label.cex, lwd) {
 
+  coxfit <- coxph(Surv(time, event) ~ group, ties = "breslow")
   KMres <- getKMtab(time, event, group)
   skm <- KMres[[1]]
   forplot = get4plot(skm)
 
-  coxfit <- coxph(Surv(time, event) ~ group, ties = "breslow")
-
   #correlations, SSR and area between curves
-  cox_surv1 <- forplot[,1]^exp(coxfit$coefficients) #surv1 = surv0^HR
-  rho <- cor(forplot[,2], cox_surv1)
-  resid <- forplot[,2] - cox_surv1
+  h0 <- basehaz(coxfit)
+  cox_surv <- data.frame(cx = exp(cumsum(h0$hazard)))
+  cox_surv$cy <- cox_surv[,1]^(exp(coxfit$coefficients)) #surv1 = surv0^HR
+
+  a=data.table(forplot)
+  a[,merge:=forplot[,1]]
+  b=data.table(cox_surv)
+  b[,merge:=cox_surv[,1]]
+  setkeyv(a,c('merge'))
+  setkeyv(b,c('merge'))
+  MergedForplot=b[a,roll='nearest']
+
+  rho <- cor(MergedForplot$cy, MergedForplot$y)
+  resid <-  MergedForplot$y - MergedForplot$cy
   SSR <- sum(resid^2)
-  forplot <- cbind(forplot, cox = cox_surv1)
   if (abtwc == TRUE){
-      invisible(capture.output(out <- CreateMap(forplot[,c(1,2)], forplot[,c(1,3)],
+      invisible(capture.output(out <- CreateMap(MergedForplot[,c(1,2)],
+                                                MergedForplot[,c(4,5)],
                                             plotgrid=F, verbose=F, insertopposites=F)))
       areaBTWcurves <- out$deviation
   }
@@ -52,12 +63,12 @@ ROCandPHM <- function(time, event, group, silent, abtwc, xlab, ylab, main, cex.a
     plot(NULL, type="n", las=1,
          xlim=c(0,1), ylim = c(0, 1), #to make tight axis: xaxs="i", yaxs="i"
          xlab=xlab, ylab=ylab, main=main, cex.axis = cex.axis, cex.lab = cex.lab)
-  lines(forplot[,1], forplot[,2], col="black", lty=lty[1], lwd = lwd)
-  lines(forplot[,1], forplot[,1]^exp(coxfit$coefficients), lty=lty[2], lwd = lwd)
-  abline(c(0,1), col = "grey", lty=1, lwd = lwd-0.25)
-  legend("topleft", c("KMROC", "Cox ROC"), lty = lty,
-         inset=label.inset, cex=label.cex, bg = "white", bty='n', seg.len = 0.8,
-         x.intersp=0.9, y.intersp = 0.85, lwd = lwd)
+    lines(MergedForplot$x, MergedForplot$y, col="black", lty=lty[1], lwd = lwd)
+    lines(MergedForplot$cx, MergedForplot$cy, lty=lty[2], lwd = lwd)
+    abline(c(0,1), col = "grey", lty=1, lwd = lwd-0.25)
+    legend("topleft", c("KM-ROC", "Cox-ROC"), lty = lty,
+           inset=label.inset, cex=label.cex, bg = "white", bty='n', seg.len = 0.8,
+           x.intersp=0.9, y.intersp = 0.85, lwd = lwd)
 
   text(x=0.99, y=0.25,
        labels = bquote(hat(rho) == .(round(rho, 4))),
@@ -75,8 +86,8 @@ ROCandPHM <- function(time, event, group, silent, abtwc, xlab, ylab, main, cex.a
   }
 
   if (abtwc == TRUE){
-    res <- list(KMres = KMres, SSR = SSR, rho = rho, areaBTWcurves = areaBTWcurves)
-    } else {res <- list(KMres = KMres, SSR = SSR, rho = rho)}
+    res <- list(SSR = SSR, rho = rho, areaBTWcurves = areaBTWcurves)
+    } else {res <- list(SSR = SSR, rho = rho)}
 
   return(res)
 
