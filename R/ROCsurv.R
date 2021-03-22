@@ -21,7 +21,7 @@
 #' @param legend.cex Optional graphical parameter for magnification of the legend's text.
 #' @param lty Optional graphical parameter to set the type of line to use. Can be a number or a vector. See \link[graphics]{par} for more details.
 #' @param lwd Optional graphical parameter for line width relative to the default. See \link[graphics]{par} for more details.
-#' @param km Optional logical parameter. If TRUE the result will include survfit object containing survival information for each group.
+#' @param KM Optional logical parameter. If TRUE the result will include survfit object containing survival information for each group.
 #'
 #' @return A plot of the ROC curve (if \code{silent=FALSE}) and an ROCsurv object containing:
 #' \itemize{
@@ -44,7 +44,6 @@ ROCsurv <- function(time, event, group, method,
                     xlab=NULL, ylab=NULL, main=NULL, KM, cex.axis = 1.5, cex.lab = 1.5,
                     legend.inset=0.02, legend.cex=1.5, lty = c(2,1,3), lwd = 1.5){
 
-  #level=NULL,
   #### basic checks for missing parameters
   all_lengths = c(length(time), length(event), length(group))
   if (length(unique(all_lengths)) != 1) stop("One or more input vectors (time, event, group) differs in length from the rest.")
@@ -56,6 +55,10 @@ ROCsurv <- function(time, event, group, method,
   if (missing(method)) {method <- ""}
   if (missing(KM)) {KM <- FALSE}
   label.inset=legend.inset; label.cex=legend.cex
+
+  mat <- cbind(time, event, group)
+  mat <- na.omit(mat)
+  time = mat[,1]; event = mat[,2]; group = mat[,3];
 
   ###########################################
 

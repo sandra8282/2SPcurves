@@ -12,16 +12,6 @@ getSKM4fit <- function(time, fitsurv, group) {
   return(fitskm)
 }
 
-getmat4cor <- function(forplot, forplotfit){
-  all <- matrix(nrow = nrow(forplot), ncol=4)
-  all[1,] <- cbind(forplot[1, 1:2], forplotfit[1,])
-  for (q in 2:nrow(forplot)) {
-    absdiff = (abs(forplotfit[,1]-forplot[q,1]))
-    index <- which(absdiff==min(absdiff))
-    all[q,] <- cbind(forplot[q,1:2], forplotfit[index[1],])
-  }
-  return(na.omit(all))
-}
 #' ROC when survival goes to 0 for either group
 #'
 #' @param time passed from ROCsurv.
@@ -55,13 +45,12 @@ getmat4cor <- function(forplot, forplotfit){
 ROCcompare <- function(time, event, group, silent, abtwc, xlab, ylab, main, cex.axis,
                        cex.lab, lty, label.inset, label.cex, lwd) {
 
-  d <- c("lognormal", "loglogistic")
+  d <- c("lognormal", "loglogistic", "spline")
   KMres <- getKMtab(time, event, group)
   skm <- KMres[[1]]
-  skm <- skm[,-3]
   forplot = get4plot(skm)
 
-  #obtain coefficients and parameters to calculate survival fcts
+  #obtain coefficients and parameters to calculate AFT survival fcts
   lambda = beta = alpha = mu = gamma = sigma = c()
   for (i in 1:2) {
     fit = survreg(Surv(time, event) ~ group, dist=d[i])
@@ -71,45 +60,23 @@ ROCcompare <- function(time, event, group, silent, abtwc, xlab, ylab, main, cex.
     lambda = c(lambda, l); beta = c(beta, b); alpha = c(alpha, a);
   }
 
-  #calculate survival fcts
-  surv_lognorm = 1 - pnorm((log(time)- mu[1] - gamma[1]*group)/sigma[1])
-  surv_loglogis = (1 + lambda[2]*exp(beta[2]*group)*(time^alpha[2]))^(-1)
-  fitsurv <- list(surv_lognorm, surv_loglogis)
-
-  forplotfit = list()
-  for (i in 1:2) {
-    fitskm <- getSKM4fit(time, fitsurv[[i]], group)
-    forplotfit[[i]] = get4plot(fitskm)
-  }
-
-  forplotfit[[1]][,2] = 1 - pnorm(qnorm(1 - forplotfit[[1]][,1]) - gamma[1]/sigma[1] )
-  forplotfit[[2]][,2] = 1 / (1 + (exp(- gamma[2]/sigma[2]) * (1/forplotfit[[2]][,1] - 1)))
-  names(forplotfit) <- d
-
   #Get cox model
   coxfit <- coxph(Surv(time, event) ~ group, ties = "breslow")
+  #calculate survival fcts
 
-  #correlations, SSR, ABTC
-  rho = SSR = areaBTWcurves = rep(0,3)
-  cox_surv1 <- forplot[,1]^exp(1/coxfit$coefficients)
-  rho[1] <- cor(forplot[,2], cox_surv1)
-  resid <- forplot[,2] - cox_surv1
-  SSR[1] = sum(resid^2)
-  forplot <- cbind(forplot, cox = cox_surv1)
-  if (abtwc==TRUE) {
-      invisible(capture.output(out <- CreateMap(forplot[,c(1,2)], forplot[,c(1,3)],
-                      plotgrid=F, verbose=F, insertopposites=F)))
-      areaBTWcurves[1] <- out$deviation
-  }
+  u = forplot[,1]
+  forplotfit = data.frame(u, u^exp(coxfit$coefficients),
+                           1 - pnorm(qnorm(1 - u) - gamma[1]/sigma[1]),
+                           1 / (1 + (exp(- gamma[2]/sigma[2]) * (1/u - 1))))
+  names(forplotfit) =  names(forplotfit2) = c("u", "Cox", d)
 
-
-  for (i in 2:3) {
-    comparetofit <- getmat4cor(forplot, forplotfit[[i-1]])
-    rho[i] <- cor(comparetofit[,2], comparetofit[,4])
-    temp <- comparetofit[,2] - comparetofit[,4]
+  for (i in 1:3) {
+    rho[i] <- cor(forplotfit[,i+1], forplot[,2])
+    temp <- forplot[,2] - forplotfit[,i+1]
     SSR[i] <- sum(temp^2)
     if (abtwc==TRUE){
-      invisible(capture.output(out <- CreateMap(forplot[,c(1,2)], forplotfit[[i-1]],
+      invisible(capture.output(out <- CreateMap(forplotfit[, c(1,forplotfit[,i+1])],
+                                                forplot,
                                                 plotgrid=F, verbose=F, insertopposites=F)))
       areaBTWcurves[i] <- out$deviation
 
@@ -118,6 +85,25 @@ ROCcompare <- function(time, event, group, silent, abtwc, xlab, ylab, main, cex.
 
   areaBTWcurves = as.numeric(areaBTWcurves)
   names(rho) = names(SSR) = names(areaBTWcurves) = c("Cox", d)
+
+
+  u = c(seq(0, 1, 0.0001), 1)
+  forplotfit2 = data.frame(u, u^exp(coxfit$coefficients),
+                          1 - pnorm(qnorm(1 - u) - gamma[1]/sigma[1]),
+                          1 / (1 + (exp(- gamma[2]/sigma[2]) * (1/u - 1))))
+
+  #correlations, SSR, ABTC
+  rho = SSR = areaBTWcurves = rep(0,3)
+
+  # a=data.table(forplotfit)
+  # a[,merge:=u]
+  # b=data.table(forplot)
+  # b[,merge:=forplot[,1]]
+  # setkeyv(a,c('merge'))
+  # setkeyv(b,c('merge'))
+  # MergedForplot=a[b,roll='nearest']
+  # setorder(MergedForplot, -x)
+  # MergedForplot = as.data.frame(MergedForplot)
 
   bestindex = which(rho == max(rho))
   best = names(rho)[bestindex]
@@ -135,13 +121,14 @@ ROCcompare <- function(time, event, group, silent, abtwc, xlab, ylab, main, cex.
          xlim=c(0,1), ylim = c(0, 1), #to make tight axis: xaxs="i", yaxs="i"
          xlab=xlab, ylab=ylab, main=main, cex.axis = cex.axis, cex.lab = cex.lab)
     points(forplot[,1], forplot[,2], col = "grey", cex = 1)
-    lines(forplot[,1], forplot[,1]^exp(coxfit$coefficients), lty=lty[1], lwd = lwd)
-    lines(forplotfit[[1]][,1], forplotfit[[1]][,2], lty=lty[2], lwd = lwd)
-    lines(forplotfit[[2]][,1], forplotfit[[2]][,2], lty=lty[3], lwd = lwd)
+    lines(forplotfit[,1], forplotfit[,2], lty=lty[1], lwd = lwd, col = "darkred")
+    lines(forplotfit[,1], forplotfit[,3], lty=lty[2], lwd = lwd, col = "blue")
+    lines(forplotfit[,1], forplotfit[,4], lty=lty[3], lwd = lwd, col = "darkgreen")
     abline(c(0,1), col = "grey", lty=1, lwd = lwd-0.25)
     legend("bottomright", legend= c("Cox PHM", "Lognormal", "Loglogistic"),
-           lty = lty, cex=label.cex, xjust = 1, yjust = 0, bg = "white",
-           bty='n', seg.len = 0.8, x.intersp=0.9, y.intersp = 0.85)
+           lty = lty, col = c("darkred", "blue", "darkgreen"), cex=label.cex,
+           xjust = 1, yjust = 0, bg = "white", bty='n', seg.len = 0.8,
+           x.intersp=0.9, y.intersp = 0.85)
   }
 
   if (abtwc==TRUE) {

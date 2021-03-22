@@ -1,7 +1,7 @@
 Package: ROCsurv
 Type: Package
 Version: 1.0.0
-Title: A  Package  for  the  Analysis  of  Time  to  Event  OutcomesSubject  to    Right-Censoring  Using  ROC  Curves  in  Two-Arm  Randomized  Trials.
+Title: A  Package  for  the  Analysis  of  Time  to  Event  OutcomesSubject  to    Right-Censoring  Using  ROC  Curves  in  Two-Arm  Randomized  Trials
 Authors@R: c(person("Sandra", "Castro-Pearson", email= "cast0135@umn.edu", role = c("aut", "cre")))
 Author: Sandra Castro-Pearson [aut, cre]
 Maintainer: Sandra Castro-Pearson <cast0135@umn.edu>

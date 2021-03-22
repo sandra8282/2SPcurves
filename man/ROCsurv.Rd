@@ -51,6 +51,8 @@ ROCsurv(
 
 \item{main}{String argument for the title of the ROC curve.}
 
+\item{KM}{Optional logical parameter. If TRUE the result will include survfit object containing survival information for each group.}
+
 \item{cex.axis}{Optional graphical parameter for magnification of axis annotation. See \link[graphics]{par} for more details.}
 
 \item{cex.lab}{Optional graphical parameter for magnification of x and y labels. See \link[graphics]{par} for more details.}
@@ -62,8 +64,6 @@ ROCsurv(
 \item{lty}{Optional graphical parameter to set the type of line to use. Can be a number or a vector. See \link[graphics]{par} for more details.}
 
 \item{lwd}{Optional graphical parameter for line width relative to the default. See \link[graphics]{par} for more details.}
-
-\item{km}{Optional logical parameter. If TRUE the result will include survfit object containing survival information for each group.}
 }
 \value{
 A plot of the ROC curve (if \code{silent=FALSE}) and an ROCsurv object containing:

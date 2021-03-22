@@ -20,12 +20,13 @@ restrictROC <- function(skm, silent, xlab, ylab, main, cex.axis,
 
   forplot <- get4plot(skm)
   minx <- forplot[nrow(forplot),1]
+  miny <- forplot[nrow(forplot),2]
   area <- 0
 
   area <- completeROC(skm, silent, xlab, ylab, main, cex.axis,
                       cex.lab, lty, label.inset, label.cex, lwd)
 
-  mina = 0.5*(1 - minx^2)
+  mina = 0.5*(1+miny)*(1 - minx)
   maxa = 1-minx
   area_adj = unname(0.5*(1 + (area - mina)/(maxa - mina)))
 
