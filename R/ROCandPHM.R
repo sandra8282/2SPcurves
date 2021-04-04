@@ -50,7 +50,6 @@ ROCandPHM <- function(time, event, group, silent, abtwc, xlab, ylab, main, cex.a
   setkeyv(a,c('merge'))
   setkeyv(b,c('merge'))
   MergedForplot=a[b,roll='nearest']
-  MergedForplot[,merge:=NULL]
   setorder(MergedForplot)
 
   rho <- cor(MergedForplot$cy, MergedForplot$y)
