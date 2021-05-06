@@ -73,17 +73,17 @@ ROCandPHM <- function(time, event, group, silent, abtwc, xlab, ylab, main, cex.a
            inset=label.inset, cex=label.cex, bg = "white", bty='n', seg.len = 0.8,
            x.intersp=0.9, y.intersp = 0.85, lwd = lwd)
 
-  text(x=0.99, y=0.25,
-       labels = bquote(hat(rho) == .(round(rho, 3))),
-       pos=2, cex=label.cex)
-  text(x=0.99, y=0.15,
-       labels = paste("SSR = ", round(SSR, 3), sep=""),
-       pos=2, cex=label.cex)
-    if (abtwc == TRUE){
-      text(x=0.99, y=0.05,
-           labels = paste("ABTC = ", round(areaBTWcurves, 3), sep=""),
-           pos=2, cex=label.cex)
-    }
+  # text(x=0.99, y=0.25,
+  #      labels = bquote(hat(rho) == .(round(rho, 3))),
+  #      pos=2, cex=label.cex)
+  # text(x=0.99, y=0.15,
+  #      labels = paste("SSR = ", round(SSR, 3), sep=""),
+  #      pos=2, cex=label.cex)
+  #   if (abtwc == TRUE){
+  #     text(x=0.99, y=0.05,
+  #          labels = paste("ABTC = ", round(areaBTWcurves, 3), sep=""),
+  #          pos=2, cex=label.cex)
+  #   }
   }
 
   if (abtwc == TRUE){

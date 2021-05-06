@@ -9,7 +9,17 @@ Description: Analysis of survival data from two-arm randomized trials combining 
 License: GPL-3
 Encoding: UTF-8
 LazyData: true
-Imports: survival, graphics, coxed, stats, simsurv, pathmapping, rootSolve, data.table
+Depends: R (>= 3.5.0)
+biocViews:
+Imports:  survival, 
+          graphics, 
+          stats, 
+          dplyr, 
+          simsurv, 
+          pathmapping, 
+          rootSolve, 
+          data.table, 
+          Icens
 Language: en-US
 RoxygenNote: 7.1.1
 URL: https://github.com/SandraCastroPearson/ROCsurv

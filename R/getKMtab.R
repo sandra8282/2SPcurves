@@ -1,7 +1,7 @@
 #' INTERNAL: data management not for user
 #'
 #' @description
-#' This function gets KM survival estimators for each group.
+#' This function gets KM survival estimators for each group for right censored data.
 #'
 #' @param time Numeric or character vector of subject's unique identifier (i).
 #' @param event Vector indicating the observation or episode (j) for a subject (i). This will determine order of events for each subject.
@@ -14,6 +14,7 @@
 #' }
 #'
 #'@import survival
+#'@importFrom dplyr distinct
 #'@keywords internal
 #'@noRd
 #'
@@ -65,6 +66,8 @@ getKMtab <- function(time, event, group) {
   skm = cbind(skm, ties_ind)
 
   mskm <- min(skm[,2])
+
+  skm <- as.matrix(distinct(data.frame(skm)))
 
   return(list(skm = skm, mskm = mskm,
               km_placebo = km_placebo, km_drug = km_drug))
