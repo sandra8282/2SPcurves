@@ -90,7 +90,7 @@ intROCsurv <- function(left, right, group, iterations, end_follow,
 
   res <- getIGroc(npmle_0 = control_pf, npmle_1 = trt_pf)
 
-  return(list(survival_functions = skm, NPMLE_placebo = NPMLE.control, NPMLE_trt = NPMLE.trt,
-              two_sample_prob = res[[1]], auc = res[[2]]))
+  return(list(two_sample_prob = res[[1]], auc = res[[2]],survival_functions = skm,
+              NPMLE_placebo = NPMLE.control, NPMLE_trt = NPMLE.trt))
 
 }
