@@ -4,7 +4,7 @@ getKM <- function(x,d){
   return(tempsumm)
 }
 
-ljoinf <- function(alist, adf){
+ljoinf <- function(alist, adf, B){
   for (b in 1:B){
     ind <- which(adf$time %in% alist[[b]][,1])
     adf[ind,b+1] <- alist[[b]][,2]
@@ -35,7 +35,7 @@ colMax <- function(data) sapply(data, max, na.rm = TRUE)
 #'@noRd
 #'
 #'
-getKMtabIntCens <- function(dat) {
+getKMtabRecurrent <- function(dat) {
 
   B <- 1000
   #Take out censored observations for subjects with more than 1 gap time
@@ -49,7 +49,7 @@ getKMtabIntCens <- function(dat) {
 
   #
   for (i in (samples$id)){
-    temp <- subset(dat_fs, id == i)
+    temp <- subset(dat_fs, dat_fs$id == i)
     ind <- which(samples$id==i)
     if (nrow(temp)==1){
       samples[ind, 5:ncol(samples)] <- temp$time
@@ -64,7 +64,7 @@ getKMtabIntCens <- function(dat) {
                                  max(colMax(sample0[,5:ncol(sample0)])),
                                  min(sapply(Sb0, function(x) min(diff(x[,1]))))))
   Sb0df <- cbind(Sb0df, matrix(rep(rep(NA, nrow(Sb0df)), B), ncol=B))
-  Sb0df <- ljoinf(Sb0, Sb0df); Sb0df[1, 2:ncol(Sb0df)] <- 1;
+  Sb0df <- ljoinf(Sb0, Sb0df, B); Sb0df[1, 2:ncol(Sb0df)] <- 1;
   Sb0_t <- data.frame(time = Sb0df$time,
                       surv = rowMeans(Sb0df[,-1], na.rm = TRUE),
                       group = 0)

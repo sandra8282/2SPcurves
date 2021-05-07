@@ -3,8 +3,14 @@
 #' @description
 #' This function gets the roc for each group for interval censored data.
 #'
-#' @param npmle_0 pass from intROCsurv.
-#' @param npmle_1 pass from intROCsurv.
+#' @param npmle_0 passed from intROCsurv.
+#' @param npmle_1 passed from intROCsurv.
+#' @param xlab passed from intROCsurv.
+#' @param ylab passed from intROCsurv.
+#' @param main passed from intROCsurv.
+#' @param cex.axis passed from intROCsurv.
+#' @param cex.lab passed from intROCsurv.
+#' @param lwd passed from intROCsurv.
 #'
 #'@importFrom data.table setDT
 #'@importFrom data.table setkey
@@ -14,7 +20,10 @@
 #'@keywords internal
 #'@noRd
 #'
-getIGroc <- function(npmle_0, npmle_1){
+getIGroc <- function(npmle_0, npmle_1, xlab, ylab, main, cex.axis,
+                     cex.lab, lwd){
+
+  dt0.L = dt1.R = dt0.R = dt1.L = L = NULL
 
   #search for overlapping intervals
   setDT(npmle_0); setDT(npmle_1);
