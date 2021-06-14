@@ -6,6 +6,7 @@
 #' @param id Unique identifier for each participant.
 #' @param episode_j Vector identifying the event number (j=1,..., m_i) for each partipant.
 #' @param time Gap time (Y_ij)
+#' @param checkPH Logical argument to indicate if user wants to compare the nonparametric two sample survival curve with a proportional hazards model based curve (default is FALSE).
 #' @param mi Vector with number of episodes/recurrences each participant experienced.
 #' @param group An indicator vector with values of 1 if the the participant was in the treatment arm and 0 otherwise.
 #' @param xlab String argument for the horizontal axis label of the ROC curve.
@@ -30,7 +31,7 @@
 #'
 #' @export
 #'
-ROCsurvRec <- function(id, episode_j, time, group, mi,
+rec2Ssurv <- function(id, episode_j, time, group, mi, checkPH = FALSE,
                        xlab=NULL, ylab=NULL, main=NULL, cex.axis = 1.5, cex.lab = 1.5,
                        legend.inset=0.02, legend.cex=1.5, lty = c(2,1,3), lwd = 1.5){
 
@@ -40,7 +41,16 @@ ROCsurvRec <- function(id, episode_j, time, group, mi,
 
     MWCR <- getKMtabRecurrent(dat)
 
-    res<-onlyROC(MWCR[[1]], xlab, ylab, main, cex.axis = cex.axis,
+    if (checkPH==FALSE) {
+        res<-onlyROC(MWCR[[1]], xlab, ylab, main, cex.axis = cex.axis,
             cex.lab = cex.lab, lty = lty, lwd = lwd)
+    } else {
+        res <- onlyROC(MWCR[[1]], xlab, ylab, main, cex.axis = cex.axis,
+                cex.lab = cex.lab, lty = lty, lwd = lwd)
+        lines(MWCR$Cox_u, MWCR$Cox_Ru, lwd = lwd, lty = 2)
+
+    }
+
+
 
 }

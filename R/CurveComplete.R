@@ -28,7 +28,7 @@ completeROC <- function(skm, silent, xlab, ylab, main, cex.axis,
 
   area <- 0
 
-  if (silent == FALSE) {
+  if (silent == FALSE) { #AUC and plot with AUC shading
     plot(NULL, type="n", las=1,
          xlim=c(0,1), ylim = c(0, 1), #to make tight axis: xaxs="i", yaxs="i"
          xlab=xlab, ylab=ylab, main=main, cex.axis = cex.axis, cex.lab = cex.lab)
@@ -65,11 +65,11 @@ completeROC <- function(skm, silent, xlab, ylab, main, cex.axis,
          pos=2, cex = 1)
 
   } else {
-
+      #AUC calculations only
     for (k in 2:nrow(forplot)) {
       coord_new = unname(forplot[k-1,])
       coord_new2 = unname(forplot[k,])
-      #figure out areas and shading
+      #figure out area
       if (forplot[k,2]==forplot[k-1,2]) {#move horizontally
         area = area + (coord_new[1] - coord_new2[1])*(coord_new[2])
       } else {
@@ -83,6 +83,6 @@ completeROC <- function(skm, silent, xlab, ylab, main, cex.axis,
     }
     area = unname(area)
   }
-
-  return(area)
+  colnames(forplot) <- c("u", "R_u", "tienext")
+  return(list(AUC=area, R_u = forplot))
 }

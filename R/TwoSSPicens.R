@@ -25,7 +25,7 @@
 #'  \item icsurv object from application of EM to the treated group data.
 #' }
 #'
-#' @importFrom Icens EM
+#' @importFrom Icens EMICM
 #' @importFrom data.table data.table
 #' @importFrom dplyr %>%
 #' @importFrom dplyr full_join
@@ -35,11 +35,11 @@
 #' @export
 #'
 
-intROCsurv <- function(left, right, group, iterations, end_follow,
+ic2sampsurv <- function(left, right, group, iterations, end_follow,
                        xlab=NULL, ylab=NULL, main=NULL, cex.axis = 1.5, cex.lab = 1.5,
                        legend.inset=0.02, legend.cex=1.5, lty = c(1,2,3), lwd = 1.5) {
 
-  if(missing(iterations)) {iterations = 1000}
+  if(missing(iterations)) {iterations = 5000}
 
   all_len <- c(length(left), length(right), length(group))
   if (length(unique(all_len))!=1) {stop("Error: One or more variables (lenft, right, group) defer in length.")}
@@ -48,7 +48,7 @@ intROCsurv <- function(left, right, group, iterations, end_follow,
   control <- data.frame(dat[group==0]); trt <- data.frame(dat[group==1])
 
   # EM calculations for control group #################################################
-    NPMLE.control<-EM(control[,(1:2)], maxiter = iterations)
+    NPMLE.control<-EMICM(control[,(1:2)], maxiter = iterations)
     control_pf <- data.frame(L = NPMLE.control$intmap[1,],
                              R = NPMLE.control$intmap[2,],
                              drop = NPMLE.control$pf)
@@ -56,7 +56,7 @@ intROCsurv <- function(left, right, group, iterations, end_follow,
     control_pf$cumdrop = cumsum(control_pf$drop)
 
   # EM calculations for treatment group #################################################
-    NPMLE.trt<-EM(trt[,(1:2)], maxiter = iterations)
+    NPMLE.trt<-EMICM(trt[,(1:2)], maxiter = iterations)
     trt_pf <- data.frame(L = NPMLE.trt$intmap[1,],
                          R = NPMLE.trt$intmap[2,],
                          drop = NPMLE.trt$pf)
@@ -88,7 +88,9 @@ intROCsurv <- function(left, right, group, iterations, end_follow,
   # 2 sample curve   ##############################################################################################
 
 
-  res <- getIGroc(npmle_0 = control_pf, npmle_1 = trt_pf)
+  res <- getIGroc(npmle_0 = control_pf, npmle_1 = trt_pf,
+                  xlab, ylab, main, cex.axis,
+                  cex.lab, lwd)
 
   return(list(two_sample_prob = res[[1]], auc = res[[2]],survival_functions = skm,
               NPMLE_placebo = NPMLE.control, NPMLE_trt = NPMLE.trt))

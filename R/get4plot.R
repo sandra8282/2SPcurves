@@ -11,12 +11,13 @@
 #'
 #'
 get4plot <- function(skm) {
-  x=y= c(1, rep(NA, nrow(skm)))
+  x=y=tie=c(1, rep(NA, nrow(skm)));
   i=1
   while (i < nrow(skm)) {
     if (skm[i,3]==0 & skm[i,4]==0) {#placebo no ties
       # horizontal move
       x[i+1] = skm[i,2]
+      tie[i+1] = 0
       # vertical stay
       if (is.na(y[i])) {y[i+1] = y[i-1]
       } else {y[i+1] = y[i]}
@@ -25,6 +26,7 @@ get4plot <- function(skm) {
       if (skm[i,3]==1 & skm[i,4]==0) {#drug no ties
         #vertical move
         y[i+1] = skm[i,2]
+        tie[i+1] = 0
         #horizontal stay
         if (is.na(x[i])) {x[i+1] = x[i-1]
         } else {x[i+1] = x[i]}
@@ -43,8 +45,8 @@ get4plot <- function(skm) {
       }
     }
   }
-
-  forplot <- na.omit(cbind(x,y))
-  colnames(forplot) <- c("x", "y")
+  tie <- ifelse(is.na(tie), 1, tie)
+  forplot <- na.omit(cbind(x,y, c(tie[-1],0)))
+  colnames(forplot) <- c("x", "y", "tienext")
   return(forplot)
 }

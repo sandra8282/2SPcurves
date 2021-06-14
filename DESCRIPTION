@@ -8,16 +8,15 @@ Maintainer: Sandra Castro-Pearson <cast0135@umn.edu>
 Description: Analysis of survival data from two-arm randomized trials combining the Kaplan-Meier curves of the two arms in the trial into an ROC curve and using the area under the curve (AUC) as measure of treatment effectiveness.
 License: GPL-3
 Encoding: UTF-8
-LazyData: true
 Depends: R (>= 3.5.0)
-biocViews:
+biocViews: 
+LazyData: true
 Imports:  survival, 
           graphics, 
           stats, 
           dplyr, 
           simsurv, 
           pathmapping, 
-          rootSolve, 
           data.table, 
           Icens, 
           DescTools

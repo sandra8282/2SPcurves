@@ -26,7 +26,7 @@ restrictROC <- function(skm, silent, xlab, ylab, main, cex.axis,
   area <- completeROC(skm, silent, xlab, ylab, main, cex.axis,
                       cex.lab, lty, label.inset, label.cex, lwd)
 
-  mina = 0.5*(1+miny)*(1 - minx)
+  mina = 0.5*(1+minx)*(1 - minx)
   maxa = 1-minx
   area_adj = unname(0.5*(1 + (area - mina)/(maxa - mina)))
 

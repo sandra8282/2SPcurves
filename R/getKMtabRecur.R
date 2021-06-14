@@ -4,6 +4,13 @@ getKM <- function(x,d){
   return(tempsumm)
 }
 
+getPHres <- function(x, d, group, u){
+  coxfit <- coxph(Surv(x, d) ~ group, ties = "breslow")
+  loghr <- coxfit$coefficients
+  return(loghr)
+
+}
+
 ljoinf <- function(alist, adf, B){
   for (b in 1:B){
     ind <- which(adf$time %in% alist[[b]][,1])
@@ -35,7 +42,7 @@ colMax <- function(data) sapply(data, max, na.rm = TRUE)
 #'@noRd
 #'
 #'
-getKMtabRecurrent <- function(dat) {
+getKMtabRecurrent <- function(dat, checkPH) {
 
   B <- 1000
   #Take out censored observations for subjects with more than 1 gap time
@@ -75,7 +82,7 @@ getKMtabRecurrent <- function(dat) {
                                  max(colMax(sample1[,5:ncol(sample1)])),
                                  min(sapply(Sb1, function(x) min(diff(x[,1]))))))
   Sb1df <- cbind(Sb1df, matrix(rep(rep(NA, nrow(Sb1df)), B), ncol=B))
-  Sb1df <- ljoinf(Sb1, Sb1df); Sb1df[1, 2:ncol(Sb1df)] <- 1;
+  Sb1df <- ljoinf(Sb1, Sb1df,B); Sb1df[1, 2:ncol(Sb1df)] <- 1;
   Sb1_t <- data.frame(time = Sb1df$time,
                       surv = rowMeans(Sb1df[,-1], na.rm = TRUE),
                       group = 1)
@@ -97,9 +104,24 @@ getKMtabRecurrent <- function(dat) {
 
   skm <- as.matrix(distinct(data.frame(skm)))
 
-  return(list(skm = skm, mskm = mskm,
+  if (checkPH==TRUE){
+
+    coxres <- apply(samples[,5:ncol(samples)], 2, function(x) getPHres(x, samples$delta, samples$group))
+    loghr <- mean(coxres)
+    u = c(seq(0, 1, 0.0001), 1)
+    Ru = u^exp(loghr)
+
+    return(list(skm = skm, mskm = mskm,
+                MWCRsurv_placebo = na.omit(Sb0_t),
+                MWCRsurv_treatmen = na.omit(Sb1_t),
+                MWCRlogHR = loghr, Cox_u = u,  Cox_Ru = Ru))
+
+  } else {
+    return(list(skm = skm, mskm = mskm,
               MWCRsurv_placebo = na.omit(Sb0_t),
               MWCRsurv_treatmen = na.omit(Sb1_t)))
+  }
+
 
 
 
