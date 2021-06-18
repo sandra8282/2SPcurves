@@ -59,13 +59,13 @@ ROCandPHM <- function(time, event, group, silent, abtwc, xlab, ylab, main, cex.a
                                             plotgrid=F, verbose=F, insertopposites=F)))
       areaBTWcurves <- out$deviation
   }
-
+  u = unique(c(seq(min(forplot[,1], 1, 0.001)), 1))
   if(silent==FALSE){
     plot(NULL, type="n", las=1,
          xlim=c(0,1), ylim = c(0, 1), #to make tight axis: xaxs="i", yaxs="i"
          xlab=xlab, ylab=ylab, main=main, cex.axis = cex.axis, cex.lab = cex.lab)
     lines(forplot[,1], forplot[,2], col="black", lty=lty[1], lwd = lwd)
-    lines(forplot[,1], forplot[,4], lty=lty[2], lwd = lwd)
+    lines(u, u^exp(coef(coxfit)), lty=lty[2], lwd = lwd)
     abline(c(0,1), col = "grey", lty=1, lwd = lwd-0.25)
     legend("topleft", c("KM-Based Curve", "Cox-Based Curve"), lty = lty,
            inset=label.inset, cex=label.cex, bg = "white", bty='n', seg.len = 0.8,

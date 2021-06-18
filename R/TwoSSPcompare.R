@@ -45,7 +45,7 @@ getSKM4fit <- function(time, fitsurv, group) {
 ROCcompare <- function(time, event, group, silent, abtwc, xlab, ylab, main, cex.axis,
                        cex.lab, lty, label.inset, label.cex, lwd) {
 
-  d <- c("lognormal", "loglogistic", "spline")
+  d <- c("lognormal", "loglogistic")
   KMres <- getKMtab(time, event, group)
   skm <- KMres[[1]]
   forplot = get4plot(skm)

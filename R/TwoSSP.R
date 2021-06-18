@@ -29,8 +29,8 @@ getAUC <- function(KMests, silent, method, xlab, ylab, main,cex.axis = cex.axis,
 #' @param event An indicator vector with values of 1 for individuals who had the event occurred or 0 if the participant was censored.
 #' @param group An indicator vector with values of 1 if the the participant was in the treatment arm and 0 otherwise.
 #' @param method Method to be used to obtain a complete curve.
-#' @param checkPH Logical argument to indicate if user wants to compare an ROC from the Cox Proportional Hazards Model to the KMROC (default is FALSE).
-#' @param compare Logical argument to indicate if user wants want to compare the KMROC to ROM curves from a Cox model, a loglogistic AFT model and a lognormal AFT model (default is FALSE).
+#' @param checkPH Logical argument to indicate if user wants to compare the nonparametric curve with the curve based on the proportional hazards model (default is FALSE).
+#' @param compare Logical argument to indicate if user wants want to compare the nonparametric curve with curves based on a proportional hazards model, proportional odds model, and various AFT models (default is FALSE).
 #' @param area Logical argument to indicate if user wants an estimate for area under the curve (default is TRUE).
 #' @param abtwc Logical argument to indicate if area between curves is needed as part of model comparisons (checkPHM or compare must be TRUE).
 #' @param silent Logical argument, FALSE indicates the user wants ROC plots and TRUE indicates no plots only AUC calculations (default is FALSE).

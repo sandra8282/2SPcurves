@@ -81,7 +81,7 @@ btsp <- function(res, maindat, method, B, level, xlab, ylab, main, cex.axis = ce
      }
 
      boot <- data.frame(u=xunik, se_Ru = se, CIlow_Ru = CIlow, CIup_Ru = CIup)
-     R_u <- merge(ref, boot, by.x = "ref_u", by.y = "u", all.x = TRUE)
+     R_u <- merge(ref[,1:2], boot, by.x = "ref_u", by.y = "u", all.x = TRUE)
      colnames(R_u)[1:2] = c("u", "Ru")
      R_u <- R_u[order(R_u$u, decreasing = TRUE), ]
      lines(R_u$u, R_u$Ru, lty = lty[1], lwd = lwd)

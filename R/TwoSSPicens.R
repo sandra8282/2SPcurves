@@ -17,6 +17,9 @@
 #' @param legend.cex Optional graphical parameter for magnification of a legend's text.
 #' @param lty Optional graphical parameter to set the type of lines to use. Can be a number or a vector. See \link[graphics]{par} for more details.
 #' @param lwd Optional graphical parameter for line width relative to the default. See \link[graphics]{par} for more details.
+#' @param checkPH Logical argument to indicate if user wants to compare the nonparametric curve with the curve based on the proportional hazards model (default is FALSE).
+#' @param checkPO Logical argument to indicate if user wants to compare the nonparametric curve with the curve based on the proportional odds model (default is FALSE).
+#' @param compare Logical argument to indicate if user wants want to compare the nonparametric curve with curves based on a proportional hazards model, Proportional Odds model, and various Bayesian parametric models (default is FALSE).
 #'
 #' @return A plot of the ROC curve and an ROCsurv object containing:
 #' \itemize{
@@ -31,13 +34,16 @@
 #' @importFrom dplyr full_join
 #' @importFrom dplyr lag
 #' @importFrom stats complete.cases
+#' @importFrom data.table data.table
+#' @importFrom icenReg ic_sp
+#'
 #'
 #' @export
 #'
 
-ic2sampsurv <- function(left, right, group, iterations, end_follow,
-                       xlab=NULL, ylab=NULL, main=NULL, cex.axis = 1.5, cex.lab = 1.5,
-                       legend.inset=0.02, legend.cex=1.5, lty = c(1,2,3), lwd = 1.5) {
+ic2ss <- function(left, right, group, iterations, end_follow, checkPH = FALSE, checkPO = FALSE,
+                  compare=FALSE, xlab=NULL, ylab=NULL, main=NULL, cex.axis = 1.5,
+                  cex.lab = 1.5, legend.inset=0.02, legend.cex=1.5, lty = c(1,2,3), lwd = 1.5) {
 
   if(missing(iterations)) {iterations = 5000}
 
@@ -63,36 +69,41 @@ ic2sampsurv <- function(left, right, group, iterations, end_follow,
     trt_pf <- trt_pf[trt_pf$drop!=0,]
     trt_pf$cumdrop = cumsum(trt_pf$drop)
 
-  ### Survival for each group ####################################################
-
-    #get time intervals to look at
-    stepsize <- c(control_pf[,2] - control_pf[,1], trt_pf[,2]-trt_pf[,1])
-    if (missing(end_follow)) {
-          endt <- max(c(max(trt_pf$R), max(control_pf$R))) #end of followup if not provided
-    } else (endt <- end_follow)
-
-    skm0 <- data.frame(getIGsurv(npmle_df = control_pf, stepsize = stepsize))
-    ttemp <- seq(control_pf$R[nrow(control_pf)], endt, min(stepsize)/2)
-    skm0[(nrow(skm0)+1):(nrow(skm0)+length(ttemp)),] <-  cbind(ttemp, rep(1-control_pf$cumdrop[nrow(control_pf)],
-                                                             length(ttemp)))
-
-    skm1 <- data.frame(getIGsurv(npmle_df = trt_pf, stepsize = stepsize))
-    ttemp <- seq(trt_pf$R[nrow(trt_pf)], endt, min(stepsize)/2)
-    skm1[(nrow(skm1)+1):(nrow(skm1)+length(ttemp)),] <-  cbind(ttemp, rep(1-trt_pf$cumdrop[nrow(trt_pf)],
-                                                             length(ttemp)))
-
-    skm <- merge(skm0, skm1, by = intersect("t", "t"))
-    colnames(skm) <- c("t", "S_0", "S_1")
-
-
   # 2 sample curve   ##############################################################################################
-
 
   res <- getIGroc(npmle_0 = control_pf, npmle_1 = trt_pf,
                   xlab, ylab, main, cex.axis,
                   cex.lab, lwd)
 
-  return(list(two_sample_prob = res[[1]], auc = res[[2]],survival_functions = skm,
-              NPMLE_placebo = NPMLE.control, NPMLE_trt = NPMLE.trt))
+    # 2 sample curve PH and PO models  #########################################################################################
+    mu <- seq(min(res$curve$u),1,0.001)
+
+    if (checkPH==TRUE){
+    fit_ph <- ic_sp(cbind(left, right) ~ group, model = 'ph', bs_samples = 500, data = dat)
+    lines(mu, mu^exp(coef(fit_ph)), lty = 2)
+    legendtext <- c("Nonparametric", "Proportional Hazards")
+    ltyl <- 1:2
+  }
+
+  if (checkPO==TRUE){
+  fit_po <- ic_sp(cbind(left, right) ~ group, model = 'po', bs_samples = 500, data = dat)
+  oddsu <- mu/(1-mu)
+  ebeta <- exp(coef(fit_po))
+  lines(mu, ebeta*oddsu/(1+ebeta*oddsu), lty = 6)
+  legendtext <- c("Nonparametric", "Proportional Odds")
+  ltyl = c(1,6)
+  }
+
+  if (checkPH==TRUE & checkPO==TRUE){
+    ltyl = c(1:2, 6)
+    legendtext <- c("Nonparametric", "Proportional Hazards", "Proportional Odds")
+  }
+  legend("topleft", legendtext, lty = ltyl,
+           inset=legend.inset, cex=legend.cex, bg = "white", bty='n', seg.len = 0.8,
+           x.intersp=0.9, y.intersp = 0.85, lwd = lwd)
+
+
+  return(list(two_sample_prob = res[[1]], auc = res[[2]],
+              NPMLE_control = NPMLE.control, NPMLE_trt = NPMLE.trt))
 
 }

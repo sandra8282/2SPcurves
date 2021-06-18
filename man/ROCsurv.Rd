@@ -47,9 +47,9 @@ ROCsurv(
 
 \item{B}{Number of bootstrap samples to use for confidence interval and error calculations. Default is 1000. It's ignored if CI=FALSE.}
 
-\item{checkPH}{Logical argument to indicate if user wants to compare an ROC from the Cox Proportional Hazards Model to the KMROC (default is FALSE).}
+\item{checkPH}{Logical argument to indicate if user wants to compare the nonparametric curve with the curve based on the proportional hazards model (default is FALSE).}
 
-\item{compare}{Logical argument to indicate if user wants want to compare the KMROC to ROM curves from a Cox model, a loglogistic AFT model and a lognormal AFT model (default is FALSE).}
+\item{compare}{Logical argument to indicate if user wants want to compare the nonparametric curve with curves based on a proportional hazards model, proportional odds model, and various AFT models (default is FALSE).}
 
 \item{abtwc}{Logical argument to indicate if area between curves is needed as part of model comparisons (checkPHM or compare must be TRUE).}
 
