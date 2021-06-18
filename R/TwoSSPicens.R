@@ -35,7 +35,6 @@
 #' @importFrom dplyr lag
 #' @importFrom stats complete.cases
 #' @importFrom data.table data.table
-#' @importFrom icenReg ic_sp
 #'
 #'
 #' @export
@@ -45,6 +44,9 @@ ic2ss <- function(left, right, group, iterations, end_follow, checkPH = FALSE, c
                   compare=FALSE, xlab=NULL, ylab=NULL, main=NULL, cex.axis = 1.5,
                   cex.lab = 1.5, legend.inset=0.02, legend.cex=1.5, lty = c(1,2,3), lwd = 1.5) {
 
+  if (is.null(xlab)) {xlab <- "Control Group Survival"}
+  if (is.null(ylab)) {ylab <- "Treatment Group Survival"}
+  if (is.null(main)) {main <- ""}
   if(missing(iterations)) {iterations = 5000}
 
   all_len <- c(length(left), length(right), length(group))
@@ -72,38 +74,30 @@ ic2ss <- function(left, right, group, iterations, end_follow, checkPH = FALSE, c
   # 2 sample curve   ##############################################################################################
 
   res <- getIGroc(npmle_0 = control_pf, npmle_1 = trt_pf,
-                  xlab, ylab, main, cex.axis,
-                  cex.lab, lwd)
+                  xlab, ylab, main, cex.axis, cex.lab, lwd)
 
     # 2 sample curve PH and PO models  #########################################################################################
-    mu <- seq(min(res$curve$u),1,0.001)
-
-    if (checkPH==TRUE){
-    fit_ph <- ic_sp(cbind(left, right) ~ group, model = 'ph', bs_samples = 500, data = dat)
-    lines(mu, mu^exp(coef(fit_ph)), lty = 2)
-    legendtext <- c("Nonparametric", "Proportional Hazards")
-    ltyl <- 1:2
+  if (checkPH == TRUE | checkPO == TRUE) {
+    res2 <- PHPOicens(checkPH=checkPH, checkPO = checkPO, dat=dat, res=res,
+                      legend.inset=legend.inset, legend.cex=legend.cex, lwd=lwd)
+      if (is.null(res2$fit_ph)){
+        returnobj <- list(two_sample_prob = res[[1]], auc = res[[2]],
+                          NPMLE_control = NPMLE.control, NPMLE_trt = NPMLE.trt,
+                          fit_po =res2$fit_po)
+      } else {
+        if (is.null(res2$fit_po)){
+          returnobj <- list(two_sample_prob = res[[1]], auc = res[[2]],
+                            NPMLE_control = NPMLE.control, NPMLE_trt = NPMLE.trt,
+                            fit_ph =res2$fit_ph)
+        } else {returnobj <- list(two_sample_prob = res[[1]], auc = res[[2]],
+                                  NPMLE_control = NPMLE.control, NPMLE_trt = NPMLE.trt,
+                                  fit_ph =res2$fit_ph, fit_po =res2$fit_po)}
+      }
+  } else {
+    returnobj <- list(two_sample_prob = res[[1]], auc = res[[2]],
+                      NPMLE_control = NPMLE.control, NPMLE_trt = NPMLE.trt)
   }
 
-  if (checkPO==TRUE){
-  fit_po <- ic_sp(cbind(left, right) ~ group, model = 'po', bs_samples = 500, data = dat)
-  oddsu <- mu/(1-mu)
-  ebeta <- exp(coef(fit_po))
-  lines(mu, ebeta*oddsu/(1+ebeta*oddsu), lty = 6)
-  legendtext <- c("Nonparametric", "Proportional Odds")
-  ltyl = c(1,6)
-  }
-
-  if (checkPH==TRUE & checkPO==TRUE){
-    ltyl = c(1:2, 6)
-    legendtext <- c("Nonparametric", "Proportional Hazards", "Proportional Odds")
-  }
-  legend("topleft", legendtext, lty = ltyl,
-           inset=legend.inset, cex=legend.cex, bg = "white", bty='n', seg.len = 0.8,
-           x.intersp=0.9, y.intersp = 0.85, lwd = lwd)
-
-
-  return(list(two_sample_prob = res[[1]], auc = res[[2]],
-              NPMLE_control = NPMLE.control, NPMLE_trt = NPMLE.trt))
+  return(returnobj)
 
 }

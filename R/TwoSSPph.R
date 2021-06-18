@@ -11,7 +11,7 @@ phsolvena <- function(indi, all4plot){
   return(all4plot)
 }
 
-#' ROC when survival goes to 0 for either group
+#' Check Proportional Hazards Based Curve
 #'
 #' @param time passed from ROCsurv.
 #' @param event passed from ROCsurv.
