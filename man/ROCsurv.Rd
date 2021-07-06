@@ -2,7 +2,7 @@
 % Please edit documentation in R/TwoSSP.R
 \name{ROCsurv}
 \alias{ROCsurv}
-\title{Create an ROC curve for survival data from clinical trials.}
+\title{Create a two-sample survival probability curve for data from randomized controlled trials.}
 \usage{
 ROCsurv(
   time,
@@ -76,11 +76,12 @@ A plot of the ROC curve (if \code{silent=FALSE}) and an ROCsurv object containin
 \itemize{
  \item A survfit object containing the survival curve for the treatment group.
  \item A survfit object containing the survival curve for the control group.
- \item The area under the curve for the ROC in the given plot.
+ \item The area under the curve (AUC).
+ \item A matrix representation of the two-sample survival probability curve \code{R_u}.
 }
 }
 \description{
-This function creates ROC curve for survival data from clinical trials and calculates the area under the curve.
+This function creates a two-samle survival probability curve for data from randomized controlled trials and has options to estimate the AUC, diagnose the proportional hazard assumptions and more.
 }
 \details{
 The methods avaiable are "restrict" or "complete"

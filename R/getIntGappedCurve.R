@@ -91,21 +91,21 @@ getIGroc <- function(npmle_0, npmle_1, xlab, ylab, main, cex.axis,
     if (combined_dt$skip[i]=="no"){
       if (combined_dt$move[i] == "overlap"){
         coord_new2 = c(combined_dt$S_0[i], combined_dt$S_1[i])
-        col="darkolivegreen1";
+        rect(xright = coord_new[1], ytop = coord_new[2],
+             xleft = coord_new2[1], ybottom = coord_new2[2],
+             col = "grey", border = "grey")
         type = c(type, "overlap")
       } else {
         if (combined_dt$move[i] == "trt"){
           coord_new2 = c(coord_new[1], combined_dt$S_1[i])
-          col="black"; lty = 1;
           type = c(type, "trt")
         } else {
           coord_new2 = c(combined_dt$S_0[i], coord_new[2])
-          col = "black"; lty = 1;
           type = c(type, "control")
         }
       }
       segments(x0=coord_new[1], y0=coord_new[2],
-               x1=coord_new2[1], y1=coord_new2[2], col= col, lwd = lwd, lty = lty)
+               x1=coord_new2[1], y1=coord_new2[2], lwd = lwd, lty = 1)
       points(rbind(coord_new, coord_new2), pch=20, cex=0.75)
       forplot = rbind(forplot, coord_new2)
       coord_new = coord_new2

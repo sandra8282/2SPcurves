@@ -26,23 +26,23 @@ PHPOicens <- function(checkPH, checkPO, dat, res, legend.inset, legend.cex, lwd)
   fit_ph = fit_po = NULL
 
   if (checkPH==TRUE){
-    fit_ph <- ic_sp(cbind(left, right) ~ group, model = 'ph', bs_samples = 500, data = dat)
-    lines(mu, mu^exp(coef(fit_ph)), lty = 2)
+    fit_ph <- ic_sp(cbind(left, right) ~ group, model = 'ph', bs_samples = 5, data = dat)
+    lines(mu, mu^exp(coef(fit_ph)), lty = 5)
     legendtext <- c("Nonparametric", "Proportional Hazards")
-    ltyl <- 1:2
+    ltyl <- c(1,5)
   }
 
   if (checkPO==TRUE){
-    fit_po <- ic_sp(cbind(left, right) ~ group, model = 'po', bs_samples = 500, data = dat)
+    fit_po <- ic_sp(cbind(left, right) ~ group, model = 'po', bs_samples = 5, data = dat)
     oddsu <- mu/(1-mu)
     ebeta <- exp(coef(fit_po))
-    lines(mu, ebeta*oddsu/(1+ebeta*oddsu), lty = 6)
+    lines(mu, ebeta*oddsu/(1+ebeta*oddsu), lty = 3)
     legendtext <- c("Nonparametric", "Proportional Odds")
-    ltyl = c(1,6)
+    ltyl = c(1,3)
   }
 
   if (checkPH==TRUE & checkPO==TRUE){
-    ltyl = c(1:2, 6)
+    ltyl = c(1, 5, 3)
     legendtext <- c("Nonparametric", "Proportional Hazards", "Proportional Odds")
   }
 

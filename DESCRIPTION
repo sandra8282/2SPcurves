@@ -11,9 +11,9 @@ Encoding: UTF-8
 Depends: R (>= 3.5.0)
 biocViews: 
 LazyData: true
-Imports:  survival, Icens, icenReg, stats, simsurv, 
-          graphics, pathmapping, 
-          dplyr, data.table,
+Imports:  survival, Icens, icenReg, cmprsk, mstate, simsurv, 
+          graphics, pathmapping, stats, 
+          dplyr, data.table, 
           DescTools
 Language: en-US
 RoxygenNote: 7.1.1

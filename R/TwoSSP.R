@@ -20,10 +20,10 @@ getAUC <- function(KMests, silent, method, xlab, ylab, main,cex.axis = cex.axis,
   return(temp)
 }
 
-#' Create an ROC curve for survival data from clinical trials.
+#' Create a two-sample survival probability curve for data from randomized controlled trials.
 #'
 #' @description
-#' This function creates ROC curve for survival data from clinical trials and calculates the area under the curve.
+#' This function creates a two-samle survival probability curve for data from randomized controlled trials and has options to estimate the AUC, diagnose the proportional hazard assumptions and more.
 #'
 #' @param time Time to event or censoring.
 #' @param event An indicator vector with values of 1 for individuals who had the event occurred or 0 if the participant was censored.
@@ -46,13 +46,13 @@ getAUC <- function(KMests, silent, method, xlab, ylab, main,cex.axis = cex.axis,
 #' @param legend.cex Optional graphical parameter for magnification of the legend's text.
 #' @param lty Optional graphical parameter to set the type of line to use. Can be a number or a vector. See \link[graphics]{par} for more details.
 #' @param lwd Optional graphical parameter for line width relative to the default. See \link[graphics]{par} for more details.
-
 #'
 #' @return A plot of the ROC curve (if \code{silent=FALSE}) and an ROCsurv object containing:
 #' \itemize{
 #'  \item A survfit object containing the survival curve for the treatment group.
 #'  \item A survfit object containing the survival curve for the control group.
-#'  \item The area under the curve for the ROC in the given plot.
+#'  \item The area under the curve (AUC).
+#'  \item A matrix representation of the two-sample survival probability curve \code{R_u}.
 #' }
 #'
 #' @details
