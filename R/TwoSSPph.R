@@ -21,6 +21,8 @@
 #' @importFrom stats na.omit
 #' @import survival
 #' @importFrom stats cor
+#' @importFrom stats approxfun
+#' @importFrom stats integrate
 #' @importFrom pathmapping CreateMap
 #' @importFrom utils capture.output
 #' @importFrom stats coef
@@ -37,10 +39,14 @@ ROCandPHM <- function(time, event, group, silent, abtwc, xlab, ylab, main, cex.a
   forplot = get4plot(skm)
 
   forplot <- cbind(forplot, cy=forplot[,1]^exp(coef(coxfit)))
-  rho <- cor(forplot[,c(2,4)])
+  rho <- cor(forplot[,c(2,4)])[1,2]
   resid <-  forplot[,4] - forplot[,2]
   SSR <- sum(resid^2)
   if (abtwc == TRUE){
+        # f1 <- approxfun(forplot[,1], forplot[,4] - forplot[,2], ties = mean)     # piecewise linear function
+        # f2 <- function(x) abs(f1(x))                 # take the positive value
+        # integrate(f2, min(forplot[,1]), max(forplot[,1]))
+
       invisible(capture.output(out <- CreateMap(forplot[,c(1,2)],
                                                 forplot[,c(1,4)],
                                             plotgrid=F, verbose=F, insertopposites=F)))
@@ -61,8 +67,8 @@ ROCandPHM <- function(time, event, group, silent, abtwc, xlab, ylab, main, cex.a
     }
 
   if (abtwc == TRUE){
-    res <- list(SSR = SSR, rho = rho, areaBTWcurves = areaBTWcurves)
-    } else {res <- list(SSR = SSR, rho = rho)}
+    res <- list(SSR = SSR, rho = rho, areaBTWcurves = areaBTWcurves, coxfit = coxfit)
+    } else {res <- list(SSR = SSR, rho = rho, coxfit = coxfit)}
 
   return(res)
 

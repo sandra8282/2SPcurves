@@ -14,7 +14,6 @@ TwoSampCI(
   rlabels,
   cex.axis = 1.5,
   cex.lab = 1.5,
-  lty = c(2, 1, 3),
   lwd = 1.5,
   legend.inset = 0.02,
   legend.cex = 1.5
@@ -39,8 +38,6 @@ TwoSampCI(
 
 \item{cex.lab}{Optional graphical parameter for magnification of x and y labels. See \link[graphics]{par} for more details.}
 
-\item{lty}{Optional graphical parameter to set the type of line to use. Can be a number or a vector. See \link[graphics]{par} for more details.}
-
 \item{lwd}{Optional graphical parameter for line width relative to the default. See \link[graphics]{par} for more details.}
 
 \item{legend.inset}{Optional graphical parameter controling the inset of the legend.}
@@ -50,7 +47,7 @@ TwoSampCI(
 \value{
 A plot of the ROC curve (if \code{silent=FALSE}) and an ROCsurv object containing:
 \itemize{
- \item A Cuminc class object containing survival and cummulative incidence estimates and corresponding standard errors and confidence intervals for group.
+ \item A Cuminc class object containing survival and cummulative incidence estimates and corresponding standard errors for each group.
  \item A matrix representation of the two-sample cumulative incidence curve \code{C_u}.
 }
 }

@@ -14,12 +14,11 @@
 #' @param cex.lab Optional graphical parameter for magnification of x and y labels. See \link[graphics]{par} for more details.
 #' @param legend.inset Optional graphical parameter controling the inset of the legend.
 #' @param legend.cex Optional graphical parameter for magnification of the legend's text.
-#' @param lty Optional graphical parameter to set the type of line to use. Can be a number or a vector. See \link[graphics]{par} for more details.
 #' @param lwd Optional graphical parameter for line width relative to the default. See \link[graphics]{par} for more details.
 #'
 #' @return A plot of the ROC curve (if \code{silent=FALSE}) and an ROCsurv object containing:
 #' \itemize{
-#'  \item A Cuminc class object containing survival and cummulative incidence estimates and corresponding standard errors and confidence intervals for group.
+#'  \item A Cuminc class object containing survival and cummulative incidence estimates and corresponding standard errors for each group.
 #'  \item A matrix representation of the two-sample cumulative incidence curve \code{C_u}.
 #' }
 #'
@@ -33,7 +32,7 @@
 #' @export
 
 TwoSampCI <- function(time, event, group, xlab=NULL, ylab=NULL, main=NULL, rlabels,
-                      cex.axis = 1.5, cex.lab = 1.5, lty = c(2,1,3), lwd = 1.5,
+                      cex.axis = 1.5, cex.lab = 1.5, lwd = 1.5,
                       legend.inset=0.02, legend.cex=1.5){
 
   ci <- Cuminc(time= time, status = event, group=group)
@@ -63,11 +62,13 @@ TwoSampCI <- function(time, event, group, xlab=NULL, ylab=NULL, main=NULL, rlabe
   for (ploti in (1:nrisktypes)){
     lines(list_4plot[[ploti]][,1:2], type="s", lty = ploti, lwd = 2)
   }
-
   abline(c(0,1), col = "grey", lwd = lwd - 0.25)
-  if (missing(lgdtext)) {lgdtext = as.character(1:nrisktypes)}
-  legend("topleft", lgdtext, lty = 1:ploti,
-         inset=0.02, cex=1.25, bg = "white", bty='n', seg.len = 0.8,
+  if (missing(rlabels)) {rlabels = as.character(1:nrisktypes)}
+  legend("topleft", rlabels, lty = 1:ploti, cex = legend.cex, inset= legend.inset,
+         bg = "white", bty='n', seg.len = 1,
          x.intersp=0.9, y.intersp = 0.85, lwd = lwd - 0.25)
+
+  names(list_4plot) <- rlabels
+  return(list(cuminc = ci, c_u = list_4plot))
 
 }
