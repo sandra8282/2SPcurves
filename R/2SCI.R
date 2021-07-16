@@ -31,7 +31,7 @@
 #'
 #' @export
 
-TwoSampCI <- function(time, event, group, xlab=NULL, ylab=NULL, main=NULL, rlabels,
+TwoSCI <- function(time, event, group, xlab=NULL, ylab=NULL, main=NULL, rlabels,
                       cex.axis = 1.5, cex.lab = 1.5, lwd = 1.5,
                       legend.inset=0.02, legend.cex=1.5){
 

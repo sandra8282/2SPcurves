@@ -34,7 +34,7 @@ solvena <- function(indi, temp){
 #' @keywords internal
 #' @noRd
 
-btsp <- function(res, maindat, method, B, level, xlab, ylab, main, cex.axis = cex.axis,
+btsp <- function(res, maindat, B, level, xlab, ylab, main, cex.axis = cex.axis,
                  cex.lab = cex.lab, lty = lty, lwd = lwd) {
 
     plot(NULL, type="n", las=1,

@@ -1,4 +1,4 @@
 library(testthat)
-library(ROCsurv)
+library(TwoSPC)
 
-test_check("ROCsurv")
+test_check("TwoSPC")

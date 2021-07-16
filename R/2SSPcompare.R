@@ -42,7 +42,7 @@ getSKM4fit <- function(time, fitsurv, group) {
 #' @keywords internal
 #' @noRd
 
-ROCcompare <- function(time, event, group, silent, abtwc, xlab, ylab, main, cex.axis,
+compare <- function(time, event, group, silent, abtwc, xlab, ylab, main, cex.axis,
                        cex.lab, lty, label.inset, label.cex, lwd) {
 
   d <- c("lognormal", "loglogistic")

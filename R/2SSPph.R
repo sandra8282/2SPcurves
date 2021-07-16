@@ -30,7 +30,7 @@
 #' @keywords internal
 #' @noRd
 
-ROCandPHM <- function(time, event, group, silent, abtwc, xlab, ylab, main, cex.axis,
+PHM <- function(time, event, group, silent, abtwc, xlab, ylab, main, cex.axis,
                       cex.lab, lty, label.inset, label.cex, lwd){
 
   coxfit <- coxph(Surv(time, event) ~ group, ties = "breslow")

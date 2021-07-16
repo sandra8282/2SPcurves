@@ -1,18 +1,9 @@
-getAUC <- function(KMests, silent, method, xlab, ylab, main,cex.axis = cex.axis,
+getAUC <- function(KMests, silent, xlab, ylab, main, cex.axis = cex.axis,
          cex.lab = cex.lab, lty = lty, label.inset = label.inset,
          label.cex = label.cex, lwd = lwd){
-  if (KMests[[2]]==0) {#uncensored data
-    result <- completeROC(KMests[[1]], silent, xlab, ylab, main,cex.axis = cex.axis,
+  result <- completeROC(KMests[[1]], silent, xlab, ylab, main,cex.axis = cex.axis,
                           cex.lab = cex.lab, lty = lty, label.inset = label.inset,
-                          label.cex = label.cex, lwd = lwd)} #time, event, group
-  if (KMests[[2]]!=0 & method=="") {#censored data
-    result <- completeROC(skm=KMests[[1]], silent, xlab, ylab, main, cex.axis,
-                          cex.lab, lty, label.inset, label.cex, lwd)
-  } else {
-    if (KMests[[2]]!=0 & method=="restrict") {
-      result <- restrictROC(skm=KMests[[1]], silent, xlab, ylab, main, cex.axis = cex.axis,
-                            cex.lab = cex.lab, lty = lty, label.inset = label.inset,
-                            label.cex = label.cex, lwd = lwd)}}
+                          label.cex = label.cex, lwd = lwd) #time, event, group
   if (is.null(result)) {temp <- list(control_km=KMests[[3]], drug_km = KMests[[4]])
   } else {temp <- list(AUC = result[[1]], R_u = result[[2]],
                        control_km=KMests[[3]], drug_km = KMests[[4]])}
@@ -28,7 +19,6 @@ getAUC <- function(KMests, silent, method, xlab, ylab, main,cex.axis = cex.axis,
 #' @param time Time to event or censoring.
 #' @param event An indicator vector with values of 1 for individuals who had the event occurred or 0 if the participant was censored.
 #' @param group An indicator vector with values of 1 if the the participant was in the treatment arm and 0 otherwise.
-#' @param method Method to be used to obtain a complete curve.
 #' @param checkPH Logical argument to indicate if user wants to compare the nonparametric curve with the curve based on the proportional hazards model (default is FALSE).
 #' @param compare Logical argument to indicate if user wants want to compare the nonparametric curve with curves based on a proportional hazards model, proportional odds model, and various AFT models (default is FALSE).
 #' @param area Logical argument to indicate if user wants an estimate for area under the curve (default is TRUE).
@@ -55,8 +45,6 @@ getAUC <- function(KMests, silent, method, xlab, ylab, main,cex.axis = cex.axis,
 #'  \item A matrix representation of the two-sample survival probability curve \code{R_u}.
 #' }
 #'
-#' @details
-#' The methods avaiable are "restrict" or "complete"
 #'
 #' @export
 #'
@@ -64,7 +52,7 @@ getAUC <- function(KMests, silent, method, xlab, ylab, main,cex.axis = cex.axis,
 ###### # @param level The confidence level for the confidence interval of the area under the curve.
 ###### # Must be between 0.50 and 0.99. Default is 0.95. See details.
 
-ROCsurv <- function(time, event, group, method, area=TRUE, silent=FALSE,
+TwoSSP <- function(time, event, group, area=TRUE, silent=FALSE,
                     CI = FALSE, level = 0.95, B=1000, checkPH = FALSE, compare=FALSE, abtwc=FALSE,
                     xlab=NULL, ylab=NULL, main=NULL, cex.axis = 1.5, cex.lab = 1.5,
                     legend.inset=0.02, legend.cex=1.5, lty = c(2,1,3), lwd = 1.5){
@@ -72,12 +60,11 @@ ROCsurv <- function(time, event, group, method, area=TRUE, silent=FALSE,
   #### basic checks for missing parameters
   all_lengths = c(length(time), length(event), length(group))
   if (length(unique(all_lengths)) != 1) stop("One or more input vectors (time, event, group) differs in length from the rest.")
-  if ((missing(method) + is.null(checkPH))==2) {checkPH <- TRUE}
   #if (is.null(level)) {level = 0.95}
   if (is.null(xlab)) {xlab <- "Control Group Survival"}
   if (is.null(ylab)) {ylab <- "Treatment Group Survival"}
   if (is.null(main)) {main <- ""}
-  if (missing(method)) {method <- ""}
+  #if (missing(method)) {method <- ""}
   label.inset=legend.inset; label.cex=legend.cex
 
   mat <- cbind(time, event, group)
@@ -88,14 +75,14 @@ ROCsurv <- function(time, event, group, method, area=TRUE, silent=FALSE,
 
   if(checkPH == TRUE) { #CHECK IF PROPORTIONAL HAZARDS
     if (missing(abtwc)) {abtwc=TRUE}
-    res <- ROCandPHM(time, event, group, silent, abtwc, xlab, ylab, main, cex.axis = cex.axis,
+    res <- PHM(time, event, group, silent, abtwc, xlab, ylab, main, cex.axis = cex.axis,
                         cex.lab = cex.lab, lty = lty, label.inset = label.inset,
                         label.cex = label.cex, lwd = lwd)
     #############################################
   }
 
   if (compare == TRUE) { #COMPARE TO LOGLOGISTIC AND LOGNORMAL
-      res <- list(ROCcompare(time, event, group, silent, abtwc, xlab, ylab, main, cex.axis = cex.axis,
+      res <- list(compare(time, event, group, silent, abtwc, xlab, ylab, main, cex.axis = cex.axis,
                            cex.lab = cex.lab, lty = lty, label.inset = label.inset,
                            label.cex = label.cex, lwd = lwd),
                   control_km=KMests[[3]], drug_km = KMests[[4]])
@@ -113,17 +100,17 @@ ROCsurv <- function(time, event, group, method, area=TRUE, silent=FALSE,
 
             #############################################
         if (area == TRUE & CI == FALSE) {
-          res <- getAUC(KMests, silent, method, xlab, ylab, main,cex.axis = cex.axis,
+          res <- getAUC(KMests, silent, xlab, ylab, main,cex.axis = cex.axis,
                              cex.lab = cex.lab, lty = lty, label.inset = label.inset,
                              label.cex = label.cex, lwd = lwd)
           }
             #############################################
         if (CI == TRUE){
-            res <- getAUC(KMests, silent=TRUE, method, xlab, ylab, main,cex.axis = cex.axis,
+            res <- getAUC(KMests, silent=TRUE, xlab, ylab, main,cex.axis = cex.axis,
                         cex.lab = cex.lab, lty = lty, label.inset = label.inset,
                         label.cex = label.cex, lwd = lwd)
             maindat <- mat
-            temp <- btsp(res, maindat, method, B, level, xlab, ylab, main, cex.axis = cex.axis,
+            temp <- btsp(res, maindat, B, level, xlab, ylab, main, cex.axis = cex.axis,
                              cex.lab = cex.lab, lty = lty, lwd = lwd)
             res <- list(temp, control_km=KMests[[3]], drug_km = KMests[[4]])
           }
@@ -134,3 +121,5 @@ ROCsurv <- function(time, event, group, method, area=TRUE, silent=FALSE,
   return(res)
 }
 
+
+#@param method Method to be used to obtain a complete curve.

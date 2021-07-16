@@ -4,10 +4,10 @@
 #' Analysis of such data is usually completed using two separate Kaplan-Meier curves, a Log Rank Test and Cox Proportional Hazard models.
 #' We propose an alternative way to analyze this type of data by combining the two Kaplan-Meier curves into an ROC curve and using the area under the curve (AUC) as measure of treatment effectiveness.
 #'
-#' @aliases ROCsurv-package
+#' @aliases TwoSPC-package
 #'
 #' @docType package
-#' @author Sandra Castro-Pearson, Chap Le, Xianghua Luo
+#' @author Sandra Castro-Pearson, Xianghua Luo, Chap Le
 #' @import survival
 #' @import graphics
 "_PACKAGE"
