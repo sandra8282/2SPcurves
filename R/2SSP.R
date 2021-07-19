@@ -121,5 +121,4 @@ TwoSSP <- function(time, event, group, area=TRUE, silent=FALSE,
   return(res)
 }
 
-
 #@param method Method to be used to obtain a complete curve.

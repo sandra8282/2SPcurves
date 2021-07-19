@@ -13,6 +13,8 @@ knitr::opts_chunk$set(
 )
 ```
 
+# Under Construction
+
 # 2SPcurves
 
 <!-- badges: start -->
@@ -22,10 +24,10 @@ A  Package  for  the  Analysis  of  Time  to  Event  Outcomes Using  Two-Sample 
 
 ## Installation
 
-You can install the released version of 2SPcurves from [CRAN](https://CRAN.R-project.org) with:
+You will be able to install the released version of 2SPcurves from [CRAN](https://CRAN.R-project.org) at a later date with:
 
 ``` r
-install.packages("ROCsurv")
+install.packages("TwoSPC")
 ```
 
 And the development version from [GitHub](https://github.com/) with:
@@ -39,6 +41,6 @@ devtools::install_github("SandraCastroPearson/2SPcurves")
 This will be a basic example which shows you how to solve a common problem:
 
 ```{r example}
-library("2SPcurves")
+#library("2SPcurves")
 ## basic example code
 ```
