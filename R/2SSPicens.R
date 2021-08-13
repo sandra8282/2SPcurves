@@ -19,7 +19,6 @@
 #' @param lwd Optional graphical parameter for line width relative to the default. See \link[graphics]{par} for more details.
 #' @param checkPH Logical argument to indicate if user wants to compare the nonparametric curve with the curve based on the proportional hazards model (default is FALSE).
 #' @param checkPO Logical argument to indicate if user wants to compare the nonparametric curve with the curve based on the proportional odds model (default is FALSE).
-#' @param compare Logical argument to indicate if user wants want to compare the nonparametric curve with curves based on a proportional hazards model, Proportional Odds model, and various Bayesian parametric models (default is FALSE).
 #'
 #' @return A plot of the ROC curve and an ROCsurv object containing:
 #' \itemize{
@@ -40,8 +39,8 @@
 #' @export
 #'
 
-ic2ss <- function(left, right, group, iterations, end_follow, checkPH = FALSE, checkPO = FALSE,
-                  compare=FALSE, xlab=NULL, ylab=NULL, main=NULL, cex.axis = 1.5,
+TwoSSPicens <- function(left, right, group, iterations, end_follow, checkPH = FALSE, checkPO = FALSE,
+                  xlab=NULL, ylab=NULL, main=NULL, cex.axis = 1.5,
                   cex.lab = 1.5, legend.inset=0.02, legend.cex=1.5, lty = c(1,2,3), lwd = 1.5) {
 
   if (is.null(xlab)) {xlab <- "Control Group Survival"}
@@ -50,7 +49,7 @@ ic2ss <- function(left, right, group, iterations, end_follow, checkPH = FALSE, c
   if(missing(iterations)) {iterations = 5000}
 
   all_len <- c(length(left), length(right), length(group))
-  if (length(unique(all_len))!=1) {stop("Error: One or more variables (lenft, right, group) defer in length.")}
+  if (length(unique(all_len))!=1) {stop("Error: One or more variables (left, right, group) defer in length.")}
 
   dat <- data.table(left, right, group)
   control <- data.frame(dat[group==0]); trt <- data.frame(dat[group==1])

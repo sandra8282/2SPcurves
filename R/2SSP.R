@@ -17,7 +17,7 @@ getAUC <- function(KMests, silent, xlab, ylab, main, cex.axis = cex.axis,
 #' This function creates a two-samle survival probability curve for data from randomized controlled trials and has options to estimate the AUC, diagnose the proportional hazard assumptions and more.
 #'
 #' @param time Time to event or censoring.
-#' @param event An indicator vector with values of 1 for individuals who had the event occurred or 0 if the participant was censored.
+#' @param event An indicator vector with values of 1 for individuals who had the event occur or 0 if the participant was censored.
 #' @param group An indicator vector with values of 1 if the the participant was in the treatment arm and 0 otherwise.
 #' @param checkPH Logical argument to indicate if user wants to compare the nonparametric curve with the curve based on the proportional hazards model (default is FALSE).
 #' @param compare Logical argument to indicate if user wants want to compare the nonparametric curve with curves based on a proportional hazards model, proportional odds model, and various AFT models (default is FALSE).
@@ -61,8 +61,8 @@ TwoSSP <- function(time, event, group, area=TRUE, silent=FALSE,
   all_lengths = c(length(time), length(event), length(group))
   if (length(unique(all_lengths)) != 1) stop("One or more input vectors (time, event, group) differs in length from the rest.")
   #if (is.null(level)) {level = 0.95}
-  if (is.null(xlab)) {xlab <- "Control Group Survival"}
-  if (is.null(ylab)) {ylab <- "Treatment Group Survival"}
+  if (is.null(xlab)) {xlab <- "Control Group Survival Probability"}
+  if (is.null(ylab)) {ylab <- "Treatment Group Survival Probability"}
   if (is.null(main)) {main <- ""}
   #if (missing(method)) {method <- ""}
   label.inset=legend.inset; label.cex=legend.cex
