@@ -32,7 +32,7 @@
 #'
 #' @export
 
-ROCsurvModifier <- function(time, event, group, modifier, area=FALSE,
+TwoSSPmodifier <- function(time, event, group, modifier, area=FALSE,
                         mlabels, xlab, ylab, main, cex.axis = 1.5, cex.lab = 1.5,
                         legend.inset=0.02, legend.cex=1.5, lty = c(1,6), lwd = 1.5){
 

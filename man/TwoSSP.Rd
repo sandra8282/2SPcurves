@@ -36,7 +36,7 @@ TwoSSP(
 
 \item{area}{Logical argument to indicate if user wants an estimate for area under the curve (default is TRUE).}
 
-\item{silent}{Logical argument, FALSE indicates the user wants ROC plots and TRUE indicates no plots only AUC calculations (default is FALSE).}
+\item{silent}{Logical argument, FALSE indicates the user wants plots and TRUE indicates no plots only AUC calculations (default is FALSE).}
 
 \item{CI}{Logical argument indicating if user wants bootstrap errors and confidence intervals to be calculated for the curve and AUC. Default is FALSE.}
 

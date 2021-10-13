@@ -16,13 +16,17 @@ TwoSCI(
   cex.lab = 1.5,
   lwd = 1.5,
   legend.inset = 0.02,
-  legend.cex = 1.5
+  legend.cex = 1.5,
+  checkFG = FALSE,
+  c_index = TRUE,
+  maxt,
+  silent
 )
 }
 \arguments{
 \item{time}{Time to an event of any kind or to censoring.}
 
-\item{event}{An indicator vector with values of 1, 2, ..., M related to one of M possible causes for an event for an participant that had an event occur or 0 if the participant was censored.}
+\item{event}{An indicator vector with values of 0, 1, 2, ..., M indicating one of M possible causes for an event for an participant that had an event occur or 0 if the participant was censored.}
 
 \item{group}{An indicator vector with values of 1 if the the participant was in the treatment arm and 0 otherwise.}
 
@@ -43,17 +47,22 @@ TwoSCI(
 \item{legend.inset}{Optional graphical parameter controling the inset of the legend.}
 
 \item{legend.cex}{Optional graphical parameter for magnification of the legend's text.}
+
+\item{checkFG}{Logical argument to indicate if user wants to compare the nonparametric curve with the curve based on the Fine-Gray model (default is FALSE).}
+
+\item{c_index}{Logical argument to indicate if user wants an estimate for the concordance for each risk (default is TRUE).}
+
+\item{maxt}{Duration of the trial.}
+
+\item{silent}{Logical argument, FALSE indicates the user wants plots and TRUE indicates no plots only calculations (default is FALSE).}
 }
 \value{
 A plot of the ROC curve (if \code{silent=FALSE}) and an ROCsurv object containing:
 \itemize{
  \item A Cuminc class object containing survival and cummulative incidence estimates and corresponding standard errors for each group.
- \item A matrix representation of the two-sample cumulative incidence curve \code{C_u}.
+ \item List with the two-sample cumulative incidence curves \code{C_u} for each risk type.
 }
 }
 \description{
 This function creates a two-sample cumulative incidence curve for data from randomized controlled trials and has an option to diagnose the proportional hazard assumption.
-}
-\details{
-The methods avaiable are "restrict" or "complete"
 }

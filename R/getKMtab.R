@@ -72,6 +72,4 @@ getKMtab <- function(time, event, group) {
   return(list(skm = skm, mskm = mskm,
               km_placebo = km_placebo, km_drug = km_drug))
 
-
-
 }

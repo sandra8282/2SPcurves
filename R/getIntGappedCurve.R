@@ -95,7 +95,9 @@ getIGroc <- function(npmle_0, npmle_1, xlab, ylab, main, cex.axis,
              xleft = coord_new2[1], ybottom = coord_new2[2],
              col = "grey", border = "grey")
         type = c(type, "overlap")
+        colt = "grey"
       } else {
+        colt = "black"
         if (combined_dt$move[i] == "trt"){
           coord_new2 = c(coord_new[1], combined_dt$S_1[i])
           type = c(type, "trt")
@@ -105,7 +107,7 @@ getIGroc <- function(npmle_0, npmle_1, xlab, ylab, main, cex.axis,
         }
       }
       segments(x0=coord_new[1], y0=coord_new[2],
-               x1=coord_new2[1], y1=coord_new2[2], lwd = lwd, lty = 1)
+               x1=coord_new2[1], y1=coord_new2[2], lwd = lwd, lty = 1, col = colt)
       points(rbind(coord_new, coord_new2), pch=20, cex=0.75)
       forplot = rbind(forplot, coord_new2)
       coord_new = coord_new2

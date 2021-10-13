@@ -77,7 +77,7 @@ TwoSSPicens <- function(left, right, group, iterations, end_follow, checkPH = FA
 
     # 2 sample curve PH and PO models  #########################################################################################
   if (checkPH == TRUE | checkPO == TRUE) {
-    res2 <- PHPOicens(checkPH=checkPH, checkPO = checkPO, dat=dat, res=res,
+    res2 <- PHPOicens(checkPH=checkPH, checkPO = checkPO, dat=dat, res=res, lty=lty,
                       legend.inset=legend.inset, legend.cex=legend.cex, lwd=lwd)
       if (is.null(res2$fit_ph)){
         returnobj <- list(two_sample_prob = res[[1]], auc = res[[2]],

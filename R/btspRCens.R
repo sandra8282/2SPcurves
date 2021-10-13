@@ -102,6 +102,8 @@ btsp <- function(res, maindat, B, level, xlab, ylab, main, cex.axis = cex.axis,
      colnames(R_u)[1:2] = c("u", "Ru")
      R_u <- R_u[order(R_u$u, decreasing = TRUE), ]
      lines(R_u$u, R_u$Ru, lty = lty[1], lwd = lwd)
+     # points(R_u$u, R_u$CIlow_Ru, pch = 20, col = "darkred", cex = 0.5)
+     # points(R_u$u, R_u$CIup_Ru, pch = 20, col = "darkred", cex = 0.5)
      lines(R_u$u, R_u$CIlow_Ru, lty = 2, col = "darkred", lwd = lwd)
      lines(R_u$u, R_u$CIup_Ru, lty = 2, col = "darkred", lwd = lwd)
      abline(c(0,1), col = "grey", lty=1, lwd = lwd-0.25)

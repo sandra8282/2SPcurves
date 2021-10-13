@@ -21,7 +21,7 @@
 #' @keywords internal
 #' @noRd
 
-btsp <- function(res, maindat, method, B, level, xlab, ylab, main, cex.axis = cex.axis,
+btspICEN <- function(res, maindat, method, B, level, xlab, ylab, main, cex.axis = cex.axis,
                  cex.lab = cex.lab, lty = lty, lwd = lwd) {
 
     plot(NULL, type="n", las=1,

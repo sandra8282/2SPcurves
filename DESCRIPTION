@@ -11,11 +11,11 @@ Encoding: UTF-8
 Depends: R (>= 3.5.0)
 biocViews: 
 LazyData: true
-Imports:  survival, Icens, icenReg, cmprsk, mstate, RISCA, simsurv, 
+Imports: survival, Icens, icenReg, cmprsk, mstate, RISCA, simsurv, 
           graphics, pathmapping, stats, dplyr, data.table, 
-          DescTools
+          DescTools, prodlim, riskRegression
 Language: en-US
-RoxygenNote: 7.1.1
+RoxygenNote: 7.1.2
 URL: https://github.com/SandraCastroPearson/2SPcurves 
 BugReports: https://github.com/SandraCastroPearson/2SPcurves/issues
 Suggests: testthat

@@ -21,28 +21,30 @@
 #' @noRd
 
 
-PHPOicens <- function(checkPH, checkPO, dat, res, legend.inset, legend.cex, lwd){
+PHPOicens <- function(checkPH, checkPO, dat, res, legend.inset, legend.cex, lwd, lty){
   mu <- seq(min(res$curve$u),1,0.001)
   fit_ph = fit_po = NULL
 
+  if (length(lty)<3) {lty = c(1,3,5)}
+
   if (checkPH==TRUE){
     fit_ph <- ic_sp(cbind(left, right) ~ group, model = 'ph', bs_samples = 5, data = dat)
-    lines(mu, mu^exp(coef(fit_ph)), lty = 5)
+    lines(mu, mu^exp(coef(fit_ph)), lty = lty[2], lwd = lwd)
     legendtext <- c("Nonparametric", "Proportional Hazards")
-    ltyl <- c(1,5)
+    ltyl <- lty[c(1:2)]
   }
 
   if (checkPO==TRUE){
     fit_po <- ic_sp(cbind(left, right) ~ group, model = 'po', bs_samples = 5, data = dat)
     oddsu <- mu/(1-mu)
     ebeta <- exp(coef(fit_po))
-    lines(mu, ebeta*oddsu/(1+ebeta*oddsu), lty = 3)
+    lines(mu, ebeta*oddsu/(1+ebeta*oddsu), lty = lty[3], lwd = lwd)
     legendtext <- c("Nonparametric", "Proportional Odds")
-    ltyl = c(1,3)
+    ltyl = lty[c(1,3)]
   }
 
   if (checkPH==TRUE & checkPO==TRUE){
-    ltyl = c(1, 5, 3)
+    ltyl = lty
     legendtext <- c("Nonparametric", "Proportional Hazards", "Proportional Odds")
   }
 

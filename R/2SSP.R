@@ -23,7 +23,7 @@ getAUC <- function(KMests, silent, xlab, ylab, main, cex.axis = cex.axis,
 #' @param compare Logical argument to indicate if user wants want to compare the nonparametric curve with curves based on a proportional hazards model, proportional odds model, and various AFT models (default is FALSE).
 #' @param area Logical argument to indicate if user wants an estimate for area under the curve (default is TRUE).
 #' @param abtwc Logical argument to indicate if area between curves is needed as part of model comparisons (checkPHM or compare must be TRUE).
-#' @param silent Logical argument, FALSE indicates the user wants ROC plots and TRUE indicates no plots only AUC calculations (default is FALSE).
+#' @param silent Logical argument, FALSE indicates the user wants plots and TRUE indicates no plots only AUC calculations (default is FALSE).
 #' @param xlab String argument for the horizontal axis label of the ROC curve.
 #' @param ylab String argument for the vertical axis label of the ROC curve.
 #' @param main String argument for the title of the ROC curve.
