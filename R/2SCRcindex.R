@@ -34,86 +34,40 @@ comprsk_c <- function(mymat, rlabels, maxt){
   pcomb <- n*(n-1)/2
   `%!in%` <- Negate(`%in%`)
 
-  c=NULL; d2 = dnom = num = 0
+  c=NULL; dnomcount = numcount = 0
   for (e in 1:max(mymat$event)){
-    for (i in 1:n){
-      for (j in 1:n){
-        if (i==j){dnom=dnom; num=num
-        } else {
-          d2 <- d2+1
-          if (mymat$group[i]==1 & mymat$group[j]==0 &
-              mymat$event[i] %!in% c(e, 0) & mymat$event[j] %!in% c(e, 0)){
-            dnom=dnom+1;
+    for (i in 1:n1){
+      for (j in 1:n0){
+        if (i==j){dnomcount=dnomcount; numcount=numcount
           } else {
-            temp <- ifelse(mymat$i.time[j] <= mymat$i.time[i] &
-                            mymat$group[i]==1 & mymat$group[j]==0 &
-                             mymat$event[i]==e & mymat$event[j]==e , 1, 0)
-            num = num+temp
-          }
+          temp <- ifelse(mymat$event[i]==e & mymat$event[j]==e & mymat$group[i]==1 & mymat$group[j]==0, 1, 0)
+          dnomcount = dnomcount + temp
+          temp2 <- ifelse(mymat$i.time[j] <= mymat$i.time[i] & mymat$event[i]==e & mymat$event[j]==e &
+                                mymat$group[i]==1 & mymat$group[j]==0, 1,0)
+          numcount = numcount + temp2
         }
       }
     }
-    c[e] <- num/d2 / (1-dnom/d2)
+    c[e] <- numcount/dnomcount
   }
   names(c) <- rlabels
 
-  c2=NULL; d2 = dnom = num = 0
+  c2=c(); dnomcount = numcount = 0.000000000000000001
   for (e in 1:max(mymat$event)){
-    for (i in 1:n){
-      for (j in 1:n){
-        if (i==j){dnom=dnom; num=num
-        } else {
-          d2 <- d2+(1/(mymat$w[i]*mymat$w[j]))
-          if (mymat$group[i]==1 & mymat$group[j]==0 &
-              mymat$event[i] %!in% c(e, 0) & mymat$event[j] %!in% c(e, 0)){
-            dnom=dnom+(1/(mymat$w[i]*mymat$w[j]));
-          } else {
-            temp <- ifelse(mymat$i.time[j] <= mymat$i.time[i] &
-                             mymat$group[i]==1 & mymat$group[j]==0 &
-                             mymat$event[i]==e & mymat$event[j]==e , 1, 0)
-            num = num+(temp/(mymat$w[i]*mymat$w[j]))
-          }
+    for (i in 1:n1){
+      for (j in 1:n0){
+        if (i!=j){
+          temp <- ifelse(mymat$event[i]==e & mymat$event[j]==e & mymat$group[i]==1 & mymat$group[j]==0, 1, 0)
+            dnomcount = dnomcount + temp/(mymat$w[i]*mymat$w[j])
+            temp2 <- ifelse(mymat$i.time[j] <= mymat$i.time[i] & mymat$event[i]==e & mymat$event[j]==e &
+                              mymat$group[i]==1 & mymat$group[j]==0, 1,0)
+            numcount = numcount + temp2/(mymat$w[i]*mymat$w[j])
         }
       }
     }
-    c2[e] <- num/d2 / (1-dnom/d2)
+    c2[e] <- (numcount-0.000000000000000001)/(dnomcount-0.000000000000000001)
   }
   names(c2) <- rlabels
-
-  # c=NULL; dnomcount = numcount = 0
-  # for (e in 1:max(mymat$event)){
-  #   for (i in 1:n1){
-  #     for (j in 1:n0){
-  #       if (i==j){dnomcount=dnomcount; numcount=numcount
-  #         } else {
-  #         temp <- ifelse(mymat$event[i]==e & mymat$event[j]==e & mymat$group[i]==1 & mymat$group[j]==0, 1, 0)
-  #         dnomcount = dnomcount + temp
-  #         temp2 <- ifelse(mymat$i.time[j] <= mymat$i.time[i] & mymat$event[i]==e & mymat$event[j]==e &
-  #                               mymat$group[i]==1 & mymat$group[j]==0, 1,0)
-  #         numcount = numcount + temp2
-  #       }
-  #     }
-  #   }
-  #   c[e] <- numcount/dnomcount
-  # }
-  # names(c) <- rlabels
-  #
-  # c2=c(); dnomcount = numcount = 0.000000000000000001
-  # for (e in 1:max(mymat$event)){
-  #   for (i in 1:n1){
-  #     for (j in 1:n0){
-  #       if (i!=j){
-  #         temp <- ifelse(mymat$event[i]==e & mymat$event[j]==e & mymat$group[i]==1 & mymat$group[j]==0, 1, 0)
-  #           dnomcount = dnomcount + temp/(mymat$w[i]*mymat$w[j])
-  #           temp2 <- ifelse(mymat$i.time[j] <= mymat$i.time[i] & mymat$event[i]==e & mymat$event[j]==e &
-  #                             mymat$group[i]==1 & mymat$group[j]==0, 1,0)
-  #           numcount = numcount + temp2/(mymat$w[i]*mymat$w[j])
-  #       }
-  #     }
-  #   }
-  #   c2[e] <- (numcount-0.000000000000000001)/(dnomcount-0.000000000000000001)
-  # }
-  # names(c2) <- rlabels
 
   return(list(c=c, c_adj = c2))
 }
