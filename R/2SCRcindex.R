@@ -1,3 +1,5 @@
+#`%!in%` <- Negate(`%in%`)
+
 #' Calculate c-index for data from randomized controlled trials with competing risk.
 #'
 #' @description
@@ -11,6 +13,7 @@
 #'
 #' @import data.table
 #' @importFrom dplyr %>%
+#'
 #' @keywords internal
 #' @noRd
 
@@ -30,6 +33,50 @@ comprsk_c <- function(mymat, rlabels, maxt){
   n <- nrow(mymat)
   n1 <- nrow(mymat %>% dplyr::filter(mymat$group == 1))
   n0 <- nrow(mymat %>% dplyr::filter(mymat$group == 0))
+
+  c=NULL; dnom2 = num = 0
+  for (e in 1:max(mymat$event)){
+    for (i in 1:n1){
+      for (j in 1:n0){
+        if (i==j){dnomcount=dnomcount; numcount=numcount
+        } else {
+          if (mymat$i.time[j] <= mymat$i.time[i] & mymat$group[i]==1 & mymat$group[j]==0 &
+              mymat$event[i] %!in% c(e, 0) & mymat$event[j] %!in% c(e, 0)){
+              denom2 <- denom2+1
+          } else {
+            temp <- ifelse(mymat$i.time[j] <= mymat$i.time[i] &
+                            mymat$group[i]==1 & mymat$group[j]==0 &
+                             mymat$event[i]==e & mymat$event[j]==e , 1, 0)
+            num = num+temp
+          }
+        }
+      }
+    }
+    c[e] <- num/(1-dnom2)
+  }
+  names(c) <- rlabels
+
+  c2=NULL; dnom2 = num = 0
+  for (e in 1:max(mymat$event)){
+    for (i in 1:n1){
+      for (j in 1:n0){
+        if (i==j){dnomcount=dnomcount; numcount=numcount
+        } else {
+          if (mymat$i.time[j] <= mymat$i.time[i] & mymat$group[i]==1 & mymat$group[j]==0 &
+              mymat$event[i] %!in% c(e, 0) & mymat$event[j] %!in% c(e, 0)){
+            denom2 <- denom2+(1/(mymat$w[i]*mymat$w[j]))
+          } else {
+            temp <- ifelse(mymat$i.time[j] <= mymat$i.time[i] &
+                             mymat$group[i]==1 & mymat$group[j]==0 &
+                             mymat$event[i]==e & mymat$event[j]==e , 1, 0)
+            num = num+(temp/(mymat$w[i]*mymat$w[j]))
+          }
+        }
+      }
+    }
+    c2[e] <- num/(1-dnom2)
+  }
+  names(c2) <- rlabels
 
   # c=NULL; dnomcount = numcount = 0
   # for (e in 1:max(mymat$event)){
