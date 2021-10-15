@@ -39,7 +39,7 @@ comprsk_c <- function(mymat, rlabels, maxt){
   for (e in 1:max(mymat$event)){
     for (i in 1:n1){
       for (j in 1:n0){
-        if (i==j){dnomcount=dnomcount; numcount=numcount
+        if (i==j){dnom2=dnom2; num=num
         } else {
           if (mymat$i.time[j] <= mymat$i.time[i] & mymat$group[i]==1 & mymat$group[j]==0 &
               mymat$event[i] %!in% c(e, 0) & mymat$event[j] %!in% c(e, 0)){
@@ -61,7 +61,7 @@ comprsk_c <- function(mymat, rlabels, maxt){
   for (e in 1:max(mymat$event)){
     for (i in 1:n1){
       for (j in 1:n0){
-        if (i==j){dnomcount=dnomcount; numcount=numcount
+        if (i==j){dnom2=dnom2; num=num
         } else {
           if (mymat$i.time[j] <= mymat$i.time[i] & mymat$group[i]==1 & mymat$group[j]==0 &
               mymat$event[i] %!in% c(e, 0) & mymat$event[j] %!in% c(e, 0)){
