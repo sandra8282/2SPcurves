@@ -62,20 +62,28 @@ TwoSCI <- function(time, event, group, xlab=NULL, ylab=NULL, main=NULL, rlabels,
 
   #Check Fine-Gray model
   if (checkFG==TRUE){
-    reg_res <- list(); rname = coeffs= c()
+    reg_res = predictions = list(); rname = coeffs= c();
     dat <- na.omit(data.frame(time, event, group))
         for (i in 1:max(event)){
           temp <- FGR(Hist(time,event)~group,data=dat, cause=i)
           reg_res[[i]] <- temp$crrFit
           rname[i] <- temp$cause
           coeffs[i] <- summary(temp$crrFit)$coef[1]
+          dat1 <- dat; dat1$group <- 1
+          dat0 <- dat; dat0$group <- 0
+          preds1 <- predictRisk(temp, newdata = dat1, times = seq(0, maxt, length.out = 100))
+          preds1 <- apply(preds1,2, function(x) unique(x))
+          preds0 <- predictRisk(temp, newdata = dat0, times = seq(0, maxt, length.out = 100))
+          preds0 <- apply(preds0,2, function(x) unique(x))
+          predictions[[i]] <- data.frame(x = preds0, y = preds1)
         }
     names(reg_res) <- rname
     ccrfits <- reg_res
     list4fitplot <- list()
         for (skmi in (1:nrisktypes)){
           temp <- list_4plot[[skmi]]
-          list4fitplot[[skmi]] <- cbind(temp[,1],1-(1-temp[,1])^exp(coeffs[[skmi]]))
+          u <- seq(0, max(temp[,1]), length.out = 50)
+          list4fitplot[[skmi]] <- cbind(u, 1-((1-u)^exp(coeffs[[skmi]])))
         }
   }
 
@@ -86,7 +94,7 @@ TwoSCI <- function(time, event, group, xlab=NULL, ylab=NULL, main=NULL, rlabels,
          xlab=xlab, ylab=ylab, main=main, cex.axis = cex.axis, cex.lab = cex.lab)
     for (ploti in (1:nrisktypes)){
       lines(list_4plot[[ploti]][,1:2], type="s", lty = ploti+1, lwd = 2)
-      if (checkFG==TRUE){lines(list4fitplot[[ploti]][,1:2], lty = 1, lwd=2)}
+      if (checkFG==TRUE){lines(predictions[[ploti]], lty = 1, lwd=2)}
     }
 
     abline(c(0,1), col = "grey", lwd = lwd - 0.25)

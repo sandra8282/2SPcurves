@@ -28,47 +28,43 @@ comprsk_c <- function(mymat, rlabels, maxt){
   mymat$w[indsna] = 1;
   mymat <- mymat[,-c(1,3)]
   n <- nrow(mymat)
-  n1 <- nrow(mymat %>% dplyr::filter(group == 1))
-  n0 <- nrow(mymat %>% dplyr::filter(group == 0))
+  n1 <- nrow(mymat %>% dplyr::filter(mymat$group == 1))
+  n0 <- nrow(mymat %>% dplyr::filter(mymat$group == 0))
 
-  c=NULL; dnomcount = numcount = 0
-  for (e in 1:max(mymat$event)){
-    for (i in 1:n1){
-      for (j in 1:n0){
-        if (i==j){dnomcount=dnomcount; numcount=numcount
-          } else {
-          temp <- ifelse(mymat$event[i]==e & mymat$event[j]==e &
-                   mymat$group[i]==1 & mymat$group[j]==0, 1, 0)
-          dnomcount = dnomcount + temp
-            if (temp != 0){
-              temp2 <- ifelse(mymat$i.time[j] < mymat$i.time[i], 1,0)
-              numcount = numcount + temp2
-            }
-        }
-      }
-    }
-    c[e] <- numcount/dnomcount
-  }
-  names(c) <- rlabels
-
-  c2=c(); dnomcount = numcount = 0.000000000000000001
-  for (e in 1:max(mymat$event)){
-    for (i in 1:n1){
-      for (j in 1:n0){
-        if (i!=j){
-          temp <- ifelse(mymat$event[i]==e & mymat$event[j]==e &
-                           mymat$group[i]==1 & mymat$group[j]==0, 1, 0)
-            dnomcount = dnomcount + round(temp/(mymat$w[i]*mymat$w[j]), digits = 15)
-          if (temp != 0){
-            temp2 <- ifelse(mymat$i.time[j] < mymat$i.time[i], 1,0)
-            numcount = numcount + (temp2/(mymat$w[i]*mymat$w[j]))
-          }
-        }
-      }
-    }
-    c2[e] <- (numcount-0.000000000000000001)/(dnomcount-0.000000000000000001)
-  }
-  names(c2) <- rlabels
+  # c=NULL; dnomcount = numcount = 0
+  # for (e in 1:max(mymat$event)){
+  #   for (i in 1:n1){
+  #     for (j in 1:n0){
+  #       if (i==j){dnomcount=dnomcount; numcount=numcount
+  #         } else {
+  #         temp <- ifelse(mymat$event[i]==e & mymat$event[j]==e & mymat$group[i]==1 & mymat$group[j]==0, 1, 0)
+  #         dnomcount = dnomcount + temp
+  #         temp2 <- ifelse(mymat$i.time[j] <= mymat$i.time[i] & mymat$event[i]==e & mymat$event[j]==e &
+  #                               mymat$group[i]==1 & mymat$group[j]==0, 1,0)
+  #         numcount = numcount + temp2
+  #       }
+  #     }
+  #   }
+  #   c[e] <- numcount/dnomcount
+  # }
+  # names(c) <- rlabels
+  #
+  # c2=c(); dnomcount = numcount = 0.000000000000000001
+  # for (e in 1:max(mymat$event)){
+  #   for (i in 1:n1){
+  #     for (j in 1:n0){
+  #       if (i!=j){
+  #         temp <- ifelse(mymat$event[i]==e & mymat$event[j]==e & mymat$group[i]==1 & mymat$group[j]==0, 1, 0)
+  #           dnomcount = dnomcount + temp/(mymat$w[i]*mymat$w[j])
+  #           temp2 <- ifelse(mymat$i.time[j] <= mymat$i.time[i] & mymat$event[i]==e & mymat$event[j]==e &
+  #                             mymat$group[i]==1 & mymat$group[j]==0, 1,0)
+  #           numcount = numcount + temp2/(mymat$w[i]*mymat$w[j])
+  #       }
+  #     }
+  #   }
+  #   c2[e] <- (numcount-0.000000000000000001)/(dnomcount-0.000000000000000001)
+  # }
+  # names(c2) <- rlabels
 
   return(list(c=c, c_adj = c2))
 }
