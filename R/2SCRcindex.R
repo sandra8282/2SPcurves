@@ -31,19 +31,19 @@ comprsk_c <- function(mymat, rlabels, maxt){
   mymat$w[indsna] = 1;
   mymat <- mymat[,-c(1,3)]
   n <- nrow(mymat)
-  n1 <- nrow(mymat %>% dplyr::filter(mymat$group == 1))
-  n0 <- nrow(mymat %>% dplyr::filter(mymat$group == 0))
+  pcomb <- n*(n-1)/2
   `%!in%` <- Negate(`%in%`)
 
-  c=NULL; dnom2 = num = 0
+  c=NULL; d2 = dnom = num = 0
   for (e in 1:max(mymat$event)){
-    for (i in 1:n1){
-      for (j in 1:n0){
-        if (i==j){dnom2=dnom2; num=num
+    for (i in 1:n){
+      for (j in 1:n){
+        if (i==j){dnom=dnom; num=num
         } else {
-          if (mymat$i.time[j] <= mymat$i.time[i] & mymat$group[i]==1 & mymat$group[j]==0 &
+          d2 <- d2+1
+          if (mymat$group[i]==1 & mymat$group[j]==0 &
               mymat$event[i] %!in% c(e, 0) & mymat$event[j] %!in% c(e, 0)){
-              denom2 <- denom2+1
+            dnom=dnom+1;
           } else {
             temp <- ifelse(mymat$i.time[j] <= mymat$i.time[i] &
                             mymat$group[i]==1 & mymat$group[j]==0 &
@@ -53,19 +53,20 @@ comprsk_c <- function(mymat, rlabels, maxt){
         }
       }
     }
-    c[e] <- num/(1-dnom2)
+    c[e] <- num/d2 / (1-dnom/d2)
   }
   names(c) <- rlabels
 
-  c2=NULL; dnom2 = num = 0
+  c2=NULL; d2 = dnom = num = 0
   for (e in 1:max(mymat$event)){
-    for (i in 1:n1){
-      for (j in 1:n0){
-        if (i==j){dnom2=dnom2; num=num
+    for (i in 1:n){
+      for (j in 1:n){
+        if (i==j){dnom=dnom; num=num
         } else {
-          if (mymat$i.time[j] <= mymat$i.time[i] & mymat$group[i]==1 & mymat$group[j]==0 &
+          d2 <- d2+(1/(mymat$w[i]*mymat$w[j]))
+          if (mymat$group[i]==1 & mymat$group[j]==0 &
               mymat$event[i] %!in% c(e, 0) & mymat$event[j] %!in% c(e, 0)){
-            denom2 <- denom2+(1/(mymat$w[i]*mymat$w[j]))
+            dnom=dnom+(1/(mymat$w[i]*mymat$w[j]));
           } else {
             temp <- ifelse(mymat$i.time[j] <= mymat$i.time[i] &
                              mymat$group[i]==1 & mymat$group[j]==0 &
@@ -75,7 +76,7 @@ comprsk_c <- function(mymat, rlabels, maxt){
         }
       }
     }
-    c2[e] <- num/(1-dnom2)
+    c2[e] <- num/d2 / (1-dnom/d2)
   }
   names(c2) <- rlabels
 
