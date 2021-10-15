@@ -1,4 +1,4 @@
-#`%!in%` <- Negate(`%in%`)
+
 
 #' Calculate c-index for data from randomized controlled trials with competing risk.
 #'
@@ -33,6 +33,7 @@ comprsk_c <- function(mymat, rlabels, maxt){
   n <- nrow(mymat)
   n1 <- nrow(mymat %>% dplyr::filter(mymat$group == 1))
   n0 <- nrow(mymat %>% dplyr::filter(mymat$group == 0))
+  `%!in%` <- Negate(`%in%`)
 
   c=NULL; dnom2 = num = 0
   for (e in 1:max(mymat$event)){

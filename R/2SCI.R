@@ -29,6 +29,7 @@
 #' @import cmprsk
 #' @importFrom mstate Cuminc
 #' @importFrom riskRegression FGR
+#' @importFrom riskRegression predictRisk
 #' @importFrom prodlim Hist
 #' @importFrom dplyr distinct
 #'
