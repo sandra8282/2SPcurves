@@ -26,11 +26,7 @@
 #'  \item List with the two-sample cumulative incidence curves \code{C_u} for each risk type.
 #' }
 #'
-#' @import cmprsk
-#' @importFrom mstate Cuminc
-#' @importFrom riskRegression FGR
-#' @importFrom riskRegression predictRisk
-#' @importFrom prodlim Hist
+#' @import survival
 #' @importFrom dplyr distinct
 #'
 #' @export
@@ -40,12 +36,14 @@ TwoSCI <- function(time, event, group, xlab=NULL, ylab=NULL, main=NULL, rlabels,
                       legend.inset=0.02, legend.cex=1.5, checkFG=FALSE, c_index = TRUE, maxt, silent){
 
   #get cum incidence
-
-  ci <- Cuminc(time= time, status = event, group=group, failcodes = unique(event[event>0]))
+  nrisktypes = length(unique(event)) - 1
+  enames = c("censored", rlabels)
+  eventf <- factor(event, 0:nrisktypes, labels = enames)
+  fit <-  survfit(Surv(time, eventf) ~ group)
+  sfit <- summary(fit)
 
   #get C(u)
-  nrisktypes = length(unique(event)) - 1
-  skm <- ci[, c(2, 1, 4:(4+nrisktypes-1))]
+  skm <- data.frame(time = sfit$time, group = as.numeric(sfit$strata)-1, ci = sfit$pstate[,2:3])
   skm <- skm[order(skm[,1], skm[,2]),]
   ties_check <- unique(table(skm[,1]))
   if (length(ties_check) > 1) {
@@ -61,29 +59,28 @@ TwoSCI <- function(time, event, group, xlab=NULL, ylab=NULL, main=NULL, rlabels,
     list_4plot[[skmi]] = get4plotCumInc(skmires)
   }
 
+  id <- 1:length(time)
+  mymat <- data.frame(id, time, event, group)
+  mymatfg <- data.frame(id, time, eventf, group)
+
   #Check Fine-Gray model
   if (checkFG==TRUE){
     reg_res = predictions = list(); rname = coeffs= c();
-    dat <- na.omit(data.frame(time, event, group))
         for (i in 1:max(event)){
-          temp <- FGR(Hist(time,event)~group,data=dat, cause=i)
-          reg_res[[i]] <- temp$crrFit
-          rname[i] <- temp$cause
-          coeffs[i] <- summary(temp$crrFit)$coef[1]
-          dat1 <- dat; dat1$group <- 1
-          dat0 <- dat; dat0$group <- 0
-          preds1 <- predictRisk(temp, newdata = dat1, times = seq(0, maxt, length.out = 100))
-          preds1 <- apply(preds1,2, function(x) unique(x))
-          preds0 <- predictRisk(temp, newdata = dat0, times = seq(0, maxt, length.out = 100))
-          preds0 <- apply(preds0,2, function(x) unique(x))
-          predictions[[i]] <- data.frame(x = preds0, y = preds1)
+          temp <- finegray(Surv(time, eventf) ~ ., data=mymatfg, etype=enames[i+1])
+          fgfit <- coxph(Surv(fgstart, fgstop, fgstatus) ~ group, data=temp, weight= fgwt)
+          fgsurv <- survfit(fgfit, data.frame(group=c(0,1)))
+          #fgmat <- cbind(fgsurv$time, fgsurv$cumhaz)
+          reg_res[[i]] <- fgfit
+          rname[i] <- enames[i+1]
+          coeffs[i] <- fgfit$coefficients
+          predictions[[i]] <- data.frame(x = fgsurv$cumhaz[,1], y = fgsurv$cumhaz[,2])
         }
     names(reg_res) <- rname
-    ccrfits <- reg_res
     list4fitplot <- list()
         for (skmi in (1:nrisktypes)){
           temp <- list_4plot[[skmi]]
-          u <- seq(0, max(temp[,1]), length.out = 50)
+          u <- temp[,1] #seq(0, max(temp[,1]), length.out = 50)
           list4fitplot[[skmi]] <- cbind(u, 1-((1-u)^exp(coeffs[[skmi]])))
         }
   }
@@ -95,7 +92,7 @@ TwoSCI <- function(time, event, group, xlab=NULL, ylab=NULL, main=NULL, rlabels,
          xlab=xlab, ylab=ylab, main=main, cex.axis = cex.axis, cex.lab = cex.lab)
     for (ploti in (1:nrisktypes)){
       lines(list_4plot[[ploti]][,1:2], type="s", lty = ploti+1, lwd = 2)
-      if (checkFG==TRUE){lines(predictions[[ploti]], lty = 1, lwd=2)}
+      if (checkFG==TRUE){lines(list4fitplot[[ploti]], lty = 1, lwd=2, type = "l")}
     }
 
     abline(c(0,1), col = "grey", lwd = lwd - 0.25)
@@ -106,8 +103,6 @@ TwoSCI <- function(time, event, group, xlab=NULL, ylab=NULL, main=NULL, rlabels,
 
   }
 
-  id <- 1:length(time)
-  mymat <- data.frame(id, time, event, group)
   if (c_index==TRUE){
     if (missing(maxt)) {stop("Must provide maxt for calculation of c_index")}
     c <- comprsk_c(mymat, rlabels, maxt)
