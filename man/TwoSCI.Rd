@@ -8,6 +8,7 @@ TwoSCI(
   time,
   event,
   group,
+  maxt,
   xlab = NULL,
   ylab = NULL,
   main = NULL,
@@ -19,7 +20,6 @@ TwoSCI(
   legend.cex = 1.5,
   checkFG = FALSE,
   c_index = TRUE,
-  maxt,
   silent
 )
 }
@@ -29,6 +29,8 @@ TwoSCI(
 \item{event}{An indicator vector with values of 0, 1, 2, ..., M indicating one of M possible causes for an event for an participant that had an event occur or 0 if the participant was censored.}
 
 \item{group}{An indicator vector with values of 1 if the the participant was in the treatment arm and 0 otherwise.}
+
+\item{maxt}{Duration of the trial.}
 
 \item{xlab}{String argument for the horizontal axis label of the ROC curve.}
 
@@ -51,8 +53,6 @@ TwoSCI(
 \item{checkFG}{Logical argument to indicate if user wants to compare the nonparametric curve with the curve based on the Fine-Gray model (default is FALSE).}
 
 \item{c_index}{Logical argument to indicate if user wants an estimate for the concordance for each risk (default is TRUE).}
-
-\item{maxt}{Duration of the trial.}
 
 \item{silent}{Logical argument, FALSE indicates the user wants plots and TRUE indicates no plots only calculations (default is FALSE).}
 }

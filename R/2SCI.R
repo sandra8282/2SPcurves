@@ -31,15 +31,21 @@
 #'
 #' @export
 
-TwoSCI <- function(time, event, group, xlab=NULL, ylab=NULL, main=NULL, rlabels,
+TwoSCI <- function(time, event, group, maxt, xlab=NULL, ylab=NULL, main=NULL, rlabels,
                       cex.axis = 1.5, cex.lab = 1.5, lwd = 1.5,
-                      legend.inset=0.02, legend.cex=1.5, checkFG=FALSE, c_index = TRUE, maxt, silent){
+                      legend.inset=0.02, legend.cex=1.5, checkFG=FALSE, c_index = TRUE, silent){
 
-  #get cum incidence
+  id <- 1:length(time)
+  mymat <- data.frame(id, time, event, group)
   nrisktypes = length(unique(event)) - 1
   enames = c("censored", rlabels)
   eventf <- factor(event, 0:nrisktypes, labels = enames)
-  fit <-  survfit(Surv(time, eventf) ~ group)
+  mymatfg <- data.frame(id, time, eventf, group)
+  #mymatfg <- mymatfg[mymatfg$time<maxt,]
+
+  #get cum incidence
+
+  fit <-  survfit(Surv(mymatfg$time, mymatfg$eventf) ~ mymatfg$group)
   sfit <- summary(fit)
 
   #get C(u)
@@ -59,16 +65,13 @@ TwoSCI <- function(time, event, group, xlab=NULL, ylab=NULL, main=NULL, rlabels,
     list_4plot[[skmi]] = get4plotCumInc(skmires)
   }
 
-  id <- 1:length(time)
-  mymat <- data.frame(id, time, event, group)
-  mymatfg <- data.frame(id, time, eventf, group)
-
   #Check Fine-Gray model
   if (checkFG==TRUE){
     reg_res = predictions = list(); rname = coeffs= c();
         for (i in 1:max(event)){
           temp <- finegray(Surv(time, eventf) ~ ., data=mymatfg, etype=enames[i+1])
-          fgfit <- coxph(Surv(fgstart, fgstop, fgstatus) ~ group, data=temp, weight= fgwt)
+          fgfit <- coxph(Surv(temp$fgstart, temp$fgstop, temp$fgstatus) ~ temp$group,
+                         weights=temp$fgwt)
           fgsurv <- survfit(fgfit, data.frame(group=c(0,1)))
           #fgmat <- cbind(fgsurv$time, fgsurv$cumhaz)
           reg_res[[i]] <- fgfit
@@ -111,11 +114,11 @@ TwoSCI <- function(time, event, group, xlab=NULL, ylab=NULL, main=NULL, rlabels,
   names(list_4plot) <- rlabels
   if (checkFG==TRUE){
     if (c_index==TRUE){
-      return(list(cuminc = ci, c_u = list_4plot, ccrfits = ccrfits, c_index = c))
-      } else {return(list(cuminc = ci, c_u = list_4plot, ccrfits = ccrfits))}
+      return(list(cuminc = sfit, c_u = list_4plot, fits = reg_res, c_u_fit = list4fitplot, c_index = c))
+      } else {return(list(cuminc = sfit, c_u = list_4plot, fits = reg_res, c_u_fit = list4fitplot))}
   } else {
     if (c_index==TRUE){
-      return(list(cuminc = ci, c_u = list_4plot, c_index = c))
-    } else {return(list(cuminc = ci, c_u = list_4plot))}}
+      return(list(cuminc = sfit, c_u = list_4plot, c_index = c))
+    } else {return(list(cuminc = sfit, c_u = list_4plot))}}
 
 }
