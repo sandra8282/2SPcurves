@@ -36,13 +36,13 @@ comprsk_c <- function(mymat, rlabels, maxt){
 
   c=NULL; dnomcount = numcount = 0
   for (e in 1:max(mymat$event)){
-    for (i in 1:n1){
-      for (j in 1:n0){
+    for (i in 1:n){
+      for (j in 1:n){
         if (i==j){dnomcount=dnomcount; numcount=numcount
         } else {
           temp <- ifelse(mymat$event[i]==e & mymat$event[j]==e & mymat$group[i]==1 & mymat$group[j]==0, 1, 0)
           dnomcount = dnomcount + temp
-          temp2 <- ifelse(mymat$i.time[j] <= mymat$i.time[i] & mymat$event[i]==e & mymat$event[j]==e &
+          temp2 <- ifelse(mymat$i.time[j] < mymat$i.time[i] & mymat$event[i]==e & mymat$event[j]==e &
                             mymat$group[i]==1 & mymat$group[j]==0, 1,0)
           numcount = numcount + temp2
         }
@@ -54,12 +54,12 @@ comprsk_c <- function(mymat, rlabels, maxt){
 
   c2=c(); dnomcount = numcount = 0.000000000000000001
   for (e in 1:max(mymat$event)){
-    for (i in 1:n1){
-      for (j in 1:n0){
+    for (i in 1:n){
+      for (j in 1:n){
         if (i!=j){
           temp <- ifelse(mymat$event[i]==e & mymat$event[j]==e & mymat$group[i]==1 & mymat$group[j]==0, 1, 0)
           dnomcount = dnomcount + temp/(mymat$w[i]*mymat$w[j])
-          temp2 <- ifelse(mymat$i.time[j] <= mymat$i.time[i] & mymat$event[i]==e & mymat$event[j]==e &
+          temp2 <- ifelse(mymat$i.time[j] < mymat$i.time[i] & mymat$event[i]==e & mymat$event[j]==e &
                             mymat$group[i]==1 & mymat$group[j]==0, 1,0)
           numcount = numcount + temp2/(mymat$w[i]*mymat$w[j])
         }
