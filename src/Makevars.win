@@ -1,0 +1,5 @@
+PKG_LIBS = -L$(XML_DIR)/bin
+all: $(SHLIB)
+
+cindex.o: cindex.f90
+$(FC) $(SAFE_FFLAGS) -c -o cindex.o: cindex.f90

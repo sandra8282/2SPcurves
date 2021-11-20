@@ -37,6 +37,9 @@ TwoSCI <- function(time, event, group, maxt, xlab=NULL, ylab=NULL, main=NULL, rl
 
   id <- 1:length(time)
   mymat <- data.frame(id, time, event, group)
+  # if(0 %in% mymat$event){
+  #
+  # }
   nrisktypes = length(unique(event)) - 1
   enames = c("censored", rlabels)
   eventf <- factor(event, 0:nrisktypes, labels = enames)
