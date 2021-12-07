@@ -14,6 +14,7 @@
 #' @import data.table
 #' @importFrom dplyr %>%
 #'
+#' @useDynLib TwoSPC
 #' @keywords internal
 #' @noRd
 
@@ -32,9 +33,6 @@ comprsk_c <- function(mymat, rlabels, maxt){
   #n <- nrow(mymat)
   #`%!in%` <- Negate(`%in%`)
 
-  #' @useDynLib TwoSPC
-  #' @keywords internal
-
 
   r2f.cindex <- function(mymat){
     out1 <- .Fortran("cindex",
@@ -44,15 +42,19 @@ comprsk_c <- function(mymat, rlabels, maxt){
                      event=as.integer(mymat$event),
                      group=as.integer(mymat$group),
                      w=as.double(mymat$w),
-                     cind=as.double(rep(0, max(mymat$event))),
-                     cwind=as.double(rep(0, max(mymat$event))),
+                     cind=as.double(0),
+                     cwind=as.double(0),
+                     cnew=as.double(0),
+                     cwnew=as.double(0),
                      NAOK = FALSE, PACKAGE = "TwoSPC")
 
     c <- out1$cind
     c2 <- out1$cwind
-    names(c) = names(c2) = rlabels
+    c3 <- out1$cnew
+    c4 <- out1$cwnew
+    names(c) = names(c2) = rlabels[1]
 
-    return(list(c=c, c_adj = c2))
+    return(c(c=c, c_adj = c2, cnew = c3, cnew_adj = c4))
   }
 
   # c=rep(-10, max(mymat$event));
