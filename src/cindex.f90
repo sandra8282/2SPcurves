@@ -20,12 +20,10 @@
 !      double precision w(n)
 !      double precision cind(nevent)
 !      double precision cwind(nevent)
-!      double precision cnew(nevent)
-!      double precision cwnew(nevent)
 !      double precision numcount
 !      double precision dnomcount
 
-subroutine cindex(n,nevent,time,event,group, w, cind, cwind, cnew, cwnew)
+subroutine cindex(n,nevent,time,event,group, w, cind, cwind)
 
    implicit none
    INTEGER :: n, nevent, i, j, e, ew
@@ -85,71 +83,6 @@ subroutine cindex(n,nevent,time,event,group, w, cind, cwind, cnew, cwnew)
             end do
         end do
       cwind = numcount/dnomcount
-
-
-!  #get new cindex
-         dnomcount=0.
-         numcount=0.
-         do i=1,n
-            do j=1,n
-               if (i.eq.j) then
-                  dnomcount=dnomcount
-                  numcount=numcount
-               else
-                 if (group(j).lt.group(i)) then
-                     if (event(i).eq.e) then
-                        dnomcount = dnomcount + 1
-                           if (time(j).le.time(i)) then
-                                 numcount = numcount + 1
-                           endif
-                           endif
-                           endif
-                 if (group(j).ge.group(i)) then
-                     if (event(i).ne.e) then
-                      if (event(i).ne.0) then
-                         dnomcount = dnomcount + 1
-                           if (time(j).le.time(i)) then
-                                 numcount = numcount + 1
-                           endif
-                           endif
-                           endif
-                           endif
-               endif
-            end do
-        end do
-      cnew = numcount/dnomcount
-
-!  #get new cwindex
-         dnomcount=0.
-         numcount=0.
-         do i=1,n
-            do j=1,n
-               if (i.eq.j) then
-                  dnomcount=dnomcount
-                  numcount=numcount
-               else
-                 if (group(j).lt.group(i)) then
-                     if (event(i).eq.e) then
-                        dnomcount = dnomcount + 1
-                           if (time(j).le.time(i)) then
-                                 numcount = numcount + 1
-                           endif
-                           endif
-                           endif
-                 if (group(j).ge.group(i)) then
-                     if (event(i).ne.e) then
-                      if (event(i).ne.0) then
-                         dnomcount = dnomcount + 1
-                           if (time(j).le.time(i)) then
-                                 numcount = numcount + 1
-                           endif
-                           endif
-                           endif
-                           endif
-               endif
-            end do
-        end do
-      cwnew = numcount/dnomcount
 
 end
 

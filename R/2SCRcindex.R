@@ -44,17 +44,13 @@ comprsk_c <- function(mymat, rlabels, maxt){
                      w=as.double(mymat$w),
                      cind=as.double(0),
                      cwind=as.double(0),
-                     cnew=as.double(0),
-                     cwnew=as.double(0),
                      NAOK = FALSE, PACKAGE = "TwoSPC")
 
     c <- out1$cind
     c2 <- out1$cwind
-    c3 <- out1$cnew
-    c4 <- out1$cwnew
     names(c) = names(c2) = rlabels[1]
 
-    return(c(c=c, c_adj = c2, cnew = c3, cnew_adj = c4))
+    return(c(c=c))
   }
 
   # c=rep(-10, max(mymat$event));

@@ -95,7 +95,7 @@ TwoSSP <- function(time, event, group, area=TRUE, silent=FALSE,
         if (area==FALSE & CI == FALSE) {#plot
           temp <- onlyROC(skm = KMests[[1]], xlab, ylab, main, cex.axis,
                           cex.lab, lty, label.inset, label.cex, lwd)
-          res <- list(control_km=KMests[[3]], drug_km = KMests[[4]])
+          res <- list(R_u=temp, control_km=KMests[[3]], drug_km = KMests[[4]])
           }
 
             #############################################

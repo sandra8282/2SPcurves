@@ -61,8 +61,8 @@ PHM <- function(time, event, group, silent, abtwc, xlab, ylab, main, cex.axis,
     lines(forplot[,1], forplot[,2], col="black", lty=lty[1], lwd = lwd)
     abline(c(0,1), col = "darkgrey", lty=1, lwd = lwd-0.25)
 
-    legend("topleft", c("KM-Based Curve", "Cox-Based Curve"), lty = lty,
-           inset=label.inset, cex=label.cex, bg = "white", bty='n', seg.len = 0.8,
+    legend("topleft", c("KM-Based", "Cox-Based"), lty = lty,
+           inset=label.inset, cex=label.cex, bg = "white", bty='n', seg.len = 1,
            x.intersp=0.9, y.intersp = 0.85, lwd = lwd)
     }
 

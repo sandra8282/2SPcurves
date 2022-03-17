@@ -65,7 +65,7 @@ btsp <- function(res, maindat, B, level, xlab, ylab, main, cex.axis = cex.axis,
        temp <- completeROC(KMests[[1]], silent = TRUE)
        bstAUC[b] <- temp$AUC
        forplot <- temp$R_u
-       lines(forplot[,1:2], col = "bisque")
+       #lines(forplot[,1:2], col = "bisque")
        temp <- merge(ref[-1,], forplot, by.x = "ref_u", by.y = "u", all = TRUE)
        temp <- temp[order(temp$ref_u, decreasing = TRUE), ]
        inds1 <- which(is.na(temp$R_u)); l <- length(inds1)
@@ -104,8 +104,8 @@ btsp <- function(res, maindat, B, level, xlab, ylab, main, cex.axis = cex.axis,
      lines(R_u$u, R_u$Ru, lty = lty[1], lwd = lwd)
      # points(R_u$u, R_u$CIlow_Ru, pch = 20, col = "darkred", cex = 0.5)
      # points(R_u$u, R_u$CIup_Ru, pch = 20, col = "darkred", cex = 0.5)
-     lines(R_u$u, R_u$CIlow_Ru, lty = 2, col = "darkred", lwd = lwd)
-     lines(R_u$u, R_u$CIup_Ru, lty = 2, col = "darkred", lwd = lwd)
+     lines(R_u$u, R_u$CIlow_Ru, lty = 2, lwd = lwd) #col = "darkred",
+     lines(R_u$u, R_u$CIup_Ru, lty = 2, lwd = lwd) #col = "darkred",
      abline(c(0,1), col = "grey", lty=1, lwd = lwd-0.25)
 
      AUC <- c(AUC = res$AUC,

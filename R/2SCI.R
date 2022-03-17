@@ -15,14 +15,18 @@
 #' @param legend.inset Optional graphical parameter controling the inset of the legend.
 #' @param legend.cex Optional graphical parameter for magnification of the legend's text.
 #' @param lwd Optional graphical parameter for line width relative to the default. See \link[graphics]{par} for more details.
-#' @param checkFG Logical argument to indicate if user wants to compare the nonparametric curve with the curve based on the Fine-Gray model (default is FALSE).
-#' @param c_index Logical argument to indicate if user wants an estimate for the concordance for each risk (default is TRUE).
+#' @param checkFG Logical argument to indicate if the user wants to compare the nonparametric curve with the curve based on the Fine-Gray model (default is FALSE).
+#' @param c_index Logical argument to indicate if the user wants an estimate for the concordance for each risk (default is TRUE).
 #' @param maxt Duration of the trial.
+#' @param CI Optional logical argument to indicate if the user wants a bootstrap confidence interval for the curves and the concordance.
 #' @param silent Logical argument, FALSE indicates the user wants plots and TRUE indicates no plots only calculations (default is FALSE).
-#'
-#' @return A plot of the ROC curve (if \code{silent=FALSE}) and an ROCsurv object containing:
+#' @param level A numerical argument to indicate the confidence level for the confidence interval. Default = 0.95.
+#' @param B The number of bootstrap samples to use for the confidence interval. Default = 1000.
+#' @param lty Optional graphical parameter to set the type of line to use. Can be a number or a vector. See \link[graphics]{par} for more details.
+
+#' @return A plot of the curve (if \code{silent=FALSE}) and an object containing:
 #' \itemize{
-#'  \item A Cuminc class object containing survival and cummulative incidence estimates and corresponding standard errors for each group.
+#'  \item A Cuminc object containing survival and cummulative incidence estimates and corresponding standard errors for each group.
 #'  \item List with the two-sample cumulative incidence curves \code{C_u} for each risk type.
 #' }
 #'
@@ -31,19 +35,32 @@
 #'
 #' @export
 
-TwoSCI <- function(time, event, group, maxt, xlab=NULL, ylab=NULL, main=NULL, rlabels,
-                      cex.axis = 1.5, cex.lab = 1.5, lwd = 1.5,
-                      legend.inset=0.02, legend.cex=1.5, checkFG=FALSE, c_index = TRUE, silent){
+TwoSCI <- function(time, event, group, maxt=NULL, xlab=NULL, ylab=NULL, main=NULL, rlabels,
+                      cex.axis = 1.5, cex.lab = 1.5, lwd = 1.5, silent=FALSE, lty = c(2, 3, 1),
+                      legend.inset=0.02, legend.cex=1.5, checkFG=FALSE, c_index = TRUE, CI=FALSE,
+                      level=0.95, B){
+
+  if (missing(B)){B=length(time)}
+
+  if (checkFG==TRUE & CI==TRUE) {stop("Cannot support both checkFG=TRUE and CI=TRUE")}
 
   id <- 1:length(time)
   mymat <- data.frame(id, time, event, group)
+
   # if(0 %in% mymat$event){
   #
   # }
   nrisktypes = length(unique(event)) - 1
-  enames = c("censored", rlabels)
-  eventf <- factor(event, 0:nrisktypes, labels = enames)
-  mymatfg <- data.frame(id, time, eventf, group)
+  mymatfg <- data.frame(id, time, group)
+
+  if (0 %in% event){
+    enames = c("censored", rlabels)
+    mymatfg$eventf <- factor(event, 0:nrisktypes, labels = enames)
+  } else {
+    eventf <- factor(event, 1:length(unique(event)), labels = rlabels)
+    mymatfg$eventf <- factor(eventf, levels = c(levels(eventf), "censored"))
+  }
+
   #mymatfg <- mymatfg[mymatfg$time<maxt,]
 
   #get cum incidence
@@ -52,19 +69,21 @@ TwoSCI <- function(time, event, group, maxt, xlab=NULL, ylab=NULL, main=NULL, rl
   sfit <- summary(fit)
 
   #get C(u)
-  skm <- data.frame(time = sfit$time, group = as.numeric(sfit$strata)-1, ci = sfit$pstate[,2:3])
+  skm <- data.frame(time = sfit$time,
+                    group = as.numeric(sfit$strata)-1,
+                    ci = sfit$pstate[,2:3])
   skm <- skm[order(skm[,1], skm[,2]),]
-  ties_check <- unique(table(skm[,1]))
-  if (length(ties_check) > 1) {
-    ties_times = skm[duplicated(skm[,1]),1]
-    ties_ind <- rep(0, nrow(skm))
-    ties_ind[which(skm[,1] %in% ties_times)]=1
-  } else {ties_ind <- rep(0, nrow(skm))}
-  skm = cbind(skm, ties_ind)
   list_4plot = list()
   for (skmi in (1:nrisktypes)){
-    skmires = matrix(as.numeric(as.matrix(distinct(skm[, c(1, 2+skmi, 2, 5)]))),
-                ncol=4)
+    skmires = matrix(as.numeric(as.matrix(distinct(skm[, c(1, 2+skmi, 2)]))),
+                ncol=3)
+    ties_check <- duplicated(skmires[,1])
+    if (length(ties_check) > 1) {
+      ties_times = skmires[duplicated(skmires[,1]),1]
+      ties_ind <- rep(0, nrow(skmires))
+      ties_ind[which(skmires[,1] %in% ties_times)]=1
+    } else {ties_ind <- rep(0, nrow(skmires))}
+    skmires = cbind(skmires, ties_ind)
     list_4plot[[skmi]] = get4plotCumInc(skmires)
   }
 
@@ -74,7 +93,7 @@ TwoSCI <- function(time, event, group, maxt, xlab=NULL, ylab=NULL, main=NULL, rl
         for (i in 1:max(event)){
           temp <- finegray(Surv(time, eventf) ~ ., data=mymatfg, etype=enames[i+1])
           fgfit <- coxph(Surv(temp$fgstart, temp$fgstop, temp$fgstatus) ~ temp$group,
-                         weights=temp$fgwt)
+                         weights=temp$fgwt, control = coxph.control(timefix = FALSE))
           fgsurv <- survfit(fgfit, data.frame(group=c(0,1)))
           #fgmat <- cbind(fgsurv$time, fgsurv$cumhaz)
           reg_res[[i]] <- fgfit
@@ -91,37 +110,59 @@ TwoSCI <- function(time, event, group, maxt, xlab=NULL, ylab=NULL, main=NULL, rl
         }
   }
 
-  if (silent == FALSE) {
+
+  if (silent == FALSE & CI == FALSE) {
+    ltyploti <- c(5, 3, 6, 1)
     #Plot
     plot(NULL, type="n", las=1,
          xlim=c(0,1), ylim = c(0, 1), #to make tight axis: xaxs="i", yaxs="i"
          xlab=xlab, ylab=ylab, main=main, cex.axis = cex.axis, cex.lab = cex.lab)
     for (ploti in (1:nrisktypes)){
-      lines(list_4plot[[ploti]][,1:2], type="s", lty = ploti+1, lwd = 2)
+      lines(list_4plot[[ploti]][,1:2], lty = ltyploti[ploti], lwd = 2)
       if (checkFG==TRUE){lines(list4fitplot[[ploti]], lty = 1, lwd=2, type = "l")}
     }
 
     abline(c(0,1), col = "grey", lwd = lwd - 0.25)
     if (missing(rlabels)) {rlabels = as.character(1:nrisktypes)}
-    legend("topleft", rlabels, lty = 2:(ploti+1), cex = legend.cex, inset= legend.inset,
+    legend("topleft", rlabels, lty = ltyploti[1:length(rlabels)],
+           cex = legend.cex, inset= legend.inset,
            bg = "white", bty='n', seg.len = 1,
            x.intersp=0.9, y.intersp = 0.85, lwd = lwd - 0.25)
 
   }
 
+  if (silent==TRUE & CI==TRUE) {warning("CI=TRUE and silent=TRUE. Will ignore silent=TRUE command and plot curve with confidence interval.")}
+
   if (c_index==TRUE){
     if (missing(maxt)) {stop("Must provide maxt for calculation of c_index")}
     c <- comprsk_c(mymat, rlabels, maxt)
+    if (CI==TRUE){
+      BSTPres <- btsp2SCI(res = list_4plot, maindat = mymat, maxt = maxt,
+                      nrisktypes, B=B, level, xlab, ylab, rlabels, main,
+                      cex.axis = cex.axis, cex.lab = cex.lab, lty = lty,
+                      lwd = lwd, bst_c = TRUE, cindex = c)
+    }
+  } else {
+    if (CI==TRUE){
+      BSTPres <- btsp2SCI(res = list_4plot, maindat = mymat, maxt = max(mymat[,2]),
+                      nrisktypes, B=B, level, xlab, ylab, rlabels, main,
+                      cex.axis = cex.axis, cex.lab = cex.lab, lty = lty,
+                      lwd = lwd, bst_c = FALSE, cindex = c)
+    }
   }
 
   names(list_4plot) <- rlabels
+
+
   if (checkFG==TRUE){
     if (c_index==TRUE){
       return(list(cuminc = sfit, c_u = list_4plot, fits = reg_res, c_u_fit = list4fitplot, c_index = c))
       } else {return(list(cuminc = sfit, c_u = list_4plot, fits = reg_res, c_u_fit = list4fitplot))}
   } else {
     if (c_index==TRUE){
-      return(list(cuminc = sfit, c_u = list_4plot, c_index = c))
+      if (CI==TRUE){
+        return(list(cuminc = sfit, c_u = BSTPres$C_u, c_index = BSTPres$Cindex))
+      } else {return(list(cuminc = sfit, c_u = list_4plot, c_index = c))}
     } else {return(list(cuminc = sfit, c_u = list_4plot))}}
 
 }

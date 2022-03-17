@@ -24,6 +24,7 @@ onlyROC <- function(skm, xlab, ylab, main, cex.axis,
        xlab=xlab, ylab=ylab, main=main, cex.axis = cex.axis, cex.lab = cex.lab)
   abline(c(0,1), col = "darkgrey", lty=1, lwd = lwd-0.25)
 
-return(NULL)
+  colnames(forplot) <- c("u", "R_u", "tienext")
+  return(R_u = forplot)
 
 }

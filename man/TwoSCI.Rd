@@ -8,7 +8,7 @@ TwoSCI(
   time,
   event,
   group,
-  maxt,
+  maxt = NULL,
   xlab = NULL,
   ylab = NULL,
   main = NULL,
@@ -16,11 +16,15 @@ TwoSCI(
   cex.axis = 1.5,
   cex.lab = 1.5,
   lwd = 1.5,
+  silent = FALSE,
+  lty = c(2, 3, 1),
   legend.inset = 0.02,
   legend.cex = 1.5,
   checkFG = FALSE,
   c_index = TRUE,
-  silent
+  CI = FALSE,
+  level = 0.95,
+  B
 )
 }
 \arguments{
@@ -46,20 +50,28 @@ TwoSCI(
 
 \item{lwd}{Optional graphical parameter for line width relative to the default. See \link[graphics]{par} for more details.}
 
+\item{silent}{Logical argument, FALSE indicates the user wants plots and TRUE indicates no plots only calculations (default is FALSE).}
+
+\item{lty}{Optional graphical parameter to set the type of line to use. Can be a number or a vector. See \link[graphics]{par} for more details.}
+
 \item{legend.inset}{Optional graphical parameter controling the inset of the legend.}
 
 \item{legend.cex}{Optional graphical parameter for magnification of the legend's text.}
 
-\item{checkFG}{Logical argument to indicate if user wants to compare the nonparametric curve with the curve based on the Fine-Gray model (default is FALSE).}
+\item{checkFG}{Logical argument to indicate if the user wants to compare the nonparametric curve with the curve based on the Fine-Gray model (default is FALSE).}
 
-\item{c_index}{Logical argument to indicate if user wants an estimate for the concordance for each risk (default is TRUE).}
+\item{c_index}{Logical argument to indicate if the user wants an estimate for the concordance for each risk (default is TRUE).}
 
-\item{silent}{Logical argument, FALSE indicates the user wants plots and TRUE indicates no plots only calculations (default is FALSE).}
+\item{CI}{Optional logical argument to indicate if the user wants a bootstrap confidence interval for the curves and the concordance.}
+
+\item{level}{A numerical argument to indicate the confidence level for the confidence interval. Default = 0.95.}
+
+\item{B}{The number of bootstrap samples to use for the confidence interval. Default = 1000.}
 }
 \value{
-A plot of the ROC curve (if \code{silent=FALSE}) and an ROCsurv object containing:
+A plot of the curve (if \code{silent=FALSE}) and an object containing:
 \itemize{
- \item A Cuminc class object containing survival and cummulative incidence estimates and corresponding standard errors for each group.
+ \item A Cuminc object containing survival and cummulative incidence estimates and corresponding standard errors for each group.
  \item List with the two-sample cumulative incidence curves \code{C_u} for each risk type.
 }
 }

@@ -12,7 +12,7 @@ extern void F77_NAME(cindex)(int *n,  int *nevent,
                      double *w, double *cind, double *cwind, double *cnew, double *cwnew);
 
 static const R_FortranMethodDef FortranEntries[] = {
-    {"cindex",   (DL_FUNC) &F77_NAME(cindex),    10},
+    {"cindex",   (DL_FUNC) &F77_NAME(cindex),    8},
     {NULL, NULL, 0}
 };
 
