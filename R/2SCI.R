@@ -32,6 +32,7 @@
 #'
 #' @import survival
 #' @importFrom dplyr distinct
+#' @importFrom Bolstad2 sintegral
 #'
 #' @export
 
@@ -73,7 +74,7 @@ TwoSCI <- function(time, event, group, maxt=NULL, xlab=NULL, ylab=NULL, main=NUL
                     group = as.numeric(sfit$strata)-1,
                     ci = sfit$pstate[,2:3])
   skm <- skm[order(skm[,1], skm[,2]),]
-  list_4plot = list()
+  list_4plot = list(); abcds = NULL
   for (skmi in (1:nrisktypes)){
     skmires = matrix(as.numeric(as.matrix(distinct(skm[, c(1, 2+skmi, 2)]))),
                 ncol=3)
@@ -84,7 +85,17 @@ TwoSCI <- function(time, event, group, maxt=NULL, xlab=NULL, ylab=NULL, main=NUL
       ties_ind[which(skmires[,1] %in% ties_times)]=1
     } else {ties_ind <- rep(0, nrow(skmires))}
     skmires = cbind(skmires, ties_ind)
-    list_4plot[[skmi]] = get4plotCumInc(skmires)
+    temp = get4plotCumInc(skmires)
+    temp = temp[!duplicated(temp),]
+    temp = temp[-(duplicated(temp[,1:2])&temp[,2]==0),]
+    id <- 1:nrow(temp)
+    z <- abs(temp[,2] - temp[,1])
+    defaultW <- getOption("warn")
+    options(warn = -1)
+    abcdi <- sintegral(temp[,1],z)$int
+    options(warn = defaultW)
+    list_4plot[[skmi]] = temp
+    abcds[i] = abcdi
   }
 
   #Check Fine-Gray model
@@ -151,18 +162,21 @@ TwoSCI <- function(time, event, group, maxt=NULL, xlab=NULL, ylab=NULL, main=NUL
     }
   }
 
-  names(list_4plot) <- rlabels
-
+  names(list_4plot) = names(abcds) =rlabels
 
   if (checkFG==TRUE){
     if (c_index==TRUE){
-      return(list(cuminc = sfit, c_u = list_4plot, fits = reg_res, c_u_fit = list4fitplot, c_index = c))
+      return(list(cuminc = sfit, c_u = list_4plot, area.btw.curve.and.diag = abcds,
+                  fits = reg_res, c_u_fit = list4fitplot,
+                  c_index = c))
       } else {return(list(cuminc = sfit, c_u = list_4plot, fits = reg_res, c_u_fit = list4fitplot))}
   } else {
     if (c_index==TRUE){
       if (CI==TRUE){
-        return(list(cuminc = sfit, c_u = BSTPres$C_u, c_index = BSTPres$Cindex))
-      } else {return(list(cuminc = sfit, c_u = list_4plot, c_index = c))}
-    } else {return(list(cuminc = sfit, c_u = list_4plot))}}
+        return(list(cuminc = sfit, c_u = BSTPres$C_u, area.btw.curve.and.diag = BSTPres$abcd,
+                    c_index = BSTPres$Cindex))
+      } else {return(list(cuminc = sfit, c_u = list_4plot,
+                          area.btw.curve.and.diag = abcds, c_index = c))}
+    } else {return(list(cuminc = sfit, c_u = list_4plot, area.btw.curve.and.diag = abcds))}}
 
 }

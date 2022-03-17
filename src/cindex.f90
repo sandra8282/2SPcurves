@@ -86,4 +86,3 @@ subroutine cindex(n,nevent,time,event,group, w, cind, cwind)
 
 end
 
-

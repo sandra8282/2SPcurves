@@ -17,6 +17,7 @@
 #'@import survival
 #'@importFrom dplyr distinct
 #'@importFrom RISCA ipw.survival
+#'@import glmnet
 #'@keywords internal
 #'@noRd
 #'

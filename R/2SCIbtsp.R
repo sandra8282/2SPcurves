@@ -23,6 +23,7 @@ solvenaC <- function(indi, temp2){
 #' @importFrom data.table setkeyv
 #' @importFrom data.table setorder
 #' @importFrom data.table :=
+#' @importFrom Bolstad2 sintegral
 #' @keywords internal
 #' @noRd
 
@@ -83,7 +84,7 @@ btsp2SCI <- function(res, maindat, maxt, nrisktypes, B, level, xlab, ylab, rlabe
                  ties_ind[which(skm[,1] %in% ties_times)]=1
              } else {ties_ind <- rep(0, nrow(skm))}
              skm = cbind(skm, ties_ind)
-             list_4plot = bstres = list()
+             list_4plot = bstres = list(); abcds = NULL
              for (skmi in (1:nrisktypes)){
                skmires = matrix(as.numeric(as.matrix(distinct(skm[, c(1, 2+skmi, 2)]))),
                                 ncol=3)
@@ -94,7 +95,17 @@ btsp2SCI <- function(res, maindat, maxt, nrisktypes, B, level, xlab, ylab, rlabe
                  ties_ind[which(skmires[,1] %in% ties_times)]=1
                } else {ties_ind <- rep(0, nrow(skmires))}
                skmires = cbind(skmires, ties_ind)
-               list_4plot[[skmi]] = get4plotCumInc(skmires)
+               temp = get4plotCumInc(skmires)
+               temp = temp[!duplicated(temp),]
+               temp = temp[-(duplicated(temp[,1:2])&temp[,2]==0),]
+               id <- 1:nrow(temp)
+               z <- abs(temp[,2] - temp[,1])
+               defaultW <- getOption("warn")
+               options(warn = -1)
+               abcdi <- sintegral(temp[,1],z)$int
+               options(warn = defaultW)
+               list_4plot[[skmi]] = temp
+               abcds[skmi] = abcdi
              }
              for (ploti in (1:nrisktypes)){
                  #lines(list_4plot[[ploti]][,1:2], type="s", lty = 1, lwd = 2, col = colopt[ploti])
@@ -156,7 +167,10 @@ btsp2SCI <- function(res, maindat, maxt, nrisktypes, B, level, xlab, ylab, rlabe
           #lines(C_u[[uniki]]$u, C_u[[uniki]]$Cu, lty = 2, lwd = lwd)#, col=darkcolopt[[uniki]]
 
         }
-
+        abcd = lapply(abcds, function(x) c(estimate = mean(x), se = sd(x),
+                                          lower = sort(x)[(conf.lev)*length(x)],
+                                          upper = sort(x)[(1-conf.lev)*length(x)]))
+        names(abcd) = rlabels
 
          abline(c(0,1), lty=1, lwd = lwd-0.5)
          for (refi in 1:nrisktypes){
@@ -187,12 +201,12 @@ btsp2SCI <- function(res, maindat, maxt, nrisktypes, B, level, xlab, ylab, rlabe
 
          if (bst_c==TRUE){
              bstCindex <- bstCindex[,-2]
-             finalres <- list(C_u = C_u,
+             finalres <- list(C_u = C_u, abcd = abcd,
                          Cindex = c(cindex = cindex,
                                     se_cindex = sd(bstCindex),
                                     CIlow = sort(bstCindex)[(conf.lev)*length(bstCindex)],
                                     CIup = sort(bstCindex)[(1-conf.lev)*length(bstCindex)]))
-         } else {finalres <- C_u}
+         } else {finalres <- list(C_u, abcd = abcd)}
 
 return(finalres)
 }
