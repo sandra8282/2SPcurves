@@ -102,7 +102,7 @@ TwoSCI <- function(time, event, group, maxt=NULL, xlab=NULL, ylab=NULL, main=NUL
     options(warn = defaultW)
   }
 
-
+  abcds = c(abcds, sum(abcds))
   #Check Fine-Gray model
   if (checkFG==TRUE){
     reg_res = predictions = list(); rname = coeffs= c();
@@ -157,13 +157,13 @@ TwoSCI <- function(time, event, group, maxt=NULL, xlab=NULL, ylab=NULL, main=NUL
     if (CI==TRUE){
       BSTPres <- btsp2SCI(res = list_4plot, maindat = mymat, maxt = max(mymat[,2]),
                       nrisktypes, B=B, level, xlab, ylab, rlabels, main,
-                      cex.axis = cex.axis, cex.lab = cex.lab, lty = lty,
+                      cex.axis = cex.axis, cex.lab = cex.lab, lty = 2,
                       lwd = lwd, bst_c = FALSE, cindex = NULL)
     }
   }
 
-  names(list_4plot) = names(abcds) = names(tests) = rlabels
-
+  names(list_4plot) =  names(tests) = rlabels
+  names(abcds) = c(rlabels, "overall")
   if (checkFG==TRUE){
     if (c_index==TRUE){
       results <- list(cuminc = sfit, c_u = list_4plot,

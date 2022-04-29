@@ -173,13 +173,15 @@ btsp2SCI <- function(res, maindat, maxt, nrisktypes, B, level, xlab, ylab, rlabe
           #lines(C_u[[uniki]]$u, C_u[[uniki]]$Cu, lty = 2, lwd = lwd)#, col=darkcolopt[[uniki]]
 
         }
+
+        bstABCD = cbind(bstABCD, rowSums(bstABCD))
         abcd = t(apply(bstABCD, 2, function(x) c(estimate = mean(x), se = sd(x),
                                                  sort(x)[(conf.lev)*length(x)],
                                                  sort(x)[(1-conf.lev)*length(x)])))
         # abcd = cbind(abcd,
         #              lower = abcd[,1] - qnorm(1-conf.lev)*abcd[,2],
         #              upper = abcd[,1] + qnorm(1-conf.lev)*abcd[,2])
-        rownames(abcd) = rlabels
+        rownames(abcd) = c(rlabels, "overall")
 
          for (refi in 1:nrisktypes){
              uniki=refi
@@ -196,21 +198,6 @@ btsp2SCI <- function(res, maindat, maxt, nrisktypes, B, level, xlab, ylab, rlabe
                  refindup = which(diff(C_u[[uniki]]$CIup_Cu)<0)
              }}
 
-        plot(NULL, type="n", las=1,
-             xlim=c(0,1), ylim = c(0, 1), #to make tight axis: xaxs="i", yaxs="i"
-             xlab=xlab, ylab=ylab, main=main, cex.axis = cex.axis, cex.lab = cex.lab)
-        abline(c(0,1), lty=1, lwd = lwd-0.5)
-         lines(C_u[[uniki]]$u, C_u[[uniki]]$CIlow_Cu, lty = 1, lwd = lwdopt[uniki], col=darkcolopt[uniki])
-         points(C_u[[uniki]]$u, C_u[[uniki]]$CIlow_Cu, pch = ptypes[uniki], cex=0.7, col=darkcolopt[uniki])
-         lines(C_u[[uniki]]$u, C_u[[uniki]]$CIup_Cu, lty = 1, lwd = lwdopt[uniki], col=darkcolopt[uniki])
-         points(C_u[[uniki]]$u, C_u[[uniki]]$CIup_Cu, pch = ptypes[uniki], cex=0.7, col=darkcolopt[uniki])
-         lines(ref[[refi]][,1],ref[[refi]][,2], lty = 1, lwd = lwdopt[uniki], col=darkcolopt[refi])
-         points(ref[[refi]][,1],ref[[refi]][,2], pch = ptypes[refi], cex=0.7, col=darkcolopt[refi])
-
-         legend("topleft",
-                legend = rlabels, pch = ptypes, lty = 1, cex=1.5, lwd = lwdopt,
-                col = darkcolopt, bty="n", x.intersp=0.9, y.intersp = 0.85,)
-
          if (bst_c==TRUE){
              bstCindex <- bstCindex[,-2]
              finalres <- list(C_u = C_u, abcd=abcd,
@@ -219,6 +206,10 @@ btsp2SCI <- function(res, maindat, maxt, nrisktypes, B, level, xlab, ylab, rlabe
                                     CIlow = sort(bstCindex)[(conf.lev)*length(bstCindex)],
                                     CIup = sort(bstCindex)[(1-conf.lev)*length(bstCindex)]))
          } else {finalres <- list(C_u, abcd=abcd)} #, abcd = abcd
+
+        plot2SCI(C_u, xlab=xlab, ylab=ylab, main=main, rlabels=rlabels,
+                 cex.axis = cex.axis, cex.lab = 1.5, lwd = 1.5, silent=FALSE, lty = lty,
+                 legend.inset=legend.inset, legend.cex=legend.cex, btspind=TRUE)
 
 return(finalres)
 }
