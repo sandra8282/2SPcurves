@@ -32,25 +32,23 @@
 #'
 #' @import survival
 #' @importFrom dplyr distinct
+#' @importFrom zoo rollmean
+#' @importFrom stats ks.test
 #' @importFrom Bolstad2 sintegral
 #'
 #' @export
 
-TwoSCI <- function(time, event, group, maxt=NULL, xlab=NULL, ylab=NULL, main=NULL, rlabels,
-                      cex.axis = 1.5, cex.lab = 1.5, lwd = 1.5, silent=FALSE, lty = c(2, 3, 1),
+TwoSCI <- function(time, event, group, maxt=NULL, xlab=NULL, ylab=NULL, main=NULL,
+                   rlabels, cex.axis = 1.5, cex.lab = 1.5, lwd = 1.5, silent=FALSE, lty = c(2, 3, 1),
                       legend.inset=0.02, legend.cex=1.5, checkFG=FALSE, c_index = TRUE, CI=FALSE,
                       level=0.95, B){
 
   if (missing(B)){B=length(time)}
-
   if (checkFG==TRUE & CI==TRUE) {stop("Cannot support both checkFG=TRUE and CI=TRUE")}
 
   id <- 1:length(time)
   mymat <- data.frame(id, time, event, group)
 
-  # if(0 %in% mymat$event){
-  #
-  # }
   nrisktypes = length(unique(event)) - 1
   mymatfg <- data.frame(id, time, group)
 
@@ -74,7 +72,7 @@ TwoSCI <- function(time, event, group, maxt=NULL, xlab=NULL, ylab=NULL, main=NUL
                     group = as.numeric(sfit$strata)-1,
                     ci = sfit$pstate[,2:3])
   skm <- skm[order(skm[,1], skm[,2]),]
-  list_4plot = list(); abcds = NULL
+  list_4plot  = list(); abcds = tests = NULL
   for (skmi in (1:nrisktypes)){
     skmires = matrix(as.numeric(as.matrix(distinct(skm[, c(1, 2+skmi, 2)]))),
                 ncol=3)
@@ -87,16 +85,23 @@ TwoSCI <- function(time, event, group, maxt=NULL, xlab=NULL, ylab=NULL, main=NUL
     skmires = cbind(skmires, ties_ind)
     temp = get4plotCumInc(skmires)
     temp = temp[!duplicated(temp),]
-    temp = temp[-(duplicated(temp[,1:2])&temp[,2]==0),]
+    outs <- which(duplicated(temp[,1:2])&temp[,2]==0)
+    if(length(outs)>=1) {temp = temp[-(duplicated(temp[,1:2])&temp[,2]==0),]}
     id <- 1:nrow(temp)
-    z <- abs(temp[,2] - temp[,1])
-    defaultW <- getOption("warn")
-    options(warn = -1)
-    abcdi <- sintegral(temp[,1],z)$int
-    options(warn = defaultW)
+    if (skmi==1){
+      z <- (temp[,2] - temp[,1])
+    } else {z <- (temp[,1]-temp[,2])}
+    id <- order(temp[,1])
+      defaultW <- getOption("warn")
+      options(warn = -1)
+      abcdi <- sintegral(temp[,1],z)$int
     list_4plot[[skmi]] = temp
-    abcds[i] = abcdi
+    abcds[skmi] = abcdi
+    kstest = ks.test(x=temp[,2], y=temp[,1])
+    tests[skmi] = c(pval = round(kstest$p.value, 6))
+    options(warn = defaultW)
   }
+
 
   #Check Fine-Gray model
   if (checkFG==TRUE){
@@ -123,22 +128,17 @@ TwoSCI <- function(time, event, group, maxt=NULL, xlab=NULL, ylab=NULL, main=NUL
 
 
   if (silent == FALSE & CI == FALSE) {
-    ltyploti <- c(5, 3, 6, 1)
-    #Plot
-    plot(NULL, type="n", las=1,
-         xlim=c(0,1), ylim = c(0, 1), #to make tight axis: xaxs="i", yaxs="i"
-         xlab=xlab, ylab=ylab, main=main, cex.axis = cex.axis, cex.lab = cex.lab)
-    for (ploti in (1:nrisktypes)){
-      lines(list_4plot[[ploti]][,1:2], lty = ltyploti[ploti], lwd = 2)
-      if (checkFG==TRUE){lines(list4fitplot[[ploti]], lty = 1, lwd=2, type = "l")}
+    if (checkFG==TRUE){
+      plot2SCI(list_4plot, xlab=xlab, ylab=ylab, main=main, rlabels=rlabels,
+             cex.axis = cex.axis, cex.lab = 1.5, lwd = 1.5, silent=FALSE, lty = lty,
+             legend.inset=legend.inset, legend.cex=legend.cex, list4fitplot)
+
+    } else {
+      plot2SCI(list_4plot, xlab=xlab, ylab=ylab, main=main, rlabels=rlabels,
+                cex.axis = cex.axis, cex.lab = 1.5, lwd = 1.5, silent=FALSE, lty = lty,
+                legend.inset=legend.inset, legend.cex=legend.cex)
     }
 
-    abline(c(0,1), col = "grey", lwd = lwd - 0.25)
-    if (missing(rlabels)) {rlabels = as.character(1:nrisktypes)}
-    legend("topleft", rlabels, lty = ltyploti[1:length(rlabels)],
-           cex = legend.cex, inset= legend.inset,
-           bg = "white", bty='n', seg.len = 1,
-           x.intersp=0.9, y.intersp = 0.85, lwd = lwd - 0.25)
 
   }
 
@@ -158,25 +158,37 @@ TwoSCI <- function(time, event, group, maxt=NULL, xlab=NULL, ylab=NULL, main=NUL
       BSTPres <- btsp2SCI(res = list_4plot, maindat = mymat, maxt = max(mymat[,2]),
                       nrisktypes, B=B, level, xlab, ylab, rlabels, main,
                       cex.axis = cex.axis, cex.lab = cex.lab, lty = lty,
-                      lwd = lwd, bst_c = FALSE, cindex = c)
+                      lwd = lwd, bst_c = FALSE, cindex = NULL)
     }
   }
 
-  names(list_4plot) = names(abcds) =rlabels
+  names(list_4plot) = names(abcds) = names(tests) = rlabels
 
   if (checkFG==TRUE){
     if (c_index==TRUE){
-      return(list(cuminc = sfit, c_u = list_4plot, area.btw.curve.and.diag = abcds,
-                  fits = reg_res, c_u_fit = list4fitplot,
-                  c_index = c))
-      } else {return(list(cuminc = sfit, c_u = list_4plot, fits = reg_res, c_u_fit = list4fitplot))}
+      results <- list(cuminc = sfit, c_u = list_4plot,
+                      area.btw.curve.and.diag = abcds,
+                      fits = reg_res, c_u_fit = list4fitplot,
+                      c_index = c)
+    } else {
+      results <- list(cuminc = sfit, c_u = list_4plot,
+                      area.btw.curve.and.diag = abcds,
+                      fits = reg_res, c_u_fit = list4fitplot)}
   } else {
     if (c_index==TRUE){
       if (CI==TRUE){
-        return(list(cuminc = sfit, c_u = BSTPres$C_u, area.btw.curve.and.diag = BSTPres$abcd,
-                    c_index = BSTPres$Cindex))
-      } else {return(list(cuminc = sfit, c_u = list_4plot,
-                          area.btw.curve.and.diag = abcds, c_index = c))}
-    } else {return(list(cuminc = sfit, c_u = list_4plot, area.btw.curve.and.diag = abcds))}}
+        results <- list(cuminc = sfit, c_u = BSTPres$C_u,
+                        area.btw.curve.and.diag = abcds,
+                        ks.tests = tests, c_index = BSTPres$Cindex)
+                        #area.btw.curve.and.diag = BSTPres$abcd,
+      } else {
+        results <- list(cuminc = sfit, c_u = list_4plot,
+                        area.btw.curve.and.diag = abcds,
+                        ks.tests = tests, c_index = c)}
+    } else {
+      results <- list(cuminc = sfit, c_u = list_4plot,
+                      area.btw.curve.and.diag = abcds, ks.tests = tests)}
+    }
 
+  return(results)
 }

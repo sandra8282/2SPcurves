@@ -21,7 +21,6 @@
 comprsk_c <- function(mymat, rlabels, maxt){
   cens <- ifelse(mymat$event==0, 1, 0)
   GKM <- summary(survfit(Surv(mymat$time, cens) ~ 1, type='kaplan-meier'))
-  mymat <- mymat[mymat$time<=maxt,]
   a=data.table(mymat); a[,merge:=a$time]
   b=data.table(time = GKM$time, w = GKM$surv); b[,merge:=b$time]
   setkeyv(a,c('merge')); setkeyv(b,c('merge'))
@@ -34,7 +33,7 @@ comprsk_c <- function(mymat, rlabels, maxt){
   #`%!in%` <- Negate(`%in%`)
 
 
-  r2f.cindex <- function(mymat){
+  r2f.cindex <- function(mymat, maxt){
     out1 <- .Fortran("cindex",
                      n=as.integer(nrow(mymat)),
                      nevent=as.integer(max(mymat$event)),
@@ -44,6 +43,7 @@ comprsk_c <- function(mymat, rlabels, maxt){
                      w=as.double(mymat$w),
                      cind=as.double(0),
                      cwind=as.double(0),
+                     tau=as.double(maxt),
                      NAOK = FALSE, PACKAGE = "TwoSPC")
 
     c <- out1$cind
@@ -90,7 +90,7 @@ comprsk_c <- function(mymat, rlabels, maxt){
   # }
   # names(c2) <- rlabels
 
-  cres<- r2f.cindex(mymat)
+  cres<- r2f.cindex(mymat, maxt)
 
   return(cres)
 }

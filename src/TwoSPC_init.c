@@ -9,10 +9,10 @@
 /* .Fortran calls */
 extern void F77_NAME(cindex)(int *n,  int *nevent,
                      double *time, int *event, int *group,
-                     double *w, double *cind, double *cwind, double *cnew, double *cwnew);
+                     double *w, double *cind, double *cwind, double *cnew, double *cwnew, double *tau);
 
 static const R_FortranMethodDef FortranEntries[] = {
-    {"cindex",   (DL_FUNC) &F77_NAME(cindex),    8},
+    {"cindex",   (DL_FUNC) &F77_NAME(cindex),    9},
     {NULL, NULL, 0}
 };
 

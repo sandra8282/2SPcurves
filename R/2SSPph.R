@@ -1,3 +1,4 @@
+
 #' Check Proportional Hazards Based Curve
 #'
 #' @param time passed from ROCsurv.

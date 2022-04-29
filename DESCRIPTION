@@ -28,7 +28,7 @@ Imports:
     prodlim,
     riskRegression,
     Rcpp, 
-    Bolstad2, 
+    zoo, Bolstad2,
     glmnet
 Language: en-US
 RoxygenNote: 7.1.2

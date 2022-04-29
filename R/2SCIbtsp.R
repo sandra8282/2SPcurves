@@ -23,6 +23,7 @@ solvenaC <- function(indi, temp2){
 #' @importFrom data.table setkeyv
 #' @importFrom data.table setorder
 #' @importFrom data.table :=
+#' @importFrom zoo rollmean
 #' @importFrom Bolstad2 sintegral
 #' @keywords internal
 #' @noRd
@@ -35,11 +36,6 @@ btsp2SCI <- function(res, maindat, maxt, nrisktypes, B, level, xlab, ylab, rlabe
     lwdopt = c(lwd, 1)
 
     enames = c("censored", rlabels)
-
-    plot(NULL, type="n", las=1,
-        xlim=c(0,1), ylim = c(0, 1), #to make tight axis: xaxs="i", yaxs="i"
-        xlab=xlab, ylab=ylab, main=main, cex.axis = cex.axis, cex.lab = cex.lab)
-
     conf.lev = (1-level)/2
 
      maindat = data.table(maindat)
@@ -61,6 +57,7 @@ btsp2SCI <- function(res, maindat, maxt, nrisktypes, B, level, xlab, ylab, rlabe
 
      toreturn = list()
      bstCindex = matrix(rep(NA, B*2), ncol=2)
+     bstABCD = matrix(rep(NA, B*2), ncol=2)
      for (i in 1:nrisktypes){
          bst2SS = vector(mode = "list", length = B);
          for (b in 1:B) {
@@ -84,7 +81,7 @@ btsp2SCI <- function(res, maindat, maxt, nrisktypes, B, level, xlab, ylab, rlabe
                  ties_ind[which(skm[,1] %in% ties_times)]=1
              } else {ties_ind <- rep(0, nrow(skm))}
              skm = cbind(skm, ties_ind)
-             list_4plot = bstres = list(); abcds = NULL
+             list_4plot = bstres = list(); abcds = NULL;
              for (skmi in (1:nrisktypes)){
                skmires = matrix(as.numeric(as.matrix(distinct(skm[, c(1, 2+skmi, 2)]))),
                                 ncol=3)
@@ -97,16 +94,23 @@ btsp2SCI <- function(res, maindat, maxt, nrisktypes, B, level, xlab, ylab, rlabe
                skmires = cbind(skmires, ties_ind)
                temp = get4plotCumInc(skmires)
                temp = temp[!duplicated(temp),]
-               temp = temp[-(duplicated(temp[,1:2])&temp[,2]==0),]
+               outs <- which(duplicated(temp[,1:2])&temp[,2]==0)
+               if(length(outs)>=1) {temp = temp[-(duplicated(temp[,1:2])&temp[,2]==0),]}
                id <- 1:nrow(temp)
-               z <- abs(temp[,2] - temp[,1])
-               defaultW <- getOption("warn")
-               options(warn = -1)
-               abcdi <- sintegral(temp[,1],z)$int
-               options(warn = defaultW)
+               if (skmi==1){
+                   z <- (temp[,2] - temp[,1])
+               } else {z <- (temp[,1]-temp[,2])}
+               id <- order(temp[,1])
+               #abcdi <- sum(diff(temp[id, 1])*rollmean(z[id],2))
+                   defaultW <- getOption("warn")
+                   options(warn = -1)
+                   abcdi <- sintegral(temp[,1],z)$int
+                   options(warn = defaultW)
+               abcds = c(abcds, abcdi)
                list_4plot[[skmi]] = temp
-               abcds[skmi] = abcdi
+
              }
+             bstABCD[b,] = abcds
              for (ploti in (1:nrisktypes)){
                  #lines(list_4plot[[ploti]][,1:2], type="s", lty = 1, lwd = 2, col = colopt[ploti])
                  # lines(ref[[ploti]][,1:2])
@@ -154,7 +158,9 @@ btsp2SCI <- function(res, maindat, maxt, nrisktypes, B, level, xlab, ylab, rlabe
                           x[[uniki]]$y[which(x[[uniki]]$ref_u==xunik[[uniki]][xucount])]))
               se[[uniki]][xucount] <- sd(temp2)
               CIlow[[uniki]][xucount] <- sort(temp2)[(conf.lev)*length(temp2)]
+                  #temp2 - qnorm(1-conf.lev)*se[[uniki]][xucount]
               CIup[[uniki]][xucount] <- sort(temp2)[(1-conf.lev)*length(temp2)]
+                  #temp2 + qnorm(1-conf.lev)*se[[uniki]][xucount]
           }
           boot[[uniki]] <- data.frame(u=xunik[[uniki]], se_Cu = se[[uniki]],
                                       CIlow_Cu = CIlow[[uniki]] , CIup_Cu = CIup[[uniki]] )
@@ -167,12 +173,14 @@ btsp2SCI <- function(res, maindat, maxt, nrisktypes, B, level, xlab, ylab, rlabe
           #lines(C_u[[uniki]]$u, C_u[[uniki]]$Cu, lty = 2, lwd = lwd)#, col=darkcolopt[[uniki]]
 
         }
-        abcd = lapply(abcds, function(x) c(estimate = mean(x), se = sd(x),
-                                          lower = sort(x)[(conf.lev)*length(x)],
-                                          upper = sort(x)[(1-conf.lev)*length(x)]))
-        names(abcd) = rlabels
+        abcd = t(apply(bstABCD, 2, function(x) c(estimate = mean(x), se = sd(x),
+                                                 sort(x)[(conf.lev)*length(x)],
+                                                 sort(x)[(1-conf.lev)*length(x)])))
+        # abcd = cbind(abcd,
+        #              lower = abcd[,1] - qnorm(1-conf.lev)*abcd[,2],
+        #              upper = abcd[,1] + qnorm(1-conf.lev)*abcd[,2])
+        rownames(abcd) = rlabels
 
-         abline(c(0,1), lty=1, lwd = lwd-0.5)
          for (refi in 1:nrisktypes){
              uniki=refi
              refindlow = which(diff(C_u[[uniki]]$CIlow_Cu)<0)
@@ -186,27 +194,31 @@ btsp2SCI <- function(res, maindat, maxt, nrisktypes, B, level, xlab, ylab, rlabe
              while (length(refindup)>=1){
                  C_u[[uniki]]$CIup_Cu[refindup] = C_u[[uniki]]$CIup_Cu[refindup+1]
                  refindup = which(diff(C_u[[uniki]]$CIup_Cu)<0)
-             }
+             }}
 
-             lines(C_u[[uniki]]$u, C_u[[uniki]]$CIlow_Cu, lty = 1, lwd = lwdopt[uniki], col=darkcolopt[uniki])
-             points(C_u[[uniki]]$u, C_u[[uniki]]$CIlow_Cu, pch = ptypes[uniki], cex=0.7, col=darkcolopt[uniki])
-             lines(C_u[[uniki]]$u, C_u[[uniki]]$CIup_Cu, lty = 1, lwd = lwdopt[uniki], col=darkcolopt[uniki])
-             points(C_u[[uniki]]$u, C_u[[uniki]]$CIup_Cu, pch = ptypes[uniki], cex=0.7, col=darkcolopt[uniki])
-             lines(ref[[refi]][,1],ref[[refi]][,2], lty = 1, lwd = lwdopt[uniki], col=darkcolopt[refi])
-             points(ref[[refi]][,1],ref[[refi]][,2], pch = ptypes[refi], cex=0.7, col=darkcolopt[refi])
-         }
+        plot(NULL, type="n", las=1,
+             xlim=c(0,1), ylim = c(0, 1), #to make tight axis: xaxs="i", yaxs="i"
+             xlab=xlab, ylab=ylab, main=main, cex.axis = cex.axis, cex.lab = cex.lab)
+        abline(c(0,1), lty=1, lwd = lwd-0.5)
+         lines(C_u[[uniki]]$u, C_u[[uniki]]$CIlow_Cu, lty = 1, lwd = lwdopt[uniki], col=darkcolopt[uniki])
+         points(C_u[[uniki]]$u, C_u[[uniki]]$CIlow_Cu, pch = ptypes[uniki], cex=0.7, col=darkcolopt[uniki])
+         lines(C_u[[uniki]]$u, C_u[[uniki]]$CIup_Cu, lty = 1, lwd = lwdopt[uniki], col=darkcolopt[uniki])
+         points(C_u[[uniki]]$u, C_u[[uniki]]$CIup_Cu, pch = ptypes[uniki], cex=0.7, col=darkcolopt[uniki])
+         lines(ref[[refi]][,1],ref[[refi]][,2], lty = 1, lwd = lwdopt[uniki], col=darkcolopt[refi])
+         points(ref[[refi]][,1],ref[[refi]][,2], pch = ptypes[refi], cex=0.7, col=darkcolopt[refi])
+
          legend("topleft",
                 legend = rlabels, pch = ptypes, lty = 1, cex=1.5, lwd = lwdopt,
                 col = darkcolopt, bty="n", x.intersp=0.9, y.intersp = 0.85,)
 
          if (bst_c==TRUE){
              bstCindex <- bstCindex[,-2]
-             finalres <- list(C_u = C_u, abcd = abcd,
+             finalres <- list(C_u = C_u, abcd=abcd,
                          Cindex = c(cindex = cindex,
                                     se_cindex = sd(bstCindex),
                                     CIlow = sort(bstCindex)[(conf.lev)*length(bstCindex)],
                                     CIup = sort(bstCindex)[(1-conf.lev)*length(bstCindex)]))
-         } else {finalres <- list(C_u, abcd = abcd)}
+         } else {finalres <- list(C_u, abcd=abcd)} #, abcd = abcd
 
 return(finalres)
 }

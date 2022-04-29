@@ -11,9 +11,10 @@
 !  Author: Sandra Castro-Pearson
 !  Division of Biostatistics, School of Public Health
 !  University of Minnesota
-!  Latest update: Oct 12, 2021
+!  Latest update: March 24, 2022
 !------------------------------------------------------------
 !     integer n, nevent, e, ew, i, j
+!      double precision tau
 !      double precision event(n)
 !      double precision group(n)
 !      double precision time(n)
@@ -23,66 +24,55 @@
 !      double precision numcount
 !      double precision dnomcount
 
-subroutine cindex(n,nevent,time,event,group, w, cind, cwind)
+subroutine cindex(n,nevent,time,event,group, w, cind, cwind, tau)
 
    implicit none
    INTEGER :: n, nevent, i, j, e, ew
    INTEGER, DIMENSION(n) :: event, group
    DOUBLE PRECISION, DIMENSION(n) :: time, w
-   DOUBLE PRECISION :: cind, cwind, cnew, cwnew, dnomcount, numcount
+   DOUBLE PRECISION :: tau, cind, cwind, cnew, cwnew, dnomcount, numcount
 
    e=1
+
 !  #get cindex
-         dnomcount=0.
-         numcount=0.
-         do i=1,n
-            do j=1,n
-               if (i.eq.j) then
-                  dnomcount=dnomcount
-                  numcount=numcount
-               else
-                 if (event(i).eq.e) then
-                 if (event(j).eq.e) then
-                     if (group(i).eq.1) then
-                     if (group(j).eq.0) then
-                        dnomcount = dnomcount + 1
-                        if (time(j).le.time(i)) then
-                           numcount = numcount + 1
-                     endif
-                     endif
-                     endif
-                     endif
-                     endif
-               endif
-            end do
-        end do
-      cind = numcount/dnomcount
+   dnomcount=0.
+   numcount=0.
+      do i=1,n
+         do j=1,n
+            if (i.eq.j) then
+              dnomcount=dnomcount
+              numcount=numcount
+            else
+              if (group(i).eq.1.and.time(i).le.tau.and.group(j).eq.0.and.time(j).le.tau) then
+                  dnomcount = dnomcount + 1
+                  if (time(j).le.time(i).and.event(i).eq.e.and.event(j).eq.e) then
+                     numcount = numcount + 1
+                  endif
+              endif
+            endif
+         end do
+      end do
+   cind = numcount/dnomcount
 
 !  #get weighted cindex
-         dnomcount=0.
-         numcount=0.
-         do i=1,n
-            do j=1,n
-               if (i.eq.j) then
-                  dnomcount=dnomcount
-                  numcount=numcount
-               else
-                 if (event(i).eq.e) then
-                 if (event(j).eq.e) then
-                     if (group(i).eq.1) then
-                     if (group(j).eq.0) then
-                        dnomcount = dnomcount + (1/(w(i)*w(j)))
-                        if (time(j).le.time(i)) then
-                           numcount = numcount + (1/(w(i)*w(j)))
-                     endif
-                     endif
-                     endif
-                     endif
-                     endif
-               endif
-            end do
-        end do
-      cwind = numcount/dnomcount
+   dnomcount=0.
+   numcount=0.
+      do i=1,n
+         do j=1,n
+            if (i.eq.j) then
+              dnomcount=dnomcount
+              numcount=numcount
+            else
+              if (group(i).eq.1.and.time(i).le.tau.and.group(j).eq.0.and.time(j).le.tau) then
+                  dnomcount = dnomcount + (1/(w(i)*w(j)))
+                  if (time(j).le.time(i).and.event(i).eq.e.and.event(j).eq.e) then
+                     numcount = numcount + (1/(w(i)*w(j)))
+                  endif
+              endif
+            endif
+         end do
+      end do
+   cind = numcount/dnomcount
 
 end
 
