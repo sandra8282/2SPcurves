@@ -28,9 +28,9 @@ solvenaC <- function(indi, temp2){
 #' @keywords internal
 #' @noRd
 
-btsp2SCI <- function(res, maindat, maxt, nrisktypes, B, level, xlab, ylab, rlabels, main,
+btsp2SCI <- function(res, maindat, ref_skm, nrisktypes, B, level, xlab, ylab, rlabels, main,
                      cex.axis = cex.axis, cex.lab = cex.lab, lty = 1, lwd = lwd,
-                     bst_c=NULL, cindex=NULL) {
+                     legend.inset=0.01, legend.cex=1.25, silent = TRUE, cens=TRUE) {
     ptypes=c(NA, 1)
     darkcolopt =c("black", "grey29")
     lwdopt = c(lwd, 1)
@@ -45,12 +45,13 @@ btsp2SCI <- function(res, maindat, maxt, nrisktypes, B, level, xlab, ylab, rlabe
      n1 <- nrow(g1dat); g1ids = 1:n1; g1dat$id <- g1ids;
      rownames(g0dat) = g0ids; rownames(g1dat) = g1ids;
 
-     ref <- res
-     changecolnam <- function(list_element){
-         colnames(list_element) <- c("ref_u", "ref_Cu", "ref_tienext")
-         return(list_element)}
-     ref <- lapply(ref, function(x) changecolnam(x))
+     # ref <- res
+     # changecolnam <- function(list_element){
+     #     colnames(list_element) <- c("ref_u", "ref_Cu", "ref_tienext")
+     #     return(list_element)}
+     # ref <- lapply(ref, function(x) changecolnam(x))
 
+     ref_times = data.frame(time = reft)
      # for (refi in 1:nrisktypes){
      #     lines(ref[[refi]][,1],ref[[refi]][,2], lty = 2, lwd = lwd) #darkcolopt[[refi]]
      # }
@@ -58,6 +59,9 @@ btsp2SCI <- function(res, maindat, maxt, nrisktypes, B, level, xlab, ylab, rlabe
      toreturn = list()
      bstCindex = matrix(rep(NA, B*2), ncol=2)
      bstABCD = matrix(rep(NA, B*2), ncol=2)
+     bstedat = matrix(rep(NA, B*4), ncol=4)
+     colnames(bstedat) = c("startX", "startY", "endX", "endY")
+
      for (i in 1:nrisktypes){
          bst2SS = vector(mode = "list", length = B);
          for (b in 1:B) {
@@ -65,15 +69,27 @@ btsp2SCI <- function(res, maindat, maxt, nrisktypes, B, level, xlab, ylab, rlabe
              g0ids_b <- sample(g0ids, n0, replace = TRUE)
              g1ids_b <- sample(g1ids, n1, replace = TRUE)
              btspdat <- data.table(rbind(g0dat[g0ids_b, ], g1dat[g1ids_b, ]))
-             #####
-             if (bst_c==TRUE){bstCindex[b,1] <- comprsk_c(btspdat, rlabels, maxt)[1]}
-             #####
-             btspdat$eventf <- factor(btspdat$event, 0:nrisktypes, labels = enames)
+
+             ##### get cuminc
+             if (cens==TRUE){
+               btspdat$eventf <- factor(btspdat$event, 0:nrisktypes, labels = enames)
+               #get C(u)
+             } else {
+               #no censoring
+                 synthdat <- data.frame(id = nrow(maindat)+1:2,
+                                        time = rep(max(btspdat$time)*10,2),
+                                        event = c(0,0),
+                                        group = c(0,1))
+                 btspdat <- rbind(btspdat, synthdat)
+                 btspdat$eventf <- factor(btspdat$event, 0:nrisktypes, labels = enames)
+             }
+
              fit <-  survfit(Surv(btspdat$time, btspdat$eventf) ~ btspdat$group)
              sfit <- summary(fit)
-             #get C(u)
              skm <- data.frame(time = sfit$time, group = as.numeric(sfit$strata)-1, ci = sfit$pstate[,2:3])
-             skm <- skm[order(skm[,1], skm[,2]),]
+             bstedat[b,] = c(max(skm$ci.1[skm$group==0]), max(skm$ci.1[skm$group==1]),
+                             max(skm$ci.2[skm$group==0]), max(skm$ci.2[skm$group==1]))
+
              ties_check <- unique(table(skm[,1]))
              if (length(ties_check) > 1) {
                  ties_times = skm[duplicated(skm[,1]),1]
@@ -97,23 +113,30 @@ btsp2SCI <- function(res, maindat, maxt, nrisktypes, B, level, xlab, ylab, rlabe
                outs <- which(duplicated(temp[,1:2])&temp[,2]==0)
                if(length(outs)>=1) {temp = temp[-(duplicated(temp[,1:2])&temp[,2]==0),]}
                id <- 1:nrow(temp)
+
                if (skmi==1){
-                   z <- (temp[,2] - temp[,1])
-               } else {z <- (temp[,1]-temp[,2])}
-               id <- order(temp[,1])
-               #abcdi <- sum(diff(temp[id, 1])*rollmean(z[id],2))
                    defaultW <- getOption("warn")
                    options(warn = -1)
-                   abcdi <- sintegral(temp[,1],z)$int
+                   abcdi <- sintegral(temp[,1],temp[,2])$int - sintegral(temp[,1],temp[,1])$int
+                   list_4plot[[skmi]] = temp
+                   abcds[skmi] = abcdi
+                   #kstest = ks.test(x=temp[,2], y=temp[,1])
+                   #tests[skmi] = c(pval = round(kstest$p.value, 6))
                    options(warn = defaultW)
-               abcds = c(abcds, abcdi)
-               list_4plot[[skmi]] = temp
+               } else {
+                   defaultW <- getOption("warn")
+                   options(warn = -1)
+                   abcdi <- sintegral(temp[,1],temp[,1])$int - sintegral(temp[,1],temp[,2])$int
+                   list_4plot[[skmi]] = temp
+                   abcds[skmi] = abcdi
+                   #kstest = ks.test(x=temp[,2], y=temp[,1])
+                   #tests[skmi] = c(pval = round(kstest$p.value, 6))
+                   options(warn = defaultW)
+               }
 
              }
              bstABCD[b,] = abcds
              for (ploti in (1:nrisktypes)){
-                 #lines(list_4plot[[ploti]][,1:2], type="s", lty = 1, lwd = 2, col = colopt[ploti])
-                 # lines(ref[[ploti]][,1:2])
                  new <- data.frame(ref[[ploti]])
                  outs <- unique(c(which(new$ref_u==0&new$ref_Cu==0), which(duplicated(new))))
                  new <- new[-outs,]
@@ -121,11 +144,11 @@ btsp2SCI <- function(res, maindat, maxt, nrisktypes, B, level, xlab, ylab, rlabe
                  outs <- unique(c(which(new2$x==0&new2$y==0), which(duplicated(new2))))
                  new2 <- new2[-outs,]
                  temp <- merge(new, new2, by.x = "ref_u", by.y = "x", all = TRUE)
-                 temp <- temp[order(temp$ref_u, decreasing = FALSE), ]
+                 temp <- temp[order(temp$ref_u, temp$ref_Cu, decreasing = FALSE), ]
+                 fix <- which(temp$y<temp$ref_Cu&(temp$y==0))
+                 temp$y[fix] = temp$y[fix-1]
                  if (is.na(temp$y[1])){temp$y[1]=0; temp$tienext[1]=0}
-                 # maxy = which(temp$y==max(temp$y, na.rm = TRUE))
-                 # outs <- which(temp$ref_u>temp$ref_u[maxy])
-                 # temp = temp[-outs,]
+
                  inds1 <- which(is.na(temp$y)); l <- length(inds1)
                  if (l>0){
                      inds1 <- split(inds1, cumsum(c(1, diff(inds1) != 1)))
@@ -142,7 +165,9 @@ btsp2SCI <- function(res, maindat, maxt, nrisktypes, B, level, xlab, ylab, rlabe
                      #print(l)
                  }
                  temp <- data.frame(rbind(rep(0,5), temp))
-                 temp <- temp[-which(is.na(temp$ref_Cu)),]
+                 if (length(which(is.na(temp$ref_Cu)))>0){
+                   temp <- temp[-which(is.na(temp$ref_Cu)),]
+                 }
                  bstres[[ploti]]=temp
              }
              bst2SS[[b]] <- bstres
@@ -158,30 +183,29 @@ btsp2SCI <- function(res, maindat, maxt, nrisktypes, B, level, xlab, ylab, rlabe
                           x[[uniki]]$y[which(x[[uniki]]$ref_u==xunik[[uniki]][xucount])]))
               se[[uniki]][xucount] <- sd(temp2)
               CIlow[[uniki]][xucount] <- sort(temp2)[(conf.lev)*length(temp2)]
-                  #temp2 - qnorm(1-conf.lev)*se[[uniki]][xucount]
               CIup[[uniki]][xucount] <- sort(temp2)[(1-conf.lev)*length(temp2)]
-                  #temp2 + qnorm(1-conf.lev)*se[[uniki]][xucount]
           }
           boot[[uniki]] <- data.frame(u=xunik[[uniki]], se_Cu = se[[uniki]],
                                       CIlow_Cu = CIlow[[uniki]] , CIup_Cu = CIup[[uniki]] )
           C_u[[uniki]] <- merge(ref[[uniki]], boot[[uniki]], by.x = "ref_u", by.y = "u", all.x = TRUE)
           colnames(C_u[[uniki]])[1:2] = c("u", "Cu")
           C_u[[uniki]] <- C_u[[uniki]][order(C_u[[uniki]]$u, decreasing = FALSE), ]
-          # polygon(x=c(C_u[[uniki]]$u, rev(C_u[[uniki]]$u)),
-          #         y=c(C_u[[uniki]]$CIlow_Cu, rev(C_u[[uniki]]$CIup_Cu)), col = "grey", border = NA)
-
-          #lines(C_u[[uniki]]$u, C_u[[uniki]]$Cu, lty = 2, lwd = lwd)#, col=darkcolopt[[uniki]]
-
         }
 
         bstABCD = cbind(bstABCD, rowSums(bstABCD))
         abcd = t(apply(bstABCD, 2, function(x) c(estimate = mean(x), se = sd(x),
-                                                 sort(x)[(conf.lev)*length(x)],
-                                                 sort(x)[(1-conf.lev)*length(x)])))
-        # abcd = cbind(abcd,
-        #              lower = abcd[,1] - qnorm(1-conf.lev)*abcd[,2],
-        #              upper = abcd[,1] + qnorm(1-conf.lev)*abcd[,2])
-        rownames(abcd) = c(rlabels, "overall")
+                                                 CIlower = sort(x)[(conf.lev)*length(x)],
+                                                 CIupper = sort(x)[(1-conf.lev)*length(x)])))
+        bstedat = data.frame(bstedat)
+        bstedat$endX = 1-bstedat$endX
+        bstedat$endY = 1-bstedat$endY
+        bstedat$area = ((bstedat$startY-bstedat$startX)+(bstedat$endY-bstedat$endX))*(bstedat$endX-bstedat$startX)/2
+        eareas = bstABCD[,3] + bstedat$area
+        eABCD = c(mean(eareas), sd(eareas),
+                  sort(eareas)[(conf.lev)*length(eareas)],
+                  sort(eareas)[(1-conf.lev)*length(eareas)])
+        abcd = rbind(abcd, eABCD)
+        rownames(abcd) = c(rlabels, "Overall", "Extrapolated")
 
          for (refi in 1:nrisktypes){
              uniki=refi
@@ -198,18 +222,13 @@ btsp2SCI <- function(res, maindat, maxt, nrisktypes, B, level, xlab, ylab, rlabe
                  refindup = which(diff(C_u[[uniki]]$CIup_Cu)<0)
              }}
 
-         if (bst_c==TRUE){
-             bstCindex <- bstCindex[,-2]
-             finalres <- list(C_u = C_u, abcd=abcd,
-                         Cindex = c(cindex = cindex,
-                                    se_cindex = sd(bstCindex),
-                                    CIlow = sort(bstCindex)[(conf.lev)*length(bstCindex)],
-                                    CIup = sort(bstCindex)[(1-conf.lev)*length(bstCindex)]))
-         } else {finalres <- list(C_u, abcd=abcd)} #, abcd = abcd
+        finalres <- list(C_u=C_u, abcd=abcd) #, abcd = abcd
 
+        if (silent==FALSE){
         plot2SCI(C_u, xlab=xlab, ylab=ylab, main=main, rlabels=rlabels,
                  cex.axis = cex.axis, cex.lab = 1.5, lwd = 1.5, silent=FALSE, lty = lty,
                  legend.inset=legend.inset, legend.cex=legend.cex, btspind=TRUE)
+        }
 
 return(finalres)
 }

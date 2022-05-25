@@ -21,7 +21,6 @@ TwoSCI(
   legend.inset = 0.02,
   legend.cex = 1.5,
   checkFG = FALSE,
-  c_index = TRUE,
   CI = FALSE,
   level = 0.95,
   B
@@ -59,8 +58,6 @@ TwoSCI(
 \item{legend.cex}{Optional graphical parameter for magnification of the legend's text.}
 
 \item{checkFG}{Logical argument to indicate if the user wants to compare the nonparametric curve with the curve based on the Fine-Gray model (default is FALSE).}
-
-\item{c_index}{Logical argument to indicate if the user wants an estimate for the concordance for each risk (default is TRUE).}
 
 \item{CI}{Optional logical argument to indicate if the user wants a bootstrap confidence interval for the curves and the concordance.}
 

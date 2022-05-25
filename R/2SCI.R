@@ -16,7 +16,6 @@
 #' @param legend.cex Optional graphical parameter for magnification of the legend's text.
 #' @param lwd Optional graphical parameter for line width relative to the default. See \link[graphics]{par} for more details.
 #' @param checkFG Logical argument to indicate if the user wants to compare the nonparametric curve with the curve based on the Fine-Gray model (default is FALSE).
-#' @param c_index Logical argument to indicate if the user wants an estimate for the concordance for each risk (default is TRUE).
 #' @param maxt Duration of the trial.
 #' @param CI Optional logical argument to indicate if the user wants a bootstrap confidence interval for the curves and the concordance.
 #' @param silent Logical argument, FALSE indicates the user wants plots and TRUE indicates no plots only calculations (default is FALSE).
@@ -33,46 +32,52 @@
 #' @import survival
 #' @importFrom dplyr distinct
 #' @importFrom zoo rollmean
-#' @importFrom stats ks.test
 #' @importFrom Bolstad2 sintegral
+#@importFrom stats ks.test
 #'
 #' @export
 
 TwoSCI <- function(time, event, group, maxt=NULL, xlab=NULL, ylab=NULL, main=NULL,
                    rlabels, cex.axis = 1.5, cex.lab = 1.5, lwd = 1.5, silent=FALSE, lty = c(2, 3, 1),
-                      legend.inset=0.02, legend.cex=1.5, checkFG=FALSE, c_index = TRUE, CI=FALSE,
+                      legend.inset=0.02, legend.cex=1.5, checkFG=FALSE, CI=FALSE,
                       level=0.95, B){
 
   if (missing(B)){B=length(time)}
   if (checkFG==TRUE & CI==TRUE) {stop("Cannot support both checkFG=TRUE and CI=TRUE")}
 
-  id <- 1:length(time)
-  mymat <- data.frame(id, time, event, group)
-
-  nrisktypes = length(unique(event)) - 1
-  mymatfg <- data.frame(id, time, group)
+  mymat <- data.frame(id=1:length(time), time=time, event=event, group=group)
 
   if (0 %in% event){
+    #censoring
+    cens = TRUE
+    nrisktypes = length(unique(event)) - 1
+    mymatfg <- data.frame(id=1:length(time), time=time, group=group)
     enames = c("censored", rlabels)
     mymatfg$eventf <- factor(event, 0:nrisktypes, labels = enames)
+
   } else {
-    eventf <- factor(event, 1:length(unique(event)), labels = rlabels)
-    mymatfg$eventf <- factor(eventf, levels = c(levels(eventf), "censored"))
+    #no censoring
+    cens = FALSE
+    mymatfg <- data.frame(id = 1:(length(time)+2), time = c(time, max(time)*10, max(time)*10), group = c(group, 0, 1))
+    nrisktypes = length(unique(event))
+    enames = c("censored", rlabels)
+    newevent = c(event, 0,0)
+    mymatfg$eventf <- factor(newevent, 0:nrisktypes, labels = enames)
   }
-
-  #mymatfg <- mymatfg[mymatfg$time<maxt,]
-
-  #get cum incidence
 
   fit <-  survfit(Surv(mymatfg$time, mymatfg$eventf) ~ mymatfg$group)
   sfit <- summary(fit)
-
   #get C(u)
   skm <- data.frame(time = sfit$time,
                     group = as.numeric(sfit$strata)-1,
                     ci = sfit$pstate[,2:3])
+  #mymatfg <- mymatfg[mymatfg$time<maxt,]
+
+  #get cum incidence
+
   skm <- skm[order(skm[,1], skm[,2]),]
-  list_4plot  = list(); abcds = tests = NULL
+  ref_skm <- skm
+  list_4plot  = list(); abcds =  NULL #tests =
   for (skmi in (1:nrisktypes)){
     skmires = matrix(as.numeric(as.matrix(distinct(skm[, c(1, 2+skmi, 2)]))),
                 ncol=3)
@@ -89,25 +94,38 @@ TwoSCI <- function(time, event, group, maxt=NULL, xlab=NULL, ylab=NULL, main=NUL
     if(length(outs)>=1) {temp = temp[-(duplicated(temp[,1:2])&temp[,2]==0),]}
     id <- 1:nrow(temp)
     if (skmi==1){
-      z <- (temp[,2] - temp[,1])
-    } else {z <- (temp[,1]-temp[,2])}
-    id <- order(temp[,1])
       defaultW <- getOption("warn")
       options(warn = -1)
-      abcdi <- sintegral(temp[,1],z)$int
-    list_4plot[[skmi]] = temp
-    abcds[skmi] = abcdi
-    kstest = ks.test(x=temp[,2], y=temp[,1])
-    tests[skmi] = c(pval = round(kstest$p.value, 6))
-    options(warn = defaultW)
+      abcdi <- sintegral(temp[,1],temp[,2])$int - sintegral(temp[,1],temp[,1])$int
+      list_4plot[[skmi]] = temp
+      abcds[skmi] = abcdi
+      #kstest = ks.test(x=temp[,2], y=temp[,1])
+      #tests[skmi] = c(pval = round(kstest$p.value, 6))
+      options(warn = defaultW)
+    } else {
+      defaultW <- getOption("warn")
+      options(warn = -1)
+      abcdi <- sintegral(temp[,1],temp[,1])$int - sintegral(temp[,1],temp[,2])$int
+      list_4plot[[skmi]] = temp
+      abcds[skmi] = abcdi
+      #kstest = ks.test(x=temp[,2], y=temp[,1])
+      #tests[skmi] = c(pval = round(kstest$p.value, 6))
+      options(warn = defaultW)
+    }
+
   }
 
   abcds = c(abcds, sum(abcds))
+    start = list_4plot[[1]][nrow(list_4plot[[1]]),1:2]
+    end = 1-list_4plot[[2]][nrow(list_4plot[[2]]),1:2]
+    earea = ((start[2]-start[1])+(end[2]-end[1]))*(end[1]-start[1])/2
+  eabcd = abcds[3]+earea
+
   #Check Fine-Gray model
+  #not for uncensored case
   if (checkFG==TRUE){
     reg_res = predictions = list(); rname = coeffs= c();
         for (i in 1:max(event)){
-          temp <- finegray(Surv(time, eventf) ~ ., data=mymatfg, etype=enames[i+1])
           fgfit <- coxph(Surv(temp$fgstart, temp$fgstop, temp$fgstatus) ~ temp$group,
                          weights=temp$fgwt, control = coxph.control(timefix = FALSE))
           fgsurv <- survfit(fgfit, data.frame(group=c(0,1)))
@@ -126,7 +144,7 @@ TwoSCI <- function(time, event, group, maxt=NULL, xlab=NULL, ylab=NULL, main=NUL
         }
   }
 
-
+  ################################## plotting
   if (silent == FALSE & CI == FALSE) {
     if (checkFG==TRUE){
       plot2SCI(list_4plot, xlab=xlab, ylab=ylab, main=main, rlabels=rlabels,
@@ -142,53 +160,34 @@ TwoSCI <- function(time, event, group, maxt=NULL, xlab=NULL, ylab=NULL, main=NUL
 
   }
 
-  if (silent==TRUE & CI==TRUE) {warning("CI=TRUE and silent=TRUE. Will ignore silent=TRUE command and plot curve with confidence interval.")}
-
-  if (c_index==TRUE){
-    if (missing(maxt)) {stop("Must provide maxt for calculation of c_index")}
-    c <- comprsk_c(mymat, rlabels, maxt)
-    if (CI==TRUE){
-      BSTPres <- btsp2SCI(res = list_4plot, maindat = mymat, maxt = maxt,
-                      nrisktypes, B=B, level, xlab, ylab, rlabels, main,
-                      cex.axis = cex.axis, cex.lab = cex.lab, lty = lty,
-                      lwd = lwd, bst_c = TRUE, cindex = c)
-    }
-  } else {
-    if (CI==TRUE){
-      BSTPres <- btsp2SCI(res = list_4plot, maindat = mymat, maxt = max(mymat[,2]),
-                      nrisktypes, B=B, level, xlab, ylab, rlabels, main,
-                      cex.axis = cex.axis, cex.lab = cex.lab, lty = 2,
-                      lwd = lwd, bst_c = FALSE, cindex = NULL)
-    }
+  #### bootstrap
+  if (CI==TRUE){
+      BSTPres <- btsp2SCI(res = list_4plot, ref_skm = ref_skm,
+                          maindat = mymat, nrisktypes=nrisktypes, B=B, level,
+                          xlab, ylab, rlabels, main, cex.axis = cex.axis,
+                          cex.lab = cex.lab, lty = 2, lwd = lwd,
+                          silent = silent, cens = cens)
   }
 
-  names(list_4plot) =  names(tests) = rlabels
+  names(list_4plot) = rlabels  # names(tests) =
   names(abcds) = c(rlabels, "overall")
+
   if (checkFG==TRUE){
-    if (c_index==TRUE){
-      results <- list(cuminc = sfit, c_u = list_4plot,
+    results <- list(cuminc = sfit, c_u = list_4plot,
                       area.btw.curve.and.diag = abcds,
-                      fits = reg_res, c_u_fit = list4fitplot,
-                      c_index = c)
+                      extrap.area.btw.curve.and.diag = eabcd,
+                      fits = reg_res, c_u_fit = list4fitplot)
     } else {
-      results <- list(cuminc = sfit, c_u = list_4plot,
-                      area.btw.curve.and.diag = abcds,
-                      fits = reg_res, c_u_fit = list4fitplot)}
-  } else {
-    if (c_index==TRUE){
-      if (CI==TRUE){
-        results <- list(cuminc = sfit, c_u = BSTPres$C_u,
-                        area.btw.curve.and.diag = abcds,
-                        ks.tests = tests, c_index = BSTPres$Cindex)
-                        #area.btw.curve.and.diag = BSTPres$abcd,
+    if (CI==TRUE){
+    results <- list(c_u = BSTPres$C_u, area.btw.curve.and.diag = BSTPres$abcd)
+                        #ks.tests = tests,
       } else {
         results <- list(cuminc = sfit, c_u = list_4plot,
                         area.btw.curve.and.diag = abcds,
-                        ks.tests = tests, c_index = c)}
-    } else {
-      results <- list(cuminc = sfit, c_u = list_4plot,
-                      area.btw.curve.and.diag = abcds, ks.tests = tests)}
-    }
+                        extrap.area.btw.curve.and.diag = eabcd)
+                        #ks.tests = tests,
+                        }
+  }
 
   return(results)
 }
