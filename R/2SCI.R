@@ -89,14 +89,12 @@ TwoSCI <- function(time, event, group, maxt=NULL, xlab=NULL, ylab=NULL, main=NUL
     } else {ties_ind <- rep(0, nrow(skmires))}
     skmires = cbind(skmires, ties_ind)
     temp = get4plotCumInc(skmires)
-    temp = temp[!duplicated(temp),]
-    outs <- which(duplicated(temp[,1:2])&temp[,2]==0)
-    if(length(outs)>=1) {temp = temp[-(duplicated(temp[,1:2])&temp[,2]==0),]}
     id <- 1:nrow(temp)
+    temp <- temp[!duplicated(temp),]
     if (skmi==1){
       defaultW <- getOption("warn")
       options(warn = -1)
-      abcdi <- sintegral(temp[,1],temp[,2])$int - sintegral(temp[,1],temp[,1])$int
+      abcdi <- sintegral(temp[,1],temp[,2]-temp[,1])$int
       list_4plot[[skmi]] = temp
       abcds[skmi] = abcdi
       #kstest = ks.test(x=temp[,2], y=temp[,1])
@@ -105,7 +103,7 @@ TwoSCI <- function(time, event, group, maxt=NULL, xlab=NULL, ylab=NULL, main=NUL
     } else {
       defaultW <- getOption("warn")
       options(warn = -1)
-      abcdi <- sintegral(temp[,1],temp[,1])$int - sintegral(temp[,1],temp[,2])$int
+      abcdi <- sintegral(temp[,1],temp[,1]-temp[,2])$int
       list_4plot[[skmi]] = temp
       abcds[skmi] = abcdi
       #kstest = ks.test(x=temp[,2], y=temp[,1])
@@ -162,7 +160,7 @@ TwoSCI <- function(time, event, group, maxt=NULL, xlab=NULL, ylab=NULL, main=NUL
 
   #### bootstrap
   if (CI==TRUE){
-      BSTPres <- btsp2SCI(res = list_4plot, ref_skm = ref_skm,
+      BSTPres <- btsp2SCI(res = list_4plot,
                           maindat = mymat, nrisktypes=nrisktypes, B=B, level,
                           xlab, ylab, rlabels, main, cex.axis = cex.axis,
                           cex.lab = cex.lab, lty = 2, lwd = lwd,
