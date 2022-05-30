@@ -25,6 +25,7 @@ solvenaC <- function(indi, temp2){
 #' @importFrom data.table :=
 #' @importFrom zoo rollmean
 #' @importFrom Bolstad2 sintegral
+#' @import dplyr
 #' @keywords internal
 #' @noRd
 
@@ -39,11 +40,9 @@ btsp2SCI <- function(res, maindat, ref_skm, nrisktypes, B, level, xlab, ylab, rl
     conf.lev = (1-level)/2
 
     maindat = data.table(maindat)
-    g0dat <- data.table(maindat[maindat$group==1,]);
-    g1dat <- data.table(maindat[maindat$group==0,]);
-    n0 <- nrow(g0dat); g0ids = 1:n0; g0dat$id <- g0ids;
-    n1 <- nrow(g1dat); g1ids = 1:n1; g1dat$id <- g1ids;
-    rownames(g0dat) = g0ids; rownames(g1dat) = g1ids;
+    gdat <- data.table(maindat);
+    n=nrow(gdat)
+    rownames(gdat) = gdat$id
 
     ref <- res
     changecolnam <- function(list_element){
@@ -61,17 +60,15 @@ btsp2SCI <- function(res, maindat, ref_skm, nrisktypes, B, level, xlab, ylab, rl
     bstABCD = matrix(rep(NA, B*2), ncol=2)
     bstedat = matrix(rep(NA, B*4), ncol=4)
     colnames(bstedat) = c("startX", "startY", "endX", "endY")
+    bst2SS = vector(mode = "list", length = B);
 
-    for (i in 1:nrisktypes){
-        bst2SS = vector(mode = "list", length = B);
-        for (b in 1:B) {
-            set.seed(b+7679)
-            g0ids_b <- sample(g0ids, n0, replace = TRUE)
-            g1ids_b <- sample(g1ids, n1, replace = TRUE)
-            btspdat <- data.table(rbind(g0dat[g0ids_b, ], g1dat[g1ids_b, ]))
+    for (b in 1:B) {
+            set.seed(b+7689)
+            gids_b <- sample(gdat$id, n, replace = TRUE)
+            btspdat <- data.table(gdat[gids_b, ])
 
             ##### get cuminc
-            if (cens==TRUE){
+            if (0 %in% btspdat$event){
                 btspdat$eventf <- factor(btspdat$event, 0:nrisktypes, labels = enames)
                 #get C(u)
             } else {
@@ -90,18 +87,22 @@ btsp2SCI <- function(res, maindat, ref_skm, nrisktypes, B, level, xlab, ylab, rl
             bstedat[b,] = c(max(skm$ci.1[skm$group==0]), max(skm$ci.1[skm$group==1]),
                             max(skm$ci.2[skm$group==0]), max(skm$ci.2[skm$group==1]))
 
+            ###check ties
             ties_check <- unique(table(skm[,1]))
             if (length(ties_check) > 1) {
                 ties_times = skm[duplicated(skm[,1]),1]
                 ties_ind <- rep(0, nrow(skm))
                 ties_ind[which(skm[,1] %in% ties_times)]=1
             } else {ties_ind <- rep(0, nrow(skm))}
+
+            #### get skm info
             skm = cbind(skm, ties_ind)
             skm = skm[order(skm$time, skm$group),]
-            list_4plot = bstres = list(); abcds = NULL;
+            list_4plot = bstres = list(); abcds_b = rep(NA, nrisktypes);
+
+            ### get C_u's, ABCD's and map C_u's to ref
             for (skmi in (1:nrisktypes)){
-                skmires = matrix(as.numeric(as.matrix(distinct(skm[, c(1, 2+skmi, 2)]))),
-                                 ncol=3)
+                skmires = skm[, c(1, 2+skmi, 2)]
                 ties_check <- duplicated(skmires[,1])
                 if (length(ties_check) > 1) {
                     ties_times = skmires[duplicated(skmires[,1]),1]
@@ -111,77 +112,89 @@ btsp2SCI <- function(res, maindat, ref_skm, nrisktypes, B, level, xlab, ylab, rl
                 skmires = cbind(skmires, ties_ind)
                 temp = get4plotCumInc(skmires)
                 temp = temp[!duplicated(temp),]
-                outs <- which(duplicated(temp[,1:2])&temp[,2]==0)
-                if(length(outs)>=1) {temp = temp[-(duplicated(temp[,1:2])&temp[,2]==0),]}
                 id <- 1:nrow(temp)
-
                 if (skmi==1){
                     defaultW <- getOption("warn")
                     options(warn = -1)
-                    abcdi <- sintegral(temp[,1],temp[,2])$int - sintegral(temp[,1],temp[,1])$int
+                    abcdi <- sintegral(temp[,1],temp[,2]-temp[,1])$int
                     list_4plot[[skmi]] = temp
-                    abcds[skmi] = abcdi
-                    #kstest = ks.test(x=temp[,2], y=temp[,1])
-                    #tests[skmi] = c(pval = round(kstest$p.value, 6))
                     options(warn = defaultW)
                 } else {
                     defaultW <- getOption("warn")
                     options(warn = -1)
-                    abcdi <- sintegral(temp[,1],temp[,1])$int - sintegral(temp[,1],temp[,2])$int
+                    abcdi <- sintegral(temp[,1],temp[,1]-temp[,2])$int
                     list_4plot[[skmi]] = temp
-                    abcds[skmi] = abcdi
-                    #kstest = ks.test(x=temp[,2], y=temp[,1])
-                    #tests[skmi] = c(pval = round(kstest$p.value, 6))
                     options(warn = defaultW)
                 }
-
-            }
-            bstABCD[b,] = abcds
-            for (ploti in (1:nrisktypes)){
-                new <- data.frame(ref[[ploti]])
-                outs <- unique(c(which(new$ref_u==0&new$ref_Cu==0), which(duplicated(new))))
-                new <- new[-outs,]
-                new2 <- data.frame(list_4plot[[ploti]])
-                outs <- unique(c(which(new2$x==0&new2$y==0), which(duplicated(new2))))
-                new2 <- new2[-outs,]
+                abcds_b[skmi] = abcdi
+                new <- data.frame(ref_skm[,c(1:2, 2+skmi)])
+                new <- new[-(new$ref_u==0&new$ref_Cu==0|duplicated(new)),]
+                new2 <- data.frame(skm[, c(1, 2+skmi, 2)])
+                new2 <- new2[-(new2$x==0&new2$y==0|duplicated(new2)),]
                 temp <- merge(new, new2, by.x = "ref_u", by.y = "x", all = TRUE)
-                temp <- temp[order(temp$ref_u, temp$ref_Cu, decreasing = FALSE), ]
-                fix <- which(temp$y<temp$ref_Cu&(temp$y==0))
-                temp$y[fix] = temp$y[fix-1]
-                if (is.na(temp$y[1])){temp$y[1]=0; temp$tienext[1]=0}
+                uniquex = unique(temp$ref_u)
+                if (TRUE %in% c(FALSE, diff(uniquex) < 1*10^-15)){
+                  uniquex = uniquex[-which(c(FALSE, diff(uniquex) < 1*10^-15)==TRUE)]
+                }
+                uniquex = round(uniquex, 12)
+                temp_orig = temp
+                temp = NULL
+                newy=NULL
+                for (tn in 1:length(uniquex)){
+                    tempsub <- subset(temp_orig, abs(uniquex[tn]-ref_u)<1*10^-10)
+                    tempsub$newy = NA
+                    ys <- unique(tempsub$y)
+                    if (length(ys)==1|unique(is.na(tempsub$y))|unique(is.na(tempsub$ref_Cu))){
+                        tempsub$newy=tempsub$y
+                        } else {
+                            inds <- apply(tempsub, 1, function(x) which(abs(x[2]-ys)==min(abs(x[2]-ys))))
+                            tempsub$newy =ys[inds]
+                        }
+                    temp=rbind(temp, tempsub)
+                }
+                temp$y = temp$newy
+                temp <- temp[,-6]
+                temp$inds <- c(FALSE, diff(temp$ref_u)==0)
 
+
+                if (length(which(temp$y==0))>0){
+                   all0 = 1:max(which(temp$y==0))
+                   temp$y[all0] = 0
+                   temp$tienext[all0] = 0
+                } else {if (is.na(temp$y[1])){temp$y[1]=0; temp$tienext[1]=0}}
+                temp = temp[order(temp$ref_u, temp$y),]
                 inds1 <- which(is.na(temp$y)); l <- length(inds1)
                 if (l>0){
                     inds1 <- split(inds1, cumsum(c(1, diff(inds1) != 1)))
-                    temp$tienext[inds1[[length(inds1)]][1]-1]=0}
+                    temp$tienext[inds1[[length(inds1)]][1]-1]=0
+                    }
                 while (l > 0) {
                     inds <- which(is.na(temp$y))
                     inds <- split(inds, cumsum(c(1, diff(inds) != 1)))
                     for (indsi in 1:length(inds)){
                         temp <- solvenaC(indi = inds[[indsi]], temp2 = temp)
                     }
-                    # temp <- lapply(inds, function(x) solvenaC(indi = x, temp2 = temp))
-                    # temp <- temp[[1]]
                     l <- length(which(is.na(temp$y)))
-                    #print(l)
                 }
-                temp <- data.frame(rbind(rep(0,5), temp))
                 if (length(which(is.na(temp$ref_Cu)))>0){
                     temp <- temp[-which(is.na(temp$ref_Cu)),]
                 }
-                bstres[[ploti]]=temp
+                bstres[[skmi]]=temp
             }
+            bstABCD[b,] = abcds_b
             bst2SS[[b]] <- bstres
-        }
     }
+
     names(bst2SS) = paste("CUMINC", 1:B, sep="")
     xunik = se = CIlow = CIup = boot = C_u = list()
+
     for (uniki in 1:nrisktypes){
         xunik[[uniki]] <- unique(ref[[uniki]][,1])
         se[[uniki]] = CIlow[[uniki]] = CIup[[uniki]] = rep(NA, length(xunik[[uniki]]))
         for (xucount in 1:length(xunik[[uniki]])){
-            temp2 <- unlist(lapply(bst2SS, function(x)
-                x[[uniki]]$y[which(x[[uniki]]$ref_u==xunik[[uniki]][xucount])]))
+            #### get the 1st of all bst2SS
+            lc_temp <- lapply(bst2SS, function(x) x[[1]])
+            temp_all <- lapply(lc_temp, function(x) x[abs(x$ref_u-xunik[[uniki]][xucount])<0.00000001,])
             se[[uniki]][xucount] <- sd(temp2)
             CIlow[[uniki]][xucount] <- sort(temp2)[(conf.lev)*length(temp2)]
             #CIlow[[uniki]][xucount] <- temp2 - qnorm(1-conf.lev)*sd(temp2)
@@ -190,9 +203,11 @@ btsp2SCI <- function(res, maindat, ref_skm, nrisktypes, B, level, xlab, ylab, rl
         }
         boot[[uniki]] <- data.frame(u=xunik[[uniki]], se_Cu = se[[uniki]],
                                     CIlow_Cu = CIlow[[uniki]] , CIup_Cu = CIup[[uniki]] )
-        C_u[[uniki]] <- merge(ref[[uniki]], boot[[uniki]], by.x = "ref_u", by.y = "u", all.x = TRUE)
+        C_u[[uniki]] <- merge(ref[[uniki]][-1,], boot[[uniki]],
+                              by.x = "ref_u", by.y = "u", all.x = TRUE)
         colnames(C_u[[uniki]])[1:2] = c("u", "Cu")
         C_u[[uniki]] <- C_u[[uniki]][order(C_u[[uniki]]$u, decreasing = FALSE), ]
+        C_u[[uniki]] <- rbind(rep(0, ncol(C_u[[uniki]])), C_u[[uniki]])
     }
 
     bstABCD = cbind(bstABCD, rowSums(bstABCD))

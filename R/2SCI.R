@@ -79,8 +79,8 @@ TwoSCI <- function(time, event, group, maxt=NULL, xlab=NULL, ylab=NULL, main=NUL
   ref_skm <- skm
   list_4plot  = list(); abcds =  NULL #tests =
   for (skmi in (1:nrisktypes)){
-    skmires = matrix(as.numeric(as.matrix(distinct(skm[, c(1, 2+skmi, 2)]))),
-                ncol=3)
+    skmires = skm[, c(1, 2+skmi, 2)]
+    skmires = skmires[!duplicated(skmires),]
     ties_check <- duplicated(skmires[,1])
     if (length(ties_check) > 1) {
       ties_times = skmires[duplicated(skmires[,1]),1]
