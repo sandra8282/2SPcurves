@@ -5,7 +5,11 @@ solvenaC <- function(indi, temp2){
         slope <- diff(ycoords)/diff(xcoords)
         intercept = ycoords[2] - slope*xcoords[2]
         temp2$y[indi] = slope*temp2$ref_u[indi]+intercept
-    } else {temp2$y[indi] = temp2$y[indi[1]-1]}
+        temp2$tienext[indi] = 1
+    } else {
+        temp2$y[indi] = temp2$y[indi[1]-1]
+        temp2$tienext[indi] = 0
+        }
     return(temp2)
 }
 
@@ -19,30 +23,19 @@ solvenaC <- function(indi, temp2){
 #' @importFrom graphics rect
 #' @importFrom stats na.omit
 #' @import survival
-#' @importFrom data.table data.table
-#' @importFrom data.table setkeyv
-#' @importFrom data.table setorder
-#' @importFrom data.table :=
 #' @importFrom zoo rollmean
 #' @importFrom Bolstad2 sintegral
-#' @import dplyr
 #' @keywords internal
 #' @noRd
 
 btsp2SCI <- function(res, maindat, ref_skm, nrisktypes, B, level, xlab, ylab, rlabels, main,
-                     cex.axis = cex.axis, cex.lab = cex.lab, lty = 1, lwd = lwd,
-                     legend.inset=0.01, legend.cex=1.25, silent = TRUE, cens=TRUE) {
-    ptypes=c(NA, 1)
-    darkcolopt =c("black", "grey29")
-    lwdopt = c(lwd, 1)
+                     cex.axis = 1, cex.lab = 1, lty = 1, lwd = 1, CIabcd = TRUE,
+                     legend.inset=0.01, legend.cex=1.25, silent = TRUE) {
 
-    enames = c("censored", rlabels)
     conf.lev = (1-level)/2
-
-    maindat = data.table(maindat)
-    gdat <- data.table(maindat);
-    n=nrow(gdat)
-    rownames(gdat) = gdat$id
+    maindat = data.frame(maindat)
+    g0dat <- data.frame(maindat[maindat$group==1,]);
+    g1dat <- data.frame(maindat[maindat$group==0,]);
 
     ref <- res
     changecolnam <- function(list_element){
@@ -50,60 +43,49 @@ btsp2SCI <- function(res, maindat, ref_skm, nrisktypes, B, level, xlab, ylab, rl
         return(list_element)}
     ref <- lapply(ref, function(x) changecolnam(x))
 
-    #ref_times = data.frame(time = reft)
-    # for (refi in 1:nrisktypes){
-    #     lines(ref[[refi]][,1],ref[[refi]][,2], lty = 2, lwd = lwd) #darkcolopt[[refi]]
-    # }
-
-    toreturn = list()
-    bstCindex = matrix(rep(NA, B*2), ncol=2)
+    toreturn = ref
     bstABCD = matrix(rep(NA, B*2), ncol=2)
     bstedat = matrix(rep(NA, B*4), ncol=4)
     colnames(bstedat) = c("startX", "startY", "endX", "endY")
     bst2SS = vector(mode = "list", length = B);
 
     for (b in 1:B) {
-            set.seed(b+7689)
-            gids_b <- sample(gdat$id, n, replace = TRUE)
-            btspdat <- data.table(gdat[gids_b, ])
+        set.seed(b+76545349)
+        btspdat0 <- data.frame(rbind(g0dat[sample(1:nrow(g0dat), replace = TRUE), ],
+                                     g1dat[sample(1:nrow(g1dat), replace = TRUE), ]))
+        time=btspdat0$time; group=btspdat0$group; event = btspdat0$event;
 
             ##### get cuminc
-            if (0 %in% btspdat$event){
-                btspdat$eventf <- factor(btspdat$event, 0:nrisktypes, labels = enames)
-                #get C(u)
+            if (0 %in% event){
+                #censoring
+                btspdat <- data.frame(id=1:length(time), time=time, group=group)
+                btspdat$eventf <- factor(ifelse(event==0, "censored",
+                                                ifelse(event==1, rlabels[1], rlabels[2])))
             } else {
                 #no censoring
-                synthdat <- data.frame(id = nrow(maindat)+1:2,
-                                       time = rep(max(btspdat$time)*10,2),
-                                       event = c(0,0),
-                                       group = c(0,1))
-                btspdat <- rbind(btspdat, synthdat)
-                btspdat$eventf <- factor(btspdat$event, 0:nrisktypes, labels = enames)
+                btspdat <- data.frame(id = 1:(length(time)+2),
+                                      time = c(time, max(time)*2, max(time)*2),
+                                      group = c(group, 0, 1))
+                newevent = c(event, 0,0)
+                btspdat$eventf <- factor(ifelse(newevent==0, "censored",
+                                                ifelse(newevent==1, rlabels[1], rlabels[2])))
             }
-
             fit <-  survfit(Surv(btspdat$time, btspdat$eventf) ~ btspdat$group)
             sfit <- summary(fit)
-            skm <- data.frame(time = sfit$time, group = as.numeric(sfit$strata)-1, ci = sfit$pstate[,2:3])
+            cis <- sfit$pstate
+            skm <- data.frame(time = sfit$time,
+                              group = as.numeric(sfit$strata)-1,
+                              ci = cis[,-1])
             bstedat[b,] = c(max(skm$ci.1[skm$group==0]), max(skm$ci.1[skm$group==1]),
                             max(skm$ci.2[skm$group==0]), max(skm$ci.2[skm$group==1]))
 
-            ###check ties
-            ties_check <- unique(table(skm[,1]))
-            if (length(ties_check) > 1) {
-                ties_times = skm[duplicated(skm[,1]),1]
-                ties_ind <- rep(0, nrow(skm))
-                ties_ind[which(skm[,1] %in% ties_times)]=1
-            } else {ties_ind <- rep(0, nrow(skm))}
-
-            #### get skm info
-            skm = cbind(skm, ties_ind)
-            skm = skm[order(skm$time, skm$group),]
-            list_4plot = bstres = list(); abcds_b = rep(NA, nrisktypes);
-
             ### get C_u's, ABCD's and map C_u's to ref
+            list_4plot = bstres = list(); abcds_b = rep(NA, nrisktypes);
             for (skmi in (1:nrisktypes)){
-                skmires = skm[, c(1, 2+skmi, 2)]
-                ties_check <- duplicated(skmires[,1])
+                skmires = cbind(time = sfit$time, ci = cis[,skmi+1], group=as.numeric(sfit$strata)-1)
+                skmires = skmires[!duplicated(skmires[,2:3]),]
+                skmires = skmires[order(skmires[,1], skmires[,3]),]
+                ties_check <- which(duplicated(skmires[,1]))
                 if (length(ties_check) > 1) {
                     ties_times = skmires[duplicated(skmires[,1]),1]
                     ties_ind <- rep(0, nrow(skmires))
@@ -111,103 +93,57 @@ btsp2SCI <- function(res, maindat, ref_skm, nrisktypes, B, level, xlab, ylab, rl
                 } else {ties_ind <- rep(0, nrow(skmires))}
                 skmires = cbind(skmires, ties_ind)
                 temp = get4plotCumInc(skmires)
-                temp = temp[!duplicated(temp),]
+                colnames(temp) = c("x", "y", "tienext")
                 id <- 1:nrow(temp)
                 if (skmi==1){
                     defaultW <- getOption("warn")
                     options(warn = -1)
-                    abcdi <- sintegral(temp[,1],temp[,2]-temp[,1])$int
+                    abcdi <- pracma::trapz(temp[,1],temp[,2]) - pracma::trapz(temp[,1],temp[,1])
                     list_4plot[[skmi]] = temp
                     options(warn = defaultW)
                 } else {
                     defaultW <- getOption("warn")
                     options(warn = -1)
-                    abcdi <- sintegral(temp[,1],temp[,1]-temp[,2])$int
+                    abcdi <- pracma::trapz(temp[,1],temp[,1])-pracma::trapz(temp[,1],temp[,2])
                     list_4plot[[skmi]] = temp
                     options(warn = defaultW)
                 }
                 abcds_b[skmi] = abcdi
-                new <- data.frame(ref_skm[,c(1:2, 2+skmi)])
-                new <- new[-(new$ref_u==0&new$ref_Cu==0|duplicated(new)),]
-                new2 <- data.frame(skm[, c(1, 2+skmi, 2)])
-                new2 <- new2[-(new2$x==0&new2$y==0|duplicated(new2)),]
-                temp <- merge(new, new2, by.x = "ref_u", by.y = "x", all = TRUE)
-                uniquex = unique(temp$ref_u)
-                if (TRUE %in% c(FALSE, diff(uniquex) < 1*10^-15)){
-                  uniquex = uniquex[-which(c(FALSE, diff(uniquex) < 1*10^-15)==TRUE)]
-                }
-                uniquex = round(uniquex, 12)
-                temp_orig = temp
-                temp = NULL
-                newy=NULL
-                for (tn in 1:length(uniquex)){
-                    tempsub <- subset(temp_orig, abs(uniquex[tn]-ref_u)<1*10^-10)
-                    tempsub$newy = NA
-                    ys <- unique(tempsub$y)
-                    if (length(ys)==1|unique(is.na(tempsub$y))|unique(is.na(tempsub$ref_Cu))){
-                        tempsub$newy=tempsub$y
-                        } else {
-                            inds <- apply(tempsub, 1, function(x) which(abs(x[2]-ys)==min(abs(x[2]-ys))))
-                            tempsub$newy =ys[inds]
+                if (CIabcd==FALSE){
+                    new <- data.frame(ref[[skmi]])
+                    new2 <- data.frame(temp)
+                    new2$tienext[nrow(new2)]=0
+                    unix = unique(new2$x)
+                    new2_orig = new2
+                    new2 = NULL
+                    for (ux in 1:length(unix)){
+                      new2sub = subset(new2_orig, new2_orig$x==unix[ux])
+                      newy = max(new2sub$y)
+                      new2 = rbind(new2,
+                                   c(x=unix[ux], y=newy, tienext = new2sub[nrow(new2sub),3]))
+                    }
+                    new2 = data.frame(new2)
+                    tempnew <- merge(new[-1,], new2, by.x="ref_u", by.y = "x", all=TRUE)
+                    tempnew <- rbind(rep(0, ncol(tempnew)), tempnew)
+                    temp_orig = tempnew
+                    temp=NULL
+                    cond=as.numeric(length(na.omit(tempnew[,4]))!=nrow(tempnew))
+                    while (cond==1){
+                        inds = which(is.na(tempnew$y))
+                        inds = split(inds, cumsum(c(1, diff(inds) != 1)))
+                        all <- lapply(inds, function(x) solvenaC(x, temp2 = tempnew))
+                        for(i in 1:length(inds)) {
+                            newy = all[[i]]$y[inds[[i]]]
+                            tempnew$y[inds[[i]]] = newy
                         }
-                    temp=rbind(temp, tempsub)
-                }
-                temp$y = temp$newy
-                temp <- temp[,-6]
-                temp$inds <- c(FALSE, diff(temp$ref_u)==0)
-
-
-                if (length(which(temp$y==0))>0){
-                   all0 = 1:max(which(temp$y==0))
-                   temp$y[all0] = 0
-                   temp$tienext[all0] = 0
-                } else {if (is.na(temp$y[1])){temp$y[1]=0; temp$tienext[1]=0}}
-                temp = temp[order(temp$ref_u, temp$y),]
-                inds1 <- which(is.na(temp$y)); l <- length(inds1)
-                if (l>0){
-                    inds1 <- split(inds1, cumsum(c(1, diff(inds1) != 1)))
-                    temp$tienext[inds1[[length(inds1)]][1]-1]=0
+                        cond <- as.numeric(length(na.omit(tempnew[,4]))!=nrow(tempnew))
                     }
-                while (l > 0) {
-                    inds <- which(is.na(temp$y))
-                    inds <- split(inds, cumsum(c(1, diff(inds) != 1)))
-                    for (indsi in 1:length(inds)){
-                        temp <- solvenaC(indi = inds[[indsi]], temp2 = temp)
-                    }
-                    l <- length(which(is.na(temp$y)))
+                    temp = tempnew[!is.na(tempnew$ref_Cu),]
+                    bstres[[skmi]]=temp
                 }
-                if (length(which(is.na(temp$ref_Cu)))>0){
-                    temp <- temp[-which(is.na(temp$ref_Cu)),]
-                }
-                bstres[[skmi]]=temp
             }
             bstABCD[b,] = abcds_b
-            bst2SS[[b]] <- bstres
-    }
-
-    names(bst2SS) = paste("CUMINC", 1:B, sep="")
-    xunik = se = CIlow = CIup = boot = C_u = list()
-
-    for (uniki in 1:nrisktypes){
-        xunik[[uniki]] <- unique(ref[[uniki]][,1])
-        se[[uniki]] = CIlow[[uniki]] = CIup[[uniki]] = rep(NA, length(xunik[[uniki]]))
-        for (xucount in 1:length(xunik[[uniki]])){
-            #### get the 1st of all bst2SS
-            lc_temp <- lapply(bst2SS, function(x) x[[1]])
-            temp_all <- lapply(lc_temp, function(x) x[abs(x$ref_u-xunik[[uniki]][xucount])<0.00000001,])
-            se[[uniki]][xucount] <- sd(temp2)
-            CIlow[[uniki]][xucount] <- sort(temp2)[(conf.lev)*length(temp2)]
-            #CIlow[[uniki]][xucount] <- temp2 - qnorm(1-conf.lev)*sd(temp2)
-            CIup[[uniki]][xucount] <- sort(temp2)[(1-conf.lev)*length(temp2)]
-            #CIlow[[uniki]][xucount] <- temp2 + qnorm(1-conf.lev)*sd(temp2)
-        }
-        boot[[uniki]] <- data.frame(u=xunik[[uniki]], se_Cu = se[[uniki]],
-                                    CIlow_Cu = CIlow[[uniki]] , CIup_Cu = CIup[[uniki]] )
-        C_u[[uniki]] <- merge(ref[[uniki]][-1,], boot[[uniki]],
-                              by.x = "ref_u", by.y = "u", all.x = TRUE)
-        colnames(C_u[[uniki]])[1:2] = c("u", "Cu")
-        C_u[[uniki]] <- C_u[[uniki]][order(C_u[[uniki]]$u, decreasing = FALSE), ]
-        C_u[[uniki]] <- rbind(rep(0, ncol(C_u[[uniki]])), C_u[[uniki]])
+            if (CIabcd==FALSE){bst2SS[[b]] = bstres}
     }
 
     bstABCD = cbind(bstABCD, rowSums(bstABCD))
@@ -225,28 +161,43 @@ btsp2SCI <- function(res, maindat, ref_skm, nrisktypes, B, level, xlab, ylab, rl
     abcd = rbind(abcd, eABCD)
     rownames(abcd) = c(rlabels, "Overall", "Extrapolated")
 
-    for (refi in 1:nrisktypes){
-        uniki=refi
-        refindlow = which(diff(C_u[[uniki]]$CIlow_Cu)<0)
-        refindup = which(diff(C_u[[uniki]]$CIup_Cu)<0)
-        C_u[[uniki]]$CIlow_Cu[refindlow]=NA
-        C_u[[uniki]]$CIup_Cu[refindup]=NA
-        while (length(refindlow)>=1){
-            C_u[[uniki]]$CIlow_Cu[refindlow] = C_u[[uniki]]$CIlow_Cu[refindlow+1]
-            refindlow = which(diff(C_u[[uniki]]$CIlow_Cu)<0)
+    if (CIabcd==FALSE){
+        names(bst2SS) = paste("CUMINC", 1:B, sep="")
+        xunik = se = CIlow = CIup = boot = C_u = list()
+
+        for (uniki in 1:nrisktypes){
+            xunik[[uniki]] <- unique(ref[[uniki]][,1])
+            se[[uniki]] = CIlow[[uniki]] = CIup[[uniki]] = rep(NA, length(xunik[[uniki]]))
+            for (xucount in 1:length(xunik[[uniki]])){
+                lc_temp <- lapply(bst2SS, function(x) x[[uniki]])
+                temp_all <- lapply(lc_temp, function(x) x[abs(x$ref_u-xunik[[uniki]][xucount])<0.00000001,])
+                temp_all <- lapply(temp_all, function(x) x[!(x$ref_Cu==0),])
+                temp2 <- unlist(lapply(temp_all, function(x) x$y))
+                se[[uniki]][xucount] <- sd(temp2)
+                CIlow[[uniki]][xucount] <- sort(temp2)[(conf.lev)*length(temp2)]
+                #CIlow[[uniki]][xucount] <- temp2 - qnorm(1-conf.lev)*sd(temp2)
+                CIup[[uniki]][xucount] <- sort(temp2)[(1-conf.lev)*length(temp2)]
+                #CIlow[[uniki]][xucount] <- temp2 + qnorm(1-conf.lev)*sd(temp2)
+            }
+            boot[[uniki]] <- data.frame(u=xunik[[uniki]], se_Cu = se[[uniki]],
+                                        CIlow_Cu = CIlow[[uniki]] , CIup_Cu = CIup[[uniki]] )
+            C_u[[uniki]] <- merge(ref[[uniki]][-1,], boot[[uniki]],
+                                  by.x = "ref_u", by.y = "u", all.x = TRUE)
+            colnames(C_u[[uniki]])[1:2] = c("u", "Cu")
+            C_u[[uniki]] <- C_u[[uniki]][order(C_u[[uniki]]$u, decreasing = FALSE), ]
+            C_u[[uniki]] <- rbind(rep(0, ncol(C_u[[uniki]])), C_u[[uniki]])
         }
-        while (length(refindup)>=1){
-            C_u[[uniki]]$CIup_Cu[refindup] = C_u[[uniki]]$CIup_Cu[refindup+1]
-            refindup = which(diff(C_u[[uniki]]$CIup_Cu)<0)
-        }}
-
-    finalres <- list(C_u=C_u, abcd=abcd) #, abcd = abcd
-
-    if (silent==FALSE){
-        plot2SCI(C_u, xlab=xlab, ylab=ylab, main=main, rlabels=rlabels,
-                 cex.axis = cex.axis, cex.lab = 1.5, lwd = 1.5, silent=FALSE, lty = lty,
-                 legend.inset=legend.inset, legend.cex=legend.cex, btspind=TRUE)
-    }
+        finalres <- list(C_u=C_u, abcd=abcd)
+        if (silent==FALSE){
+            ptypes=c(NA, 1)
+            darkcolopt =c("black", "grey29")
+            lwdopt = c(lwd, 1)
+            plot2SCI(C_u, xlab=xlab, ylab=ylab, main=main, rlabels=rlabels,
+                     cex.axis = cex.axis, cex.lab = 1.5, lwd = 1.5, silent=FALSE, lty = lty,
+                     legend.inset=legend.inset, legend.cex=legend.cex, btspind=TRUE)
+        }
+    } else {finalres <- list(abcd=abcd)}
+     #, abcd = abcd
 
     return(finalres)
 }

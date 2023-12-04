@@ -47,6 +47,9 @@ get4plotCumInc <- function(skm) {
   }
   tie <- ifelse(is.na(tie), 1, tie)
   forplot <- na.omit(cbind(x,y, c(tie[-1],0)))
-  colnames(forplot) <- c("x", "y", "tienext")
+  if (length(which(duplicated(forplot)))>0){
+    forplot <- forplot[!duplicated(forplot),]
+  }
+  #colnames(forplot) <- c("x", "y", "tienext")
   return(forplot)
 }

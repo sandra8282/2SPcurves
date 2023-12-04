@@ -17,11 +17,13 @@
 #' @param lwd Optional graphical parameter for line width relative to the default. See \link[graphics]{par} for more details.
 #' @param checkFG Logical argument to indicate if the user wants to compare the nonparametric curve with the curve based on the Fine-Gray model (default is FALSE).
 #' @param maxt Duration of the trial.
-#' @param CI Optional logical argument to indicate if the user wants a bootstrap confidence interval for the curves and the concordance.
 #' @param silent Logical argument, FALSE indicates the user wants plots and TRUE indicates no plots only calculations (default is FALSE).
-#' @param level A numerical argument to indicate the confidence level for the confidence interval. Default = 0.95.
 #' @param B The number of bootstrap samples to use for the confidence interval. Default = 1000.
 #' @param lty Optional graphical parameter to set the type of line to use. Can be a number or a vector. See \link[graphics]{par} for more details.
+#' @param CIabcd logical argument to indicate if user wants confidence interval for area between the curve and the diagonal (default is TRUE)
+#' @param CI Optional logical argument to indicate if the user wants a bootstrap confidence interval for the curves and the concordance.
+#' @param level A numerical argument to indicate the confidence level for the confidence interval. Default = 0.95.
+
 
 #' @return A plot of the curve (if \code{silent=FALSE}) and an object containing:
 #' \itemize{
@@ -39,17 +41,16 @@
 
 TwoSCI <- function(time, event, group, maxt=NULL, xlab=NULL, ylab=NULL, main=NULL,
                    rlabels, cex.axis = 1.5, cex.lab = 1.5, lwd = 1.5, silent=FALSE, lty = c(2, 3, 1),
-                      legend.inset=0.02, legend.cex=1.5, checkFG=FALSE, CI=FALSE,
+                      legend.inset=0.02, legend.cex=1.5, checkFG=FALSE, CIabcd=TRUE, CI=FALSE,
                       level=0.95, B){
 
   if (missing(B)){B=length(time)}
   if (checkFG==TRUE & CI==TRUE) {stop("Cannot support both checkFG=TRUE and CI=TRUE")}
-
+  maxt <- ifelse(is.null(maxt), max(time), maxt)
   mymat <- data.frame(id=1:length(time), time=time, event=event, group=group)
 
   if (0 %in% event){
     #censoring
-    cens = TRUE
     nrisktypes = length(unique(event)) - 1
     mymatfg <- data.frame(id=1:length(time), time=time, group=group)
     enames = c("censored", rlabels)
@@ -57,7 +58,6 @@ TwoSCI <- function(time, event, group, maxt=NULL, xlab=NULL, ylab=NULL, main=NUL
 
   } else {
     #no censoring
-    cens = FALSE
     mymatfg <- data.frame(id = 1:(length(time)+2), time = c(time, max(time)*10, max(time)*10), group = c(group, 0, 1))
     nrisktypes = length(unique(event))
     enames = c("censored", rlabels)
@@ -71,16 +71,14 @@ TwoSCI <- function(time, event, group, maxt=NULL, xlab=NULL, ylab=NULL, main=NUL
   skm <- data.frame(time = sfit$time,
                     group = as.numeric(sfit$strata)-1,
                     ci = sfit$pstate[,2:3])
-  #mymatfg <- mymatfg[mymatfg$time<maxt,]
 
   #get cum incidence
-
   skm <- skm[order(skm[,1], skm[,2]),]
-  ref_skm <- skm
-  list_4plot  = list(); abcds =  NULL #tests =
+  ref_skm = list_4plot  = list(); abcds =  NULL #tests =
   for (skmi in (1:nrisktypes)){
     skmires = skm[, c(1, 2+skmi, 2)]
-    skmires = skmires[!duplicated(skmires),]
+    skmires = skmires[!duplicated(skmires[,2:3]),]
+    skmires = skmires[order(skmires$time, skmires$group),]
     ties_check <- duplicated(skmires[,1])
     if (length(ties_check) > 1) {
       ties_times = skmires[duplicated(skmires[,1]),1]
@@ -88,9 +86,9 @@ TwoSCI <- function(time, event, group, maxt=NULL, xlab=NULL, ylab=NULL, main=NUL
       ties_ind[which(skmires[,1] %in% ties_times)]=1
     } else {ties_ind <- rep(0, nrow(skmires))}
     skmires = cbind(skmires, ties_ind)
+    ref_skm[[skmi]] = skmires
     temp = get4plotCumInc(skmires)
     id <- 1:nrow(temp)
-    temp <- temp[!duplicated(temp),]
     if (skmi==1){
       defaultW <- getOption("warn")
       options(warn = -1)
@@ -118,6 +116,10 @@ TwoSCI <- function(time, event, group, maxt=NULL, xlab=NULL, ylab=NULL, main=NUL
     end = 1-list_4plot[[2]][nrow(list_4plot[[2]]),1:2]
     earea = ((start[2]-start[1])+(end[2]-end[1]))*(end[1]-start[1])/2
   eabcd = abcds[3]+earea
+
+  # ABCDres <- btsp2SCI(res = list_4plot,
+  #                     maindat = mymat, nrisktypes=nrisktypes, B=B, level=level,
+  #                     xlab, ylab, rlabels, main, CIabcd=TRUE, silent = TRUE)
 
   #Check Fine-Gray model
   #not for uncensored case
@@ -158,34 +160,16 @@ TwoSCI <- function(time, event, group, maxt=NULL, xlab=NULL, ylab=NULL, main=NUL
 
   }
 
-  #### bootstrap
-  if (CI==TRUE){
-      BSTPres <- btsp2SCI(res = list_4plot,
-                          maindat = mymat, nrisktypes=nrisktypes, B=B, level,
-                          xlab, ylab, rlabels, main, cex.axis = cex.axis,
-                          cex.lab = cex.lab, lty = 2, lwd = lwd,
-                          silent = silent, cens = cens)
-  }
-
-  names(list_4plot) = rlabels  # names(tests) =
-  names(abcds) = c(rlabels, "overall")
-
-  if (checkFG==TRUE){
+    if (checkFG==TRUE){
     results <- list(cuminc = sfit, c_u = list_4plot,
                       area.btw.curve.and.diag = abcds,
                       extrap.area.btw.curve.and.diag = eabcd,
                       fits = reg_res, c_u_fit = list4fitplot)
     } else {
-    if (CI==TRUE){
-    results <- list(c_u = BSTPres$C_u, area.btw.curve.and.diag = BSTPres$abcd)
-                        #ks.tests = tests,
-      } else {
         results <- list(cuminc = sfit, c_u = list_4plot,
                         area.btw.curve.and.diag = abcds,
                         extrap.area.btw.curve.and.diag = eabcd)
-                        #ks.tests = tests,
-                        }
-  }
+        }
 
   return(results)
 }
