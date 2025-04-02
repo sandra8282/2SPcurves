@@ -16,7 +16,6 @@
 #'@importFrom data.table setDT
 #'@importFrom data.table setkey
 #'@importFrom data.table foverlaps
-#'@importFrom DescTools AUC
 #'
 #'@keywords internal
 #'@noRd
@@ -35,7 +34,7 @@ getIGroc <- function(npmle_0, npmle_1, xlab, ylab, main, cex.axis,
   combined_dt <- cbind(dt0 = npmle_0[overlaps_ind$xid,],
                        dt1 = npmle_1[overlaps_ind$yid,])
   notoverlap <- c(which(combined_dt$dt0.L == combined_dt$dt1.R),
-                    which(combined_dt$dt0.R == combined_dt$dt1.L))
+                  which(combined_dt$dt0.R == combined_dt$dt1.L))
   temp <- combined_dt[notoverlap,]
   combined_dt <- combined_dt[dt0.L != dt1.R]
   combined_dt <- combined_dt[dt0.R != dt1.L]
@@ -114,7 +113,6 @@ getIGroc <- function(npmle_0, npmle_1, xlab, ylab, main, cex.axis,
     }
   }
   abline(c(0,1), col = "grey", lty=1, lwd = lwd-0.25)
-  auc = AUC(forplot[,1], forplot[,2])
   rownames(forplot) = NULL
 
   colnames(combined_dt) = c("L0", "R0", "L1", "R1",
@@ -125,5 +123,5 @@ getIGroc <- function(npmle_0, npmle_1, xlab, ylab, main, cex.axis,
 
   forplot = data.frame(forplot, type)
   colnames(forplot) = c("u", "R_u", "type")
-  return(list(curve = forplot, auc = auc))
+  return(curve = forplot)
 }

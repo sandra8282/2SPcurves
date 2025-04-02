@@ -13,7 +13,7 @@
 #' @param maxtime passed from other functions.
 #' @param ctime passed from other functions.
 #'
-#' @return
+#' @return onset and gap estimates
 #'
 #' @keywords internal
 #' @noRd

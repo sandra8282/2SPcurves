@@ -2,8 +2,8 @@
 % Please edit documentation in R/package.R
 \docType{package}
 \name{TwoSPC-package}
+\alias{TwoSPC}
 \alias{TwoSPC-package}
-\alias{_PACKAGE}
 \title{A  Package  for  the  Analysis  of  Time  to  Event  OutcomesSubject  to    Right-Censoring  Using  ROC  Curves  in  Two-Arm  Randomized  Trials.}
 \description{
 Survival data is often used in clinical trials to determine effectiveness of a new treatment.

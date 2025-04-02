@@ -22,7 +22,7 @@
 
 
 PHPOicens <- function(checkPH, checkPO, dat, res, legend.inset, legend.cex, lwd, lty){
-  mu <- seq(min(res$curve$u),1,0.001)
+  mu <- seq(min(res$u),1,0.001)
   fit_ph = fit_po = NULL
 
   if (length(lty)<3) {lty = c(1,3,5)}

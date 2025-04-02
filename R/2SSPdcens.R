@@ -30,6 +30,7 @@
 #'
 ## @importFrom dblcens d011
 #' @importFrom DescTools AUC
+#' @importFrom data.table data.table
 #'
 #' @details
 #' For doubly censored data as discussed by Turnbull (dtype = "dcens"):
@@ -79,6 +80,8 @@ TwoSSPdcens <- function(o_l, o_r,  e_l, e_r, group, maxtime = NULL, ctime = 99, 
          xlim=c(0,1), ylim = c(0, 1), #to make tight axis: xaxs="i", yaxs="i"
          xlab=xlab, ylab=ylab, main=main, cex.axis = cex.axis, cex.lab = cex.lab)
     abline(c(0,1), col = "darkgrey", lty=1, lwd = lwd-0.25)
+    rect(xleft=0, ybottom = 0, xright=forplot[nrow(forplot),1], ytop=forplot[nrow(forplot),2],
+         col="grey", border=NA, lty=NULL, xpd=FALSE)
   }
 
   auc = AUC(forplot[,1], forplot[,2])

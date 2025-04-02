@@ -30,11 +30,9 @@
 #' @importFrom Icens EMICM
 #' @importFrom data.table data.table
 #' @importFrom dplyr %>%
-#' @importFrom dplyr full_join
-#' @importFrom dplyr lag
 #' @importFrom stats complete.cases
-#' @importFrom data.table data.table
-#'
+#' @importFrom DescTools AUC
+#' @importFrom stats approx
 #'
 #' @export
 #'
@@ -55,45 +53,84 @@ TwoSSPicens <- function(left, right, group, iterations, end_follow, checkPH = FA
   control <- data.frame(dat[group==0]); trt <- data.frame(dat[group==1])
 
   # EM calculations for control group #################################################
-    NPMLE.control<-EMICM(control[,(1:2)], maxiter = iterations)
-    control_pf <- data.frame(L = NPMLE.control$intmap[1,],
-                             R = NPMLE.control$intmap[2,],
-                             drop = NPMLE.control$pf)
-    control_pf <- control_pf[control_pf$drop!=0,]
-    control_pf$cumdrop = cumsum(control_pf$drop)
+  NPMLE.control<-EMICM(control[,(1:2)], maxiter = iterations)
+  control_pf <- data.frame(L = NPMLE.control$intmap[1,],
+                           R = NPMLE.control$intmap[2,],
+                           drop = NPMLE.control$pf)
+  control_pf <- control_pf[control_pf$drop!=0,]
+  control_pf$cumdrop = cumsum(control_pf$drop)
 
   # EM calculations for treatment group #################################################
-    NPMLE.trt<-EMICM(trt[,(1:2)], maxiter = iterations)
-    trt_pf <- data.frame(L = NPMLE.trt$intmap[1,],
-                         R = NPMLE.trt$intmap[2,],
-                         drop = NPMLE.trt$pf)
-    trt_pf <- trt_pf[trt_pf$drop!=0,]
-    trt_pf$cumdrop = cumsum(trt_pf$drop)
+  NPMLE.trt<-EMICM(trt[,(1:2)], maxiter = iterations)
+  trt_pf <- data.frame(L = NPMLE.trt$intmap[1,],
+                       R = NPMLE.trt$intmap[2,],
+                       drop = NPMLE.trt$pf)
+  trt_pf <- trt_pf[trt_pf$drop!=0,]
+  trt_pf$cumdrop = cumsum(trt_pf$drop)
 
   # 2 sample curve   ##############################################################################################
 
   res <- getIGroc(npmle_0 = control_pf, npmle_1 = trt_pf,
                   xlab, ylab, main, cex.axis, cex.lab, lwd)
 
+  ### survival estimations for missing portions through interpolation
+    control_surv <- control_pf %>% mutate(surv = 1- cumdrop, surv0 = lag(surv, default = 1))
+    control_surv$R <- ifelse(control_surv$R==Inf, control_surv$R[nrow(control_surv)-1]+control_surv$R[nrow(control_surv)-1]*2, control_surv$R)
+    control_surv_new <- data.frame(t=0, s=1)
+    for (i in 1:nrow(control_surv)) {
+      ti = approx(control_surv[i,1:2], c(control_surv$surv0[i],control_surv$surv[i]), n = 3)
+      sfct = data.frame(t = ti$x, s = ti$y)
+      control_surv_new = rbind(control_surv_new, sfct)
+    }
+
+    trt_surv <- trt_pf %>% mutate(surv = 1- cumdrop, surv0 = lag(surv, default = 1))
+    trt_surv$R <- ifelse(trt_surv$R==Inf, trt_surv$R[nrow(trt_surv)-1]+trt_surv$R[nrow(trt_surv)-1]*2, trt_surv$R)
+    trt_surv_new <- data.frame(t=0, s=1)
+    for (i in 1:nrow(trt_surv)) {
+      ti = approx(trt_surv[i,1:2], c(trt_surv$surv0[i],trt_surv$surv[i]), n = 3)
+      sfct = data.frame(t = ti$x, s = ti$y)
+      trt_surv_new = rbind(trt_surv_new, sfct)
+    }
+
+
+  # add missing portions to two sample curve ######################################################################################
+    control_surv_new$group = 0;
+    trt_surv_new$group = 1
+    surv_new = distinct(rbind(control_surv_new, trt_surv_new))
+    surv_new = surv_new[order(surv_new$t, -surv_new$s),]
+    KMests <- data.frame(getIntSKM(surv_new))
+    res_temp <- data.frame(get4plot(skm = KMests))
+    if (res_temp$x[nrow(res_temp)]==0|res_temp$y[nrow(res_temp)]==0){
+      res_temp[nrow(res_temp)+1,]=c(0, 0, 1)
+    }
+    res_temp = distinct(res_temp)
+    final_res <-res_temp[,1:2]
+    colnames(final_res) = colnames(res)[1:2]
+    warn = getOption("warn")
+    options(warn=-1)
+    auc = AUC(final_res[,1], final_res[,2], method = c("trapezoid"))
+    options(warn=warn)
+
     # 2 sample curve PH and PO models  #########################################################################################
   if (checkPH == TRUE | checkPO == TRUE) {
     res2 <- PHPOicens(checkPH=checkPH, checkPO = checkPO, dat=dat, res=res, lty=lty,
                       legend.inset=legend.inset, legend.cex=legend.cex, lwd=lwd)
       if (is.null(res2$fit_ph)){
-        returnobj <- list(two_sample_prob = res[[1]], auc = res[[2]],
+        returnobj <- list(two_sample_prob = res, auc = auc,
                           NPMLE_control = NPMLE.control, NPMLE_trt = NPMLE.trt,
                           fit_po =res2$fit_po)
       } else {
         if (is.null(res2$fit_po)){
-          returnobj <- list(two_sample_prob = res[[1]], auc = res[[2]],
+          returnobj <- list(two_sample_prob = res, auc = auc,
                             NPMLE_control = NPMLE.control, NPMLE_trt = NPMLE.trt,
                             fit_ph =res2$fit_ph)
-        } else {returnobj <- list(two_sample_prob = res[[1]], auc = res[[2]],
+        } else {returnobj <- list(two_sample_prob = res, auc = auc,
                                   NPMLE_control = NPMLE.control, NPMLE_trt = NPMLE.trt,
                                   fit_ph =res2$fit_ph, fit_po =res2$fit_po)}
       }
   } else {
-    returnobj <- list(two_sample_prob = res[[1]], auc = res[[2]],
+    lines(res_temp, lty = 2)
+    returnobj <- list(two_sample_prob = res, auc = auc,
                       NPMLE_control = NPMLE.control, NPMLE_trt = NPMLE.trt)
   }
 

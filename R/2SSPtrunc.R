@@ -63,7 +63,8 @@ TwoSSPtrunc <- function(entry, exit, event, group, area=FALSE, silent=FALSE,
     if (area==FALSE & CI == FALSE) {#plot
       temp <- onlyROC(skm = MKMests[[1]], xlab, ylab, main, cex.axis,
                       cex.lab, lty, label.inset, label.cex, lwd)
-      res <- list(unexposed_km=MKMests[[3]], exposed_km = MKMests[[4]],
+
+      res <- list(R_u = temp, unexposed_km=MKMests[[3]], exposed_km = MKMests[[4]],
                   unexposed_mkm=unexposed_mkm, exposed_mkm = exposed_mkm)
     }
 
@@ -78,15 +79,18 @@ TwoSSPtrunc <- function(entry, exit, event, group, area=FALSE, silent=FALSE,
     }
     #############################################
     if (CI == TRUE){
-      res <- getAUC(MKMests, silent=TRUE, xlab, ylab, main,cex.axis = cex.axis,
-                    cex.lab = cex.lab, lty = lty, label.inset = label.inset,
-                    label.cex = label.cex, lwd = lwd)
-      maindat <- mat
-      temp <- btsp(res, maindat, B, level, xlab, ylab, main, cex.axis = cex.axis,
-                   cex.lab = cex.lab, lty = lty, lwd = lwd)
-      res <- list(temp, unexposed_km=MKMests[[3]], exposed_km = MKMests[[4]],
-                  unexposed_mkm=unexposed_mkm, exposed_mkm = exposed_mkm)
+      print("currently not implemented")
+      # res <- getAUC(MKMests, silent=TRUE, xlab, ylab, main,cex.axis = cex.axis,
+      #               cex.lab = cex.lab, lty = lty, label.inset = label.inset,
+      #               label.cex = label.cex, lwd = lwd)
+      # maindat <- mat
+      # temp <- btsp(res, maindat, B, level, xlab, ylab, main, cex.axis = cex.axis,
+      #              cex.lab = cex.lab, lty = lty, lwd = lwd)
+      # res <- list(temp, unexposed_km=MKMests[[3]], exposed_km = MKMests[[4]],
+      #             unexposed_mkm=unexposed_mkm, exposed_mkm = exposed_mkm)
     }
-
+  lastpoint = res$R_u[nrow(res$R_u), 1:2]
+  rect(xleft=0, ybottom = 0, xright=lastpoint[1], ytop=lastpoint[2],
+       col="grey", border=NA, lty=NULL, xpd=FALSE)
   return(res)
 }

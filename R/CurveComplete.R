@@ -1,5 +1,5 @@
 
-#' ROC when survival goes to 0 for either group
+#' 2SPC when survival goes to 0 for either group
 #'
 #' @param skm passed from ROCsurv
 #' @param silen passed from ROCsurv or btsp
