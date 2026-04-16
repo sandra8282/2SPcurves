@@ -20,7 +20,11 @@ TwoSSPicens(
   legend.inset = 0.02,
   legend.cex = 1.5,
   lty = c(1, 2, 3),
-  lwd = 1.5
+  lwd = 1.5,
+  shade = TRUE,
+  CI = FALSE,
+  level = 0.95,
+  B = 500
 )
 }
 \arguments{
@@ -55,6 +59,14 @@ TwoSSPicens(
 \item{lty}{Optional graphical parameter to set the type of lines to use. Can be a number or a vector. See \link[graphics]{par} for more details.}
 
 \item{lwd}{Optional graphical parameter for line width relative to the default. See \link[graphics]{par} for more details.}
+
+\item{shade}{Logical. If true, gaps in the curve will be shaded gray, otherwise they are left blank.}
+
+\item{CI}{Logical TRUE if bootstrap confidence intervals for the curve are needed}
+
+\item{level}{for CI, values between 0.7 and 0.99 allowed (preset at 0.95).}
+
+\item{B}{number of bootstrap resamples to use for CI (preset at 500).}
 }
 \value{
 A plot of the ROC curve and an ROCsurv object containing:

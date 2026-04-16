@@ -4,14 +4,16 @@
 #' @description
 #' This function gets the roc for each group for interval censored data.
 #'
-#' @param npmle_0 passed from intROCsurv.
-#' @param npmle_1 passed from intROCsurv.
-#' @param xlab passed from intROCsurv.
-#' @param ylab passed from intROCsurv.
-#' @param main passed from intROCsurv.
-#' @param cex.axis passed from intROCsurv.
-#' @param cex.lab passed from intROCsurv.
-#' @param lwd passed from intROCsurv.
+#' @param npmle_0 passed from TwoSSPicens.
+#' @param npmle_1 passed from TwoSSPicens.
+#' @param xlab passed from TwoSSPicens.
+#' @param ylab passed from TwoSSPicens.
+#' @param main passed from TwoSSPicens.
+#' @param cex.axis passed from TwoSSPicens.
+#' @param cex.lab passed from TwoSSPicens.
+#' @param lwd passed from TwoSSPicens.
+#' @param silenceplot passed from TwoSSPicens or btspICEN.
+#' @param shade passed from TwoSSPicens or btspICEN.
 #'
 #'@importFrom data.table setDT
 #'@importFrom data.table setkey
@@ -21,11 +23,14 @@
 #'@noRd
 #'
 getIGroc <- function(npmle_0, npmle_1, xlab, ylab, main, cex.axis,
-                     cex.lab, lwd){
+                     cex.lab, lwd, silenceplot = FALSE, shade = FALSE){
 
   dt0.L = dt1.R = dt0.R = dt1.L = L = NULL
 
   #search for overlapping intervals
+  #change where one is known could be based
+  #on boundary for each and things improved if you know one
+
   setDT(npmle_0); setDT(npmle_1);
   n0 = nrow(npmle_0); n1 = nrow(npmle_1);
   setkey(npmle_1)
@@ -40,6 +45,7 @@ getIGroc <- function(npmle_0, npmle_1, xlab, ylab, main, cex.axis,
   combined_dt <- combined_dt[dt0.R != dt1.L]
   combined_dt$move <- "overlap"
 
+  #if we know one of the curves - make the region smaller based on boundaries of unknown regions
   ind0 <- which(temp$dt0.L %in% combined_dt$dt0.L)
   ind1 <- which(temp$dt1.L %in% combined_dt$dt1.L)
 
@@ -80,48 +86,92 @@ getIGroc <- function(npmle_0, npmle_1, xlab, ylab, main, cex.axis,
 
   if (length(skip_ind)>0) {combined_dt$skip[skip_ind-1] = "yes"}
 
-  #plot
-  plot(NULL, type="n", las=1,
-       xlim=c(0,1), ylim = c(0, 1), #to make tight axis: xaxs="i", yaxs="i"
-       xlab=xlab, ylab=ylab, main=main, cex.axis = cex.axis, cex.lab = cex.lab)
+  if (silenceplot==FALSE) {
+    #plot
+    plot(NULL, type="n", las=1,
+         xlim=c(0,1), ylim = c(0, 1), #to make tight axis: xaxs="i", yaxs="i"
+         xlab=xlab, ylab=ylab, main=main, cex.axis = cex.axis, cex.lab = cex.lab)
 
-  forplot = coord_new = c(1,1); type = "";
-  for (i in 1:nrow(combined_dt)){
-    if (combined_dt$skip[i]=="no"){
-      if (combined_dt$move[i] == "overlap"){
-        coord_new2 = c(combined_dt$S_0[i], combined_dt$S_1[i])
-        rect(xright = coord_new[1], ytop = coord_new[2],
-             xleft = coord_new2[1], ybottom = coord_new2[2],
-             col = "grey", border = "grey")
-        type = c(type, "overlap")
-        colt = "grey"
-      } else {
-        colt = "black"
-        if (combined_dt$move[i] == "trt"){
-          coord_new2 = c(coord_new[1], combined_dt$S_1[i])
-          type = c(type, "trt")
+    forplot = coord_new = c(1,1); type = "";
+
+    for (i in 1:nrow(combined_dt)){
+      if (combined_dt$skip[i]=="no"){
+        if (combined_dt$move[i] == "overlap"){
+          if (shade==TRUE){
+            coord_new2 = c(combined_dt$S_0[i], combined_dt$S_1[i])
+            rect(xright = coord_new[1], ytop = coord_new[2],
+                 xleft = coord_new2[1], ybottom = coord_new2[2],
+                 col = "grey", border = "grey")
+            type = c(type, "overlap")
+            colt = "grey"
+          } else {
+            coord_new2 = c(combined_dt$S_0[i], combined_dt$S_1[i])
+            rect(xright = coord_new[1], ytop = coord_new[2],
+                 xleft = coord_new2[1], ybottom = coord_new2[2],
+                 col = "white", border = "white")
+            type = c(type, "overlap")
+            colt = "white"
+          }
+
+
         } else {
-          coord_new2 = c(combined_dt$S_0[i], coord_new[2])
-          type = c(type, "control")
+          colt = "black"
+          if (combined_dt$move[i] == "trt"){
+            coord_new2 = c(coord_new[1], combined_dt$S_1[i])
+            type = c(type, "trt")
+          } else {
+            coord_new2 = c(combined_dt$S_0[i], coord_new[2])
+            type = c(type, "control")
+          }
+        }
+        segments(x0=coord_new[1], y0=coord_new[2],
+                 x1=coord_new2[1], y1=coord_new2[2], lwd = lwd, lty = 1,
+                 col = colt)
+        points(rbind(coord_new, coord_new2), pch=20, cex=0.75)
+        forplot = rbind(forplot, coord_new2)
+        coord_new = coord_new2
+      }
+    }
+    abline(c(0,1), col = "grey", lty=2, lwd = lwd-0.25)
+
+    rownames(forplot) = NULL
+
+    colnames(combined_dt) = c("L0", "R0", "L1", "R1",
+                              "S0", "S1", "Move", "Skip")
+    combined_dt$L0 <- ifelse(is.na(combined_dt$R0), NA, combined_dt$L0)
+    combined_dt$L1 <- ifelse(is.na(combined_dt$R1), NA, combined_dt$L1)
+    combined_dt$order <- 1:nrow(combined_dt)
+  } else {
+      #plot
+      forplot = coord_new = c(1,1); type = "";
+
+      for (i in 1:nrow(combined_dt)){
+        if (combined_dt$skip[i]=="no"){
+          if (combined_dt$move[i] == "overlap"){
+            coord_new2 = c(combined_dt$S_0[i], combined_dt$S_1[i])
+            type = c(type, "overlap")
+          } else {
+            if (combined_dt$move[i] == "trt"){
+              coord_new2 = c(coord_new[1], combined_dt$S_1[i])
+              type = c(type, "trt")
+            } else {
+              coord_new2 = c(combined_dt$S_0[i], coord_new[2])
+              type = c(type, "control")
+            }
+          }
+          forplot = rbind(forplot, coord_new2)
+          coord_new = coord_new2
         }
       }
-      segments(x0=coord_new[1], y0=coord_new[2],
-               x1=coord_new2[1], y1=coord_new2[2], lwd = lwd, lty = 1, col = colt)
-      points(rbind(coord_new, coord_new2), pch=20, cex=0.75)
-      forplot = rbind(forplot, coord_new2)
-      coord_new = coord_new2
-    }
+      rownames(forplot) = NULL
+      colnames(combined_dt) = c("L0", "R0", "L1", "R1",
+                                "S0", "S1", "Move", "Skip")
+      combined_dt$L0 <- ifelse(is.na(combined_dt$R0), NA, combined_dt$L0)
+      combined_dt$L1 <- ifelse(is.na(combined_dt$R1), NA, combined_dt$L1)
+      combined_dt$order <- 1:nrow(combined_dt)
   }
-  abline(c(0,1), col = "grey", lty=1, lwd = lwd-0.25)
-  rownames(forplot) = NULL
 
-  colnames(combined_dt) = c("L0", "R0", "L1", "R1",
-                            "S0", "S1", "Move", "Skip")
-  combined_dt$L0 <- ifelse(is.na(combined_dt$R0), NA, combined_dt$L0)
-  combined_dt$L1 <- ifelse(is.na(combined_dt$R1), NA, combined_dt$L1)
-  combined_dt$order <- 1:nrow(combined_dt)
-
-  forplot = data.frame(forplot, type)
-  colnames(forplot) = c("u", "R_u", "type")
+    forplot = data.frame(forplot, type)
+    colnames(forplot) = c("u", "R_u", "type")
   return(curve = forplot)
 }

@@ -17,8 +17,12 @@
 #' @param legend.cex Optional graphical parameter for magnification of a legend's text.
 #' @param lty Optional graphical parameter to set the type of lines to use. Can be a number or a vector. See \link[graphics]{par} for more details.
 #' @param lwd Optional graphical parameter for line width relative to the default. See \link[graphics]{par} for more details.
+#' @param shade Logical. If true, gaps in the curve will be shaded gray, otherwise they are left blank.
 #' @param checkPH Logical argument to indicate if user wants to compare the nonparametric curve with the curve based on the proportional hazards model (default is FALSE).
 #' @param checkPO Logical argument to indicate if user wants to compare the nonparametric curve with the curve based on the proportional odds model (default is FALSE).
+#' @param CI Logical TRUE if bootstrap confidence intervals for the curve are needed
+#' @param level for CI, values between 0.7 and 0.99 allowed (preset at 0.95).
+#' @param B number of bootstrap resamples to use for CI (preset at 500).
 #'
 #' @return A plot of the ROC curve and an ROCsurv object containing:
 #' \itemize{
@@ -29,7 +33,7 @@
 #'
 #' @importFrom Icens EMICM
 #' @importFrom data.table data.table
-#' @importFrom dplyr %>%
+#' @importFrom dplyr %>% filter select
 #' @importFrom stats complete.cases
 #' @importFrom DescTools AUC
 #' @importFrom stats approx
@@ -39,12 +43,13 @@
 
 TwoSSPicens <- function(left, right, group, iterations, end_follow, checkPH = FALSE, checkPO = FALSE,
                   xlab=NULL, ylab=NULL, main=NULL, cex.axis = 1.5,
-                  cex.lab = 1.5, legend.inset=0.02, legend.cex=1.5, lty = c(1,2,3), lwd = 1.5) {
+                  cex.lab = 1.5, legend.inset=0.02, legend.cex=1.5,
+                  lty = c(1,2,3), lwd = 1.5, shade=TRUE, CI=FALSE, level=0.95, B=500) {
 
   if (is.null(xlab)) {xlab <- "Control Group Survival"}
   if (is.null(ylab)) {ylab <- "Treatment Group Survival"}
   if (is.null(main)) {main <- ""}
-  if(missing(iterations)) {iterations = 5000}
+  if(missing(iterations)) {iterations = 1000}
 
   all_len <- c(length(left), length(right), length(group))
   if (length(unique(all_len))!=1) {stop("Error: One or more variables (left, right, group) defer in length.")}
@@ -71,45 +76,7 @@ TwoSSPicens <- function(left, right, group, iterations, end_follow, checkPH = FA
   # 2 sample curve   ##############################################################################################
 
   res <- getIGroc(npmle_0 = control_pf, npmle_1 = trt_pf,
-                  xlab, ylab, main, cex.axis, cex.lab, lwd)
-
-  ### survival estimations for missing portions through interpolation
-    control_surv <- control_pf %>% mutate(surv = 1- cumdrop, surv0 = lag(surv, default = 1))
-    control_surv$R <- ifelse(control_surv$R==Inf, control_surv$R[nrow(control_surv)-1]+control_surv$R[nrow(control_surv)-1]*2, control_surv$R)
-    control_surv_new <- data.frame(t=0, s=1)
-    for (i in 1:nrow(control_surv)) {
-      ti = approx(control_surv[i,1:2], c(control_surv$surv0[i],control_surv$surv[i]), n = 3)
-      sfct = data.frame(t = ti$x, s = ti$y)
-      control_surv_new = rbind(control_surv_new, sfct)
-    }
-
-    trt_surv <- trt_pf %>% mutate(surv = 1- cumdrop, surv0 = lag(surv, default = 1))
-    trt_surv$R <- ifelse(trt_surv$R==Inf, trt_surv$R[nrow(trt_surv)-1]+trt_surv$R[nrow(trt_surv)-1]*2, trt_surv$R)
-    trt_surv_new <- data.frame(t=0, s=1)
-    for (i in 1:nrow(trt_surv)) {
-      ti = approx(trt_surv[i,1:2], c(trt_surv$surv0[i],trt_surv$surv[i]), n = 3)
-      sfct = data.frame(t = ti$x, s = ti$y)
-      trt_surv_new = rbind(trt_surv_new, sfct)
-    }
-
-
-  # add missing portions to two sample curve ######################################################################################
-    control_surv_new$group = 0;
-    trt_surv_new$group = 1
-    surv_new = distinct(rbind(control_surv_new, trt_surv_new))
-    surv_new = surv_new[order(surv_new$t, -surv_new$s),]
-    KMests <- data.frame(getIntSKM(surv_new))
-    res_temp <- data.frame(get4plot(skm = KMests))
-    if (res_temp$x[nrow(res_temp)]==0|res_temp$y[nrow(res_temp)]==0){
-      res_temp[nrow(res_temp)+1,]=c(0, 0, 1)
-    }
-    res_temp = distinct(res_temp)
-    final_res <-res_temp[,1:2]
-    colnames(final_res) = colnames(res)[1:2]
-    warn = getOption("warn")
-    options(warn=-1)
-    auc = AUC(final_res[,1], final_res[,2], method = c("trapezoid"))
-    options(warn=warn)
+                  xlab, ylab, main, cex.axis, cex.lab, lwd, silenceplot = FALSE)
 
     # 2 sample curve PH and PO models  #########################################################################################
   if (checkPH == TRUE | checkPO == TRUE) {
@@ -129,10 +96,36 @@ TwoSSPicens <- function(left, right, group, iterations, end_follow, checkPH = FA
                                   fit_ph =res2$fit_ph, fit_po =res2$fit_po)}
       }
   } else {
-    lines(res_temp, lty = 2)
-    returnobj <- list(two_sample_prob = res, auc = auc,
-                      NPMLE_control = NPMLE.control, NPMLE_trt = NPMLE.trt)
-  }
+
+    if (CI==TRUE){
+
+      newres <- btspICEN(control_pf, trt_pf, maindat, B, level, xlab, ylab, main, cex.axis = cex.axis,
+                           cex.lab = cex.lab, lty = lty, lwd = lwd)
+      returnobj <- list(two_sample_prob = newres,
+                        NPMLE_control = NPMLE.control, NPMLE_trt = NPMLE.trt,
+                        control_surv = res_temp$control_surv_new,
+                        trt_surv = res_temp$trt_surv_new)
+
+    } else {
+      res_temp <- getINTERPcurve(control_pf, trt_pf, res, interp_n)
+
+      final_res <- res_temp$res_temp[,1:2]
+      colnames(final_res) = colnames(res)[1:2]
+      warn = getOption("warn")
+      options(warn=-1)
+      auc = AUC(final_res[,1], final_res[,2], method = c("trapezoid"))
+      options(warn=warn)
+
+      lines(res_temp$res_temp[,1:2], lty = 2)
+
+      returnobj <- list(two_sample_prob = res, interpolated = final_res,
+                      auc = auc,
+                      NPMLE_control = NPMLE.control, NPMLE_trt = NPMLE.trt,
+                      control_surv = res_temp$control_surv_new,
+                      trt_surv = res_temp$trt_surv_new)
+
+      }
+    }
 
   return(returnobj)
 

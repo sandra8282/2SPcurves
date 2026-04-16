@@ -78,5 +78,5 @@ A plot of the ROC curve (if \code{silent=FALSE}) and an ROCsurv object containin
 }
 }
 \description{
-This function creates a two-samle survival probability curve for data from randomized controlled trials and has options to estimate the AUC, diagnose the proportional hazard assumptions and more.
+This function creates a two-sample survival probability curve for data from randomized controlled trials and has options to estimate the AUC, diagnose the proportional hazard assumptions and more.
 }

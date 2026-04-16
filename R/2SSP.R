@@ -14,7 +14,7 @@ getAUC <- function(KMests, silent, xlab, ylab, main, cex.axis = cex.axis,
 #' Create a two-sample survival probability curve for data from randomized controlled trials.
 #'
 #' @description
-#' This function creates a two-samle survival probability curve for data from randomized controlled trials and has options to estimate the AUC, diagnose the proportional hazard assumptions and more.
+#' This function creates a two-sample survival probability curve for data from randomized controlled trials and has options to estimate the AUC, diagnose the proportional hazard assumptions and more.
 #'
 #' @param time Time to event or censoring.
 #' @param event An indicator vector with values of 1 for individuals who had the event occur or 0 if the participant was censored.
