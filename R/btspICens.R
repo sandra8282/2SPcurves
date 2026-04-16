@@ -1,19 +1,20 @@
 #' Estimate SE and CI for AUC based on 1000 sample bootstrap
 #'
-#' @param control_pf passed from ROCsurv
-#' @param trt_pf passed from ROCsurv
-#' @param maindat passed from ROCsurv
+#' @param control_pf passed from TwoSSPicens
+#' @param trt_pf passed from TwoSSPicens
+#' @param maindat passed from TwoSSPicens
 #' @param B number of bootstrap resamples
-#' @param level passed from ROCsurv
-#' @param xlab passed from ROCsurv
-#' @param ylab passed from ROCsurv
-#' @param main passed from ROCsurv
-#' @param cex.axis passed from ROCsurv
-#' @param cex.lab passed from ROCsurv
-#' @param legend.inset passed from ROCsurv
-#' @param legend.cex passed from ROCsurv
-#' @param lty passed from ROCsurv
-#' @param lwd passed from ROCsurv
+#' @param level passed from TwoSSPicens
+#' @param xlab passed from TwoSSPicens
+#' @param ylab passed from TwoSSPicens
+#' @param main passed from TwoSSPicens
+#' @param cex.axis passed from TwoSSPicens
+#' @param cex.lab passed from TwoSSPicens
+#' @param legend.inset passed from TwoSSPicens
+#' @param legend.cex passed from TwoSSPicens
+#' @param lty passed from TwoSSPicens
+#' @param lwd passed from TwoSSPicens
+#' @param iterations passed from TwoSSPicens
 #'
 #' @return SE and CI for indicated level
 #'
@@ -30,7 +31,7 @@
 #' @noRd
 
 btspICEN <- function(control_pf, trt_pf, maindat, B, level, xlab, ylab, main, cex.axis = cex.axis,
-                 cex.lab = cex.lab, lty = lty, lwd = lwd) {
+                 cex.lab = cex.lab, lty = lty, lwd = lwd, iterations) {
 
   res <- getIGroc(npmle_0 = control_pf,
                   npmle_1 = trt_pf,
@@ -75,7 +76,7 @@ btspICEN <- function(control_pf, trt_pf, maindat, B, level, xlab, ylab, main, ce
          btrt_pf$cumdrop = cumsum(btrt_pf$drop)
          res_new <- getIGroc(npmle_0 = bcontrol_pf, npmle_1 = btrt_pf,
                              xlab, ylab, main, cex.axis, cex.lab, lwd, silenceplot=TRUE)
-         res_temp <- getINTERPcurve(bcontrol_pf, btrt_pf, res_new)
+         res_temp <- getINTERPcurve(bcontrol_pf, btrt_pf, res_new, 1000)
 
          #bstAUC[b] <- temp$AUC
          forplot <- res_temp$res_temp[,1:2]

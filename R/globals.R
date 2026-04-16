@@ -10,10 +10,6 @@ utils::globalVariables(c(
   "surv"
 ))
 
-# Might need in future
-# riskRegression,
-# cmprsk,
-# mstate,
-# prodlim,
-# simsurv,
+#' @useDynLib TwoSPC, .registration = TRUE
+NULL
 

@@ -84,6 +84,8 @@ TwoSSPdcens <- function(o_l, o_r,  e_l, e_r, group, maxtime = NULL, ctime = 99, 
          col="grey", border=NA, lty=NULL, xpd=FALSE)
   }
 
+  forplot_clean <- aggregate(y ~ x, data = as.data.frame(forplot[, 1:2]), FUN = mean)
+  forplot_clean <- forplot_clean[order(forplot_clean$x), ]
   auc = AUC(forplot[,1], forplot[,2])
   returnobj <- list(R_u = forplot, auc = auc, npmle0 = DISKM$npmle0, npmle1 = DISKM$npmle1)
 

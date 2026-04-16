@@ -99,8 +99,8 @@ TwoSSPicens <- function(left, right, group, iterations, end_follow, checkPH = FA
 
     if (CI==TRUE){
 
-      newres <- btspICEN(control_pf, trt_pf, maindat, B, level, xlab, ylab, main, cex.axis = cex.axis,
-                           cex.lab = cex.lab, lty = lty, lwd = lwd)
+      newres <- btspICEN(control_pf, trt_pf, dat, B, level, xlab, ylab, main, cex.axis = cex.axis,
+                           cex.lab = cex.lab, lty = lty, lwd = lwd, iterations)
       returnobj <- list(two_sample_prob = newres,
                         NPMLE_control = NPMLE.control, NPMLE_trt = NPMLE.trt,
                         control_surv = res_temp$control_surv_new,

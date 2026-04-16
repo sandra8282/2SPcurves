@@ -22,7 +22,7 @@
 #'
 #' @noRd
 
-getINTERPcurve <- function(control_pf, trt_pf, res, interp_n) {
+getINTERPcurve <- function(control_pf, trt_pf, res, interp_n=1000) {
 
     ### survival estimations for missing portions through interpolation
     control_surv <- control_pf %>% mutate(surv = 1-cumdrop, surv0 = lag(surv, default = 1),
